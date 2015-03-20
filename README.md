@@ -1,0 +1,2 @@
+# QConf
+Qihoo Configuration
