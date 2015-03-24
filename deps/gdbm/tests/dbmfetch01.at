@@ -1,0 +1,31 @@
+# This file is part of GDBM.                                   -*- autoconf -*-
+# Copyright (C) 2011 Free Software Foundation, Inc.
+#
+# GDBM is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+#
+# GDBM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GDBM. If not, see <http://www.gnu.org/licenses/>. */
+
+AT_SETUP([fetch: nonexisting record])
+AT_KEYWORDS([dbm fetch fetch01 dbmfetch01])
+
+AT_CHECK([
+AT_COMPAT_PREREQ
+num2word 1:10000 | dtload test
+dtfetch test 0
+],
+[2],
+[],
+[dtfetch: 0: not found
+])
+
+AT_CLEANUP
+

@@ -1,0 +1,938 @@
+# Serbian translation of gdbm.
+# Copyright (C) 2012 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gdbm package.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2012, 2013.
+msgid ""
+msgstr ""
+"Project-Id-Version: gdbm-1.10.90\n"
+"Report-Msgid-Bugs-To: bug-gdbm@gnu.org\n"
+"POT-Creation-Date: 2013-12-25 16:41+0200\n"
+"PO-Revision-Date: 2013-10-08 11:21+0200\n"
+"Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
+"Language-Team: Serbian <(nothing)>\n"
+"Language: sr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: src/bucket.c:67 src/bucket.c:186
+msgid "couldn't init cache"
+msgstr "не могу да покренем оставу"
+
+#: src/bucket.c:97 src/bucket.c:346 src/falloc.c:185 src/falloc.c:282
+#: src/findkey.c:64 src/gdbmstore.c:139 src/update.c:36 src/update.c:82
+msgid "lseek error"
+msgstr "грешка премотавања реда"
+
+#: src/bucket.c:224 src/falloc.c:259 src/findkey.c:57 src/gdbmfetch.c:56
+#: src/gdbmseq.c:73
+msgid "malloc error"
+msgstr "грешка доделе меморије"
+
+#: src/falloc.c:181
+msgid "malloc failed"
+msgstr "није успела додела меморије"
+
+#: src/gdbm_dump.c:25
+msgid "select dump format"
+msgstr "бирам запис исписа"
+
+#: src/gdbm_dump.c:67
+msgid "unknown dump format"
+msgstr "непознат запис исписа"
+
+#: src/gdbm_dump.c:74 src/gdbm_load.c:215
+msgid "unknown option"
+msgstr "непозната опција"
+
+#: src/gdbm_dump.c:90 src/gdbm_load.c:231
+#, c-format
+msgid "too many arguments; try `%s -h' for more info"
+msgstr "превише аргумената; покушајте „%s -h“ за више података"
+
+#: src/gdbm_dump.c:110 src/gdbm_load.c:251
+#, c-format
+msgid "cannot open %s"
+msgstr "не могу да отворим „%s“"
+
+#: src/gdbm_dump.c:118 src/gdbm_load.c:261
+msgid "gdbm_open failed"
+msgstr "гдбм_отвори није успело"
+
+#: src/gdbm_dump.c:125
+msgid "dump error"
+msgstr "грешка исписа"
+
+#: src/gdbm_load.c:35
+msgid "replace records in the existing database"
+msgstr "мења записе у постојећој бази података"
+
+#: src/gdbm_load.c:36
+msgid "MODE"
+msgstr "РЕЖИМ"
+
+#: src/gdbm_load.c:36
+msgid "set file mode"
+msgstr "подешава режим датотеке"
+
+#: src/gdbm_load.c:37
+msgid "NAME|UID[:NAME|GID]"
+msgstr "НАЗИВ|ЈИБ[:НАЗИВ|ГИБ]"
+
+#: src/gdbm_load.c:37
+msgid "set file owner"
+msgstr "подешава власника датотеке"
+
+#: src/gdbm_load.c:38
+msgid "do not attempt to set file meta-data"
+msgstr "не покушава да подеси мета податке датотеке"
+
+#: src/gdbm_load.c:39
+msgid "use memory mapping"
+msgstr ""
+
+#: src/gdbm_load.c:40 src/gdbm_load.c:41
+#, fuzzy
+msgid "NUM"
+msgstr "БРОЈ"
+
+#: src/gdbm_load.c:40
+#, fuzzy
+msgid "set the cache size"
+msgstr "подешава величину оставе"
+
+#: src/gdbm_load.c:41
+#, fuzzy
+msgid "set the block size"
+msgstr "подешава величину блока"
+
+#: src/gdbm_load.c:79
+#, fuzzy, c-format
+msgid "invalid number: %s"
+msgstr "неисправно корисничко име: %s"
+
+#: src/gdbm_load.c:84
+#, fuzzy, c-format
+msgid "invalid number: %s: %s"
+msgstr "неисправно корисничко име: %s"
+
+#: src/gdbm_load.c:136
+#, c-format
+msgid "invalid octal number"
+msgstr "неисправан октални број"
+
+#: src/gdbm_load.c:161
+#, c-format
+msgid "invalid user name: %s"
+msgstr "неисправно корисничко име: %s"
+
+#: src/gdbm_load.c:180
+#, c-format
+msgid "invalid group name: %s"
+msgstr "неисправан назив групе: %s"
+
+#: src/gdbm_load.c:192
+#, c-format
+msgid "no such UID: %lu"
+msgstr "нема таквог ЈИБ-а: %lu"
+
+#: src/gdbm_load.c:267 src/gdbmtool.c:103 src/gdbmtool.c:849
+#, c-format
+msgid "gdbm_setopt failed: %s"
+msgstr "гдбм_подесиопцију није успело: %s"
+
+#: src/gdbm_load.c:281 src/gdbm_load.c:299 src/gdbmtool.c:832
+#, c-format
+msgid "error restoring metadata: %s (%s)"
+msgstr "грешка повраћаја мета података: %s (%s)"
+
+#: src/gdbm_load.c:290
+#, c-format
+msgid "cannot load from %s"
+msgstr "не могу да учитам из %s"
+
+#: src/gdbm_load.c:307
+msgid "gdbm_setopt failed"
+msgstr "гдбм_подесиопцију није успело"
+
+#: src/gdbmerrno.c:31
+msgid "No error"
+msgstr "Нема грешака"
+
+#: src/gdbmerrno.c:32
+msgid "Malloc error"
+msgstr "Грешка доделе меморије"
+
+#: src/gdbmerrno.c:33
+msgid "Block size error"
+msgstr "Грешка величине блока"
+
+#: src/gdbmerrno.c:34
+msgid "File open error"
+msgstr "Грешка отварања датотеке"
+
+#: src/gdbmerrno.c:35
+msgid "File write error"
+msgstr "Грешка писања датотеке"
+
+#: src/gdbmerrno.c:36
+msgid "File seek error"
+msgstr "Грешка премотавања датотеке"
+
+#: src/gdbmerrno.c:37
+msgid "File read error"
+msgstr "Грешка читања датотеке"
+
+#: src/gdbmerrno.c:38
+msgid "Bad magic number"
+msgstr "Лош магични број"
+
+#: src/gdbmerrno.c:39
+msgid "Empty database"
+msgstr "Празна база података"
+
+#: src/gdbmerrno.c:40
+msgid "Can't be reader"
+msgstr "Не може бити читач"
+
+#: src/gdbmerrno.c:41
+msgid "Can't be writer"
+msgstr "Не може бити писач"
+
+#: src/gdbmerrno.c:42
+msgid "Reader can't delete"
+msgstr "Читач не може да обрише"
+
+#: src/gdbmerrno.c:43
+msgid "Reader can't store"
+msgstr "Читач не може да складишти"
+
+#: src/gdbmerrno.c:44
+msgid "Reader can't reorganize"
+msgstr "Читач не може да преорганизује"
+
+#: src/gdbmerrno.c:45
+msgid "Unknown update"
+msgstr "Непознато ажурирање"
+
+#: src/gdbmerrno.c:46 src/gdbmtool.c:416
+msgid "Item not found"
+msgstr "Нема такве ставке"
+
+#: src/gdbmerrno.c:47
+msgid "Reorganize failed"
+msgstr "Преорганизовање није успело"
+
+#: src/gdbmerrno.c:48
+msgid "Cannot replace"
+msgstr "Не могу да заменим"
+
+#: src/gdbmerrno.c:49
+msgid "Illegal data"
+msgstr "Неисправни подаци"
+
+#: src/gdbmerrno.c:50
+msgid "Option already set"
+msgstr "Опција је већ подешена"
+
+#: src/gdbmerrno.c:51
+msgid "Illegal option"
+msgstr "Неисправна опција"
+
+#: src/gdbmerrno.c:52
+msgid "Byte-swapped file"
+msgstr "Датотека размењеног бајта"
+
+#: src/gdbmerrno.c:53
+msgid "Wrong file offset"
+msgstr "Погрешан померај датотеке"
+
+#: src/gdbmerrno.c:54
+msgid "Bad file flags"
+msgstr "Лоше заставице датотеке"
+
+#: src/gdbmerrno.c:55
+msgid "Cannot stat file"
+msgstr "Не могу да добавим податке о датотеци"
+
+#: src/gdbmerrno.c:56
+msgid "Unexpected end of file"
+msgstr "Неочекиван крај датотеке"
+
+#: src/gdbmerrno.c:57
+msgid "Database name not given"
+msgstr "Није дат назив базе података"
+
+#: src/gdbmerrno.c:58
+msgid "Failed to restore file owner"
+msgstr "Нисам успео да повратим власника датотеке"
+
+#: src/gdbmerrno.c:59
+msgid "Failed to restore file mode"
+msgstr "Нисам успео да повратим режим датотеке"
+
+#: src/gdbmerrno.c:67
+msgid "Unknown error"
+msgstr "Непозната грешка"
+
+#: src/parseopt.c:49
+msgid "give this help list"
+msgstr "приказује овај списак помоћи"
+
+#: src/parseopt.c:50
+msgid "print program version"
+msgstr "исписује издање програма"
+
+#: src/parseopt.c:51
+msgid "give a short usage message"
+msgstr "приказује кратку поруку коришћења"
+
+#: src/parseopt.c:347 src/parseopt.c:431
+msgid "Usage:"
+msgstr "Употреба:"
+
+#: src/parseopt.c:349
+msgid "OPTION"
+msgstr "МОГУЋНОСТ"
+
+#: src/parseopt.c:364
+msgid ""
+"Mandatory or optional arguments to long options are also mandatory or "
+"optional for any corresponding short options."
+msgstr ""
+"Обавезни или опционални аргументи за дуге опције су такође обавезни или "
+"опционални за све одговарајуће кратке опције."
+
+#. TRANSLATORS: The placeholder indicates the bug-reporting address
+#. for this package.  Please add _another line_ saying
+#. "Report translation bugs to <...>\n" with the address for translation
+#. bugs (typically your translation team's web or email address).
+#: src/parseopt.c:375
+#, c-format
+msgid "Report bugs to %s.\n"
+msgstr "Грешке пријавите на %s.\n"
+
+#: src/parseopt.c:378
+#, c-format
+msgid "%s home page: <%s>\n"
+msgstr "%s матична страница: <%s>\n"
+
+#. TRANSLATORS: Translate "(C)" to the copyright symbol
+#. (C-in-a-circle), if this symbol is available in the user's
+#. locale.  Otherwise, do not translate "(C)"; leave it as-is.
+#: src/parseopt.c:541
+msgid "(C)"
+msgstr "©"
+
+#: src/gdbmtool.c:84
+#, c-format
+msgid "database %s already exists; overwrite"
+msgstr "већ постоји база података „%s“; да је препишем"
+
+#: src/gdbmtool.c:96
+#, c-format
+msgid "cannot open database %s: %s"
+msgstr "не могу да отворим базу података %s: %s"
+
+#: src/gdbmtool.c:120
+#, c-format
+msgid "warning: using default database file %s"
+msgstr "упозорење: користим основну датотеку базе података „%s“"
+
+#: src/gdbmtool.c:141
+#, c-format
+msgid ""
+"******* %s **********\n"
+"\n"
+"bits = %d\n"
+"count= %d\n"
+"Hash Table:\n"
+msgstr ""
+"******* %s **********\n"
+"\n"
+"бита = %d\n"
+"број = %d\n"
+"Хеш табела:\n"
+
+#: src/gdbmtool.c:144
+#, c-format
+msgid "     #    hash value     key size    data size     data adr  home\n"
+msgstr ""
+"     #    хеш вредност     величина кључа     величина податка    адреса "
+"података  полазна\n"
+
+#: src/gdbmtool.c:154
+#, c-format
+msgid ""
+"\n"
+"Avail count = %1d\n"
+msgstr ""
+"\n"
+"Укупно доступно = %1d\n"
+
+#: src/gdbmtool.c:155
+#, c-format
+msgid "Avail  adr     size\n"
+msgstr "Велчна дстпне адрсе\n"
+
+#: src/gdbmtool.c:218
+#, c-format
+msgid ""
+"\n"
+"header block\n"
+"size  = %d\n"
+"count = %d\n"
+msgstr ""
+"\n"
+"блок заглавља\n"
+"величина = %d\n"
+"укупно   = %d\n"
+
+#: src/gdbmtool.c:252
+#, c-format
+msgid ""
+"\n"
+"block = %d\n"
+"size  = %d\n"
+"count = %d\n"
+msgstr ""
+"\n"
+"блок     = %d\n"
+"величина = %d\n"
+"укупно   = %d\n"
+
+#: src/gdbmtool.c:273
+#, c-format
+msgid ""
+"Bucket Cache (size %d):\n"
+"  Index:  Address  Changed  Data_Hash \n"
+msgstr ""
+"Остава ведра (величина %d):\n"
+"  Индекс:  Адреса  Измењен  Хеш_података \n"
+
+#: src/gdbmtool.c:281
+msgid "True"
+msgstr "Тачно"
+
+#: src/gdbmtool.c:281
+msgid "False"
+msgstr "Нетачно"
+
+#: src/gdbmtool.c:286
+#, c-format
+msgid "Bucket cache has not been initialized.\n"
+msgstr "Ведро оставе није покренуто.\n"
+
+#: src/gdbmtool.c:357
+msgid "nothing to close"
+msgstr "ништа за затварање"
+
+#: src/gdbmtool.c:399
+msgid "count buffer overflow"
+msgstr ""
+
+#: src/gdbmtool.c:402
+#, fuzzy, c-format
+msgid "There is %s item in the database.\n"
+msgid_plural "There are %s items in the database.\n"
+msgstr[0] "Постоји %d ставка у бази података.\n"
+msgstr[1] "Постоје %d ставке у бази података.\n"
+msgstr[2] "Постоји %d ставки у бази података.\n"
+
+#: src/gdbmtool.c:418
+#, c-format
+msgid "Can't delete: %s"
+msgstr "Не могу да обришем: %s"
+
+#: src/gdbmtool.c:434 src/gdbmtool.c:467 src/gdbmtool.c:497
+#, c-format
+msgid "No such item found.\n"
+msgstr "Нисам пронашао такву ставку.\n"
+
+#: src/gdbmtool.c:444
+#, c-format
+msgid "Item not inserted.\n"
+msgstr "Ставка није уметнута.\n"
+
+#: src/gdbmtool.c:508
+#, c-format
+msgid "Reorganization failed.\n"
+msgstr "Преорганизација није успела.\n"
+
+#: src/gdbmtool.c:510
+#, c-format
+msgid "Reorganization succeeded.\n"
+msgstr "Преорганизација је успела.\n"
+
+#: src/gdbmtool.c:546
+msgid "Current bucket"
+msgstr "Тренутно ведро"
+
+#: src/gdbmtool.c:547
+#, c-format
+msgid ""
+"\n"
+" current directory entry = %d.\n"
+msgstr ""
+"\n"
+" унос тренутног директоријума = %d.\n"
+
+#: src/gdbmtool.c:549
+#, c-format
+msgid " current bucket address  = %lu.\n"
+msgstr " адреса тренутног ведра       = %lu.\n"
+
+#: src/gdbmtool.c:560 src/gdbmtool.c:569
+#, c-format
+msgid "not a number (stopped near %s)\n"
+msgstr "није број (стадох близу %s)\n"
+
+#: src/gdbmtool.c:591
+#, c-format
+msgid "Not a bucket.\n"
+msgstr "Није ведро.\n"
+
+#: src/gdbmtool.c:617
+#, c-format
+msgid "Hash table directory.\n"
+msgstr "Директоријум хеш табеле.\n"
+
+#: src/gdbmtool.c:618
+#, c-format
+msgid ""
+"  Size =  %d.  Bits = %d. \n"
+"\n"
+msgstr ""
+"  Величина =  %d.  Бита = %d. \n"
+"\n"
+
+#: src/gdbmtool.c:642
+#, c-format
+msgid ""
+"\n"
+"File Header: \n"
+"\n"
+msgstr ""
+"\n"
+"Заглавље датотеке: \n"
+"\n"
+
+#: src/gdbmtool.c:643
+#, c-format
+msgid "  table        = %lu\n"
+msgstr "  табела            = %lu\n"
+
+#: src/gdbmtool.c:645
+#, c-format
+msgid "  table size   = %d\n"
+msgstr "  величина табеле   = %d\n"
+
+#: src/gdbmtool.c:646
+#, c-format
+msgid "  table bits   = %d\n"
+msgstr "  битови табеле     = %d\n"
+
+#: src/gdbmtool.c:647
+#, c-format
+msgid "  block size   = %d\n"
+msgstr "  величина блока    = %d\n"
+
+#: src/gdbmtool.c:648
+#, c-format
+msgid "  bucket elems = %d\n"
+msgstr "  елементи ведра    = %d\n"
+
+#: src/gdbmtool.c:649
+#, c-format
+msgid "  bucket size  = %d\n"
+msgstr "  величина ведра    = %d\n"
+
+#: src/gdbmtool.c:650
+#, c-format
+msgid "  header magic = %x\n"
+msgstr "  магија заглавља   = %x\n"
+
+#: src/gdbmtool.c:651
+#, c-format
+msgid "  next block   = %lu\n"
+msgstr "  следећи блок      = %lu\n"
+
+#: src/gdbmtool.c:653
+#, c-format
+msgid "  avail size   = %d\n"
+msgstr "  доступна величина = %d\n"
+
+#: src/gdbmtool.c:654
+#, c-format
+msgid "  avail count  = %d\n"
+msgstr "  доступан количина = %d\n"
+
+#: src/gdbmtool.c:655
+#, c-format
+msgid "  avail nx blk = %lu\n"
+msgstr "  достпн слдћи блк  = %lu\n"
+
+#: src/gdbmtool.c:663
+#, c-format
+msgid "hash value = %x. \n"
+msgstr "вредност хеша = %x. \n"
+
+#: src/gdbmtool.c:726
+msgid "cannot fetch data; the key was:"
+msgstr "не могу да довучем податке; кључ беше:"
+
+#: src/gdbmtool.c:771 src/gdbmtool.c:804
+#, c-format
+msgid "unrecognized argument: %s"
+msgstr "непознат аргумент: %s"
+
+#: src/gdbmtool.c:781
+#, c-format
+msgid "error dumping database: %s"
+msgstr "грешка исписивања базе података: %s"
+
+#: src/gdbmtool.c:841
+#, c-format
+msgid "cannot load from %s: %s"
+msgstr "не могу да учитам из %s: %s"
+
+#: src/gdbmtool.c:857
+#, c-format
+msgid "Database file: %s\n"
+msgstr "Датотека базе података: %s\n"
+
+#: src/gdbmtool.c:859
+msgid "No database name"
+msgstr "Нема назива базе података"
+
+#: src/gdbmtool.c:861
+msgid "Database is open"
+msgstr "База података је отворена"
+
+#: src/gdbmtool.c:863
+msgid "Database is not open"
+msgstr "База података није отворена"
+
+#: src/gdbmtool.c:905
+msgid "count (number of entries)"
+msgstr "број (укупан број уноса)"
+
+#: src/gdbmtool.c:908 src/gdbmtool.c:918 src/gdbmtool.c:936 src/gdbmtool.c:965
+msgid "KEY"
+msgstr "КЉУЧ"
+
+#: src/gdbmtool.c:908
+msgid "delete a record"
+msgstr "брише запис"
+
+#: src/gdbmtool.c:911 src/gdbmtool.c:921 src/gdbmtool.c:1116
+msgid "FILE"
+msgstr "ДАТОТЕКА"
+
+#: src/gdbmtool.c:915
+msgid "export"
+msgstr "извози"
+
+#: src/gdbmtool.c:918
+msgid "fetch record"
+msgstr "довлачи запис"
+
+#: src/gdbmtool.c:925
+msgid "import"
+msgstr "увози"
+
+#: src/gdbmtool.c:928
+msgid "list"
+msgstr "списак"
+
+#: src/gdbmtool.c:931
+msgid "[KEY]"
+msgstr "[КЉУЧ]"
+
+#: src/gdbmtool.c:933
+msgid "nextkey"
+msgstr "следећи кључ"
+
+#: src/gdbmtool.c:937
+msgid "DATA"
+msgstr "ПОДАЦИ"
+
+#: src/gdbmtool.c:939
+msgid "store"
+msgstr "смешта"
+
+#: src/gdbmtool.c:942
+msgid "firstkey"
+msgstr "први кључ"
+
+#: src/gdbmtool.c:945
+msgid "reorganize"
+msgstr "преорганизује"
+
+#: src/gdbmtool.c:948
+msgid "print avail list"
+msgstr "исписује доступан списак"
+
+#: src/gdbmtool.c:951
+msgid "NUMBER"
+msgstr "БРОЈ"
+
+#: src/gdbmtool.c:952
+msgid "print a bucket"
+msgstr "исписује ведро"
+
+#: src/gdbmtool.c:956
+msgid "print current bucket"
+msgstr "исписује тренутно ведро"
+
+#: src/gdbmtool.c:959
+msgid "print hash directory"
+msgstr "исписује хеш директоријум"
+
+#: src/gdbmtool.c:962
+msgid "print database file header"
+msgstr "исписује заглавље датотеке базе података"
+
+#: src/gdbmtool.c:966
+msgid "hash value of key"
+msgstr "хеш вредност кључа"
+
+#: src/gdbmtool.c:969
+msgid "print the bucket cache"
+msgstr "исписује оставу ведра"
+
+#: src/gdbmtool.c:972
+msgid "print current program status"
+msgstr "исписује стање тренутног програма"
+
+#: src/gdbmtool.c:975
+msgid "print version of gdbm"
+msgstr "исписује издање гдбм-а"
+
+#: src/gdbmtool.c:978
+msgid "print this help list"
+msgstr "исписује овај списак помоћи"
+
+#: src/gdbmtool.c:981
+msgid "quit the program"
+msgstr "излази из програма"
+
+#: src/gdbmtool.c:984
+msgid "set or list variables"
+msgstr "подешава или наводи променљиве"
+
+#: src/gdbmtool.c:987
+msgid "unset variables"
+msgstr "поништава променљиве"
+
+#: src/gdbmtool.c:992
+msgid "define datum structure"
+msgstr "одређује структуру датума"
+
+#: src/gdbmtool.c:996
+msgid "source command script"
+msgstr "спис наредбе извора"
+
+#: src/gdbmtool.c:999
+msgid "close the database"
+msgstr "затвара базу података"
+
+#: src/gdbmtool.c:1003
+msgid "open new database"
+msgstr "отвара нову базу података"
+
+#: src/gdbmtool.c:1101
+msgid "Invalid command. Try ? for help."
+msgstr "Неисправна наредба. Покушајте ? за помоћ."
+
+#: src/gdbmtool.c:1102
+msgid "Unknown command"
+msgstr "Непозната наредба"
+
+#: src/gdbmtool.c:1110
+msgid "examine and/or modify a GDBM database"
+msgstr "испитује и/или мења ГДБМ базу података."
+
+#: src/gdbmtool.c:1111
+msgid "DBFILE"
+msgstr "ДАТОТЕКАБП"
+
+#: src/gdbmtool.c:1114 src/gdbmtool.c:1115
+msgid "SIZE"
+msgstr "ВЕЛИЧИНА"
+
+#: src/gdbmtool.c:1114
+msgid "set block size"
+msgstr "подешава величину блока"
+
+#: src/gdbmtool.c:1115
+msgid "set cache size"
+msgstr "подешава величину оставе"
+
+#: src/gdbmtool.c:1116
+msgid "read commands from FILE"
+msgstr "чита наредбе из ДАТОТЕКЕ"
+
+#: src/gdbmtool.c:1118
+msgid "disable file locking"
+msgstr "искључује закључавање датотеке"
+
+#: src/gdbmtool.c:1119
+msgid "do not use mmap"
+msgstr "не користи нмапу"
+
+#: src/gdbmtool.c:1120
+msgid "create database"
+msgstr "ствара базу података"
+
+#: src/gdbmtool.c:1121
+msgid "do not read .gdbmtoolrc file"
+msgstr "не чита датотеку „.gdbmtoolrc“"
+
+#: src/gdbmtool.c:1122
+msgid "open database in read-only mode"
+msgstr "отвара базу података у режиму само за читање"
+
+#: src/gdbmtool.c:1123
+msgid "synchronize to disk after each write"
+msgstr "усаглашава се са диском након сваког уписа"
+
+#: src/gdbmtool.c:1124
+msgid "don't print initial banner"
+msgstr "не штампа почетну врпцу"
+
+#: src/gdbmtool.c:1364
+#, c-format
+msgid "cannot coerce %s to %s"
+msgstr "не могу да приморам „%s“ на „%s“"
+
+#: src/gdbmtool.c:1411
+#, c-format
+msgid "%s: not enough arguments"
+msgstr "%s: нема довољно аргумената"
+
+#: src/gdbmtool.c:1418
+msgid "unexpected eof"
+msgstr "неочекиван крај датотеке"
+
+#: src/gdbmtool.c:1441
+#, c-format
+msgid "%s: too many arguments"
+msgstr "%s: превише аргумената"
+
+#: src/gdbmtool.c:1468
+#, c-format
+msgid "cannot run pager `%s': %s"
+msgstr "не могу да покренем страничара „%s“: %s"
+
+#: src/gdbmtool.c:1509
+msgid "cannot find home directory"
+msgstr "не могу да пронађем лични директоријум"
+
+#: src/gdbmtool.c:1606
+#, c-format
+msgid "unknown option; try `%s -h' for more info"
+msgstr "непозната опција; покушајте „%s -h“ за више података"
+
+#: src/gdbmtool.c:1616
+msgid "too many arguments"
+msgstr "има превише аргумената"
+
+#: src/gdbmtool.c:1633
+#, c-format
+msgid ""
+"\n"
+"Welcome to the gdbm tool.  Type ? for help.\n"
+"\n"
+msgstr ""
+"\n"
+"Добродошли у гдбм програм.  Укуцајте ? за помоћ.\n"
+"\n"
+
+#: src/update.c:110
+#, c-format
+msgid "gdbm fatal: %s\n"
+msgstr "кобност гдбм-а: %s\n"
+
+#: src/gram.y:216
+#, c-format
+msgid "expected \"key\" or \"content\", but found \"%s\""
+msgstr "очекивах „key“ или „content“, али нађох „%s“"
+
+#: src/gram.y:287 src/gram.y:308 src/gram.y:340
+#, c-format
+msgid "no such variable: %s"
+msgstr "нема такве променљиве: %s"
+
+#: src/gram.y:291
+#, c-format
+msgid "%s is not a boolean variable"
+msgstr "„%s“ није логичка променљива"
+
+#: src/gram.y:295 src/gram.y:320
+#, c-format
+msgid "unexpected error setting %s: %d"
+msgstr "неочекивана грешка подешавања %s: %d"
+
+#: src/gram.y:312
+#, c-format
+msgid "%s: bad variable type"
+msgstr "%s: лоша врста променљиве"
+
+#: src/gram.y:316
+#, c-format
+msgid "%s: value %s is not allowed"
+msgstr "%s: вредност „%s“ није дозвољена"
+
+#: src/gram.y:344
+#, c-format
+msgid "%s: variable cannot be unset"
+msgstr "%s: променљива не може бити поништена"
+
+#: src/lex.l:150
+#, c-format
+msgid "cannot open `%s': %s"
+msgstr "не могу да отворим „%s“: %s"
+
+#: src/lex.l:155
+#, c-format
+msgid "%s is not a regular file"
+msgstr "„%s“ није обична датотека"
+
+#: src/lex.l:162
+msgid "recursive sourcing"
+msgstr "дубинско извориште"
+
+#: src/lex.l:164
+#, c-format
+msgid "%s already sourced here"
+msgstr "„%s“ је већ изврело овде"
+
+#: src/lex.l:171
+#, c-format
+msgid "cannot open %s for reading: %s"
+msgstr "не могу да отворим „%s“ за читање: %s"
+
+#: src/lex.l:227 src/lex.l:237
+msgid "invalid #line statement"
+msgstr "неисправно стање „#line“"
+
+#: src/datconv.c:254
+#, c-format
+msgid "(not enough data)"
+msgstr "(нема довољно података)"
+
+#: src/datconv.c:329
+msgid "mixing tagged and untagged values is not allowed"
+msgstr "није дозвољено мешање означених и неозначених вредности"
+
+#: src/datconv.c:345
+msgid "cannot convert"
+msgstr "не могу да претворим"
+
+#: src/datconv.c:356
+#, c-format
+msgid "cannot convert value #%d: %s"
+msgstr "не могу да претворим вредност „#%d“: %s"

@@ -1,0 +1,443 @@
+.\" This file is part of GDBM.  -*- nroff -*-
+.\" Copyright (C) 2013 Free Software Foundation, Inc.
+.\"
+.\" GDBM is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 3, or (at your option)
+.\" any later version.
+.\"
+.\" GDBM is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with GDBM. If not, see <http://www.gnu.org/licenses/>. */
+.TH GDBM_DUMP 1 "May 17, 2013" "GDBM" "GDBM User Reference"
+.SH NAME
+gdbmtool \- examine and modify a GDBM database
+.SH SYNOPSIS
+\fBgdbmtool\fR [\fB\-lmNnqrs\fR] [\fB\-b\fR \fISIZE\fR] [\fB\-c\fR \fISIZE\fR]\
+ [\fB\-f\fR \fIFILE\fR] [\fB\-\-block\-size\fR=\fISIZE\fR]
+         [\fB\-\-cache\-size\fR=\fISIZE\fR] [\fB\-\-file\fR \fIFILE\fR]\
+  [\fB\-\-newdb\fR] [\fB\-\-no\-lock\fR]
+         [\fB\-\-no\-mmap\fR] [\fB\-\-norc\fR]
+         [\fB\-\-quiet\fR] [\fB\-\-read\-only\fR] [\fB\-\-synchronize\fR]\
+ [\fIDBFILE\fR]
+.sp
+\fBgdbmtool\fR [\fB\-Vh\fR] ][\fB\-\-help\fR] [\fB\-\-usage\fR] [\fB\-\-version\fR]
+.SH DESCRIPTION
+The
+.B gdbmtool
+utility allows you to view and modify an existing GDBM database or to
+create a new one.
+.PP
+The \fIDBFILE\fR argument supplies the name of the database to open.
+If not supplied, the default name
+.B junk.gdbm
+is used instead.
+If the named database does not exist, it will be created.  An existing
+database can be cleared (i.e. all records removed from it) using the
+\fB\-\-newdb\fR option (see below).
+.PP
+Unless the \fB\-N\fR (\fB\-\-norc\fR) option is given, after startup
+.B gdbmtool
+looks for file named
+.B .gdbmtoolrc
+first in the current working directory, and, if not found there, in
+the home directory of the user who started the program.  If found,
+this file is read and interpreted as a list of
+.B gdbmtool
+commands.
+.PP
+Then
+.B gdbmtool
+starts a loop, in which it reads
+commands from the standard input, executes them and prints the results on the
+standard output.  If the standard input is attached to a console,
+the program runs in interactive mode.
+.PP
+The program terminates when the
+.B quit
+command is given, or end-of-file is detected on its standard input.
+.PP
+A
+.B gdbmtool
+command consists of a command verb, optionally
+followed by one or more arguments, separated by any amount of white
+space.  A command verb can be entered either in full or in an
+abbreviated form, as long as that abbreviation does not match any other
+verb.
+.PP
+Any sequence of non-whitespace characters appearing after the command
+verb forms an argument.  If the argument contains whitespace or
+unprintable characters it must be enclosed in double quotes.  Within
+double quotes the usual escape sequences are understood, as
+shown in the table below:
+.sp
+.nf
+.ta 8n 20n
+.ul
+	Escape	Expansion
+	\\a	Audible bell character (ASCII 7)
+	\\b	Backspace character (ASCII 8)
+	\\f	Form-feed character (ASCII 12)
+	\\n	Newline character (ASCII 10)
+	\\r	Carriage return character (ASCII 13)
+	\\t	Horizontal tabulation character (ASCII 9)
+	\\v	Vertical tabulation character (ASCII 11)
+	\\\\	Single slash
+	\"	Double quote
+.fi
+.PP
+In addition, a backslash immediately followed by the end-of-line
+character effectively removes that character, allowing to split long
+arguments over several input lines.
+.SH OPTIONS
+.TP
+\fB\-b\fR, \fB\-\-block\-size\fR=\fISIZE\fR
+Set block size.
+.TP
+\fB\-c\fR, \fB\-\-cache\-size\fR=\fISIZE\fR
+Set cache size.
+.TP
+\fB\-f\fR, \fB\-\-file\fR=\fIFILE\fR
+Read commands from \fIFILE\fR, instead of from the standard input.
+.TP
+\fB\-l\fR, \fB\-\-no\-lock\fR
+Disable file locking.
+.TP
+\fB\-m\fR, \fB\-\-no\-mmap\fR
+Do not use
+.BR mmap (2).
+.TP
+\fB\-n\fR, \fB\-\-newdb\fR
+Create the database, truncating it if it already exists.
+.TP
+\fB\-q\fR, \fB\-\-quiet\fR
+Don't print initial banner.
+.TP
+\fB\-r\fR, \fB\-\-read\-only\fR
+Open database in read-only mode.
+.TP
+\fB\-s\fR, \fB\-\-synchronize\fR
+Synchronize to disk after each write.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print a short usage summary.
+.TP
+\fB\-\-usage\fR
+Print a list of available options.
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print program version
+.SH SHELL COMMANDS
+.TP
+.BR avail 
+Print the 
+.BR "avail list" .
+.TP
+\fBbucket\fR \fINUM\fR
+Print the bucket number \fINUM\fR and set is as the current one.
+.TP
+.BR cache
+Print the bucket cache.
+.TP
+.B close
+Close the currently open database.
+.TP
+.BR count
+Print the number of entries in the database.
+.TP
+.BR current
+Print the current bucket.
+.TP
+\fBdelete\fR \fIKEY\fR
+Delete record with the given \fIKEY\fR.
+.TP
+.BR dir
+Print hash directory.
+.TP
+\fBexport\fR, \fBe\fR \fIFILE\-NAME\fR [\fBtruncate\fR] [\fBbinary\fR|\fBascii\fR]
+Export the database to the flat file \fIFILE\-NAME\fR.  This is equivalent to
+.BR gdbm_dump (1).
+
+This command will not overwrite an existing file, unless the 
+.B truncate
+parameter is also given.  Another optional parameter determines the type of
+the dump (*note Flat files::).  By default, ASCII dump will be created.
+.TP
+\fBfetch\fR \fIKEY\fR
+Fetch and display the record with the given \fIKEY\fR.
+.TP
+.BR first
+Fetch and display the first record in the database.  Subsequent
+records can be fetched using the
+.B next
+command (see below).
+.TP
+\fBhash\fR \fIKEY\fR
+Compute and display the hash value for the given \fIKEY\fR.
+.TP
+.BR header
+Print file header.
+.TP
+.BR help " or " ?
+Print a concise command summary, showing each command letter and
+verb with its parameters and a short description of what it does.
+Optional arguments are enclosed in square brackets.
+.TP
+\fBimport\fR \fIFILE\-NAME\fR [\fBreplace\fR] [\fBnometa\fR]
+Import data from a flat dump file \fIFILE\-NAME\fR.
+If the
+.B replace
+argument is given, any records with the same keys as the already
+existing ones will replace them.  The
+.B nometa
+argument turns off restoring meta-information from the dump file.
+.TP
+\fBlist\fR
+List the contents of the database.
+.TP
+\fBnext\fR [\fIKEY\fR]
+Sequential access: fetch and display the next record.  If the \fIKEY\fR is
+given, the record following the one with this key will be fetched.
+.TP
+\fBopen\fR \fIFILE\fR
+Open the database file \fIFILE\fR.  If successful, any previously
+open database is closed.  Otherwise, if the operation fails, the
+currently opened database remains unchanged.
+
+This command takes additional information from the variables
+.BR open ,
+.BR lock ,
+.BR mmap ", and"
+.BR sync .
+See the section
+.BR VARIABLES ,
+for a detailed description of these.
+.TP
+.B quit
+Close the database and quit the utility.
+.TP
+.BR reorganize
+Reorganize the database.
+\fBset\fR [\fIVAR\fR=\fIVALUE\fR...]
+Without arguments, lists variables and their values.  If arguments are
+specified, sets variables.   Boolean variables can be set by specifying
+variable name, optionally prefixed with \fBno\fR, to set it to \fBfalse\fR.
+.TP
+\fBsource\fR \fIFILE\fR
+Read commands from the given \fIFILE\fR.
+.TP
+.BR status
+Print current program status.
+.TP
+\fBstore\fR \fIKEY\fR \fIDATA\fR
+Store the \fIDATA\fR with the given \fIKEY\fR in the database.  If the
+\fIKEY\fR already exists, its data will be replaced.
+.TP
+\fBunset\fR \fIVARIABLE\fR...
+Unsets listed variables.
+.TP
+.BR version
+Print the version of
+.BR gdbm .
+.SH "DATA DEFINITIONS"
+The \fBdefine\fR statement provides a mechanism for defining key or
+content structures.  It is similar to the \fBC\fR \fBstruct\fR
+declaration:
+.sp
+.nf
+.in +4
+\fBdefine\fR \fBkey\fR|\fBcontent\fR \fB{\fR \fIdefnlist\fR \fB}\fR
+.in
+.fi
+.PP
+The \fIdefnlist\fR is a comma-separated list of member declarations.
+Within \fIdefnlist\fR the newline character looses its special meaning
+as the command terminator, so each declaration can appear on a
+separate line and arbitrary number of comments can be inserted to
+document the definition.
+.PP
+Each declaration has one of the following formats
+.sp
+.nf
+.in +4
+\fItype\fR \fIname\fR
+\fItype\fR \fIname\fR \fB[\fIN\fB]\fR
+.in
+.fi
+.sp
+where \fItype\fR is a data type and \fIname\fR is the member name.
+The second format defines the member \fIname\fR as an array of \fIN\fR
+elements of \fItype\fR.
+.PP
+The supported types are:
+.sp
+.nf
+.ta 8n 20n
+.ul
+	type	meaning
+	char	single byte (signed)
+	short	signed short integer
+	ushort	unsigned short integer
+	int	signed integer
+	unsigned	unsigned integer
+	uint	ditto
+	long	signed long integer
+	ulong	unsigned long integer
+	llong	signed long long integer
+	ullong	unsigned long long integer
+	float	a floating point number
+	double	double-precision floating point number
+	string	array of characters (see the \fBNOTE\fR below)
+	stringz	null-terminated string of characters
+.fi
+.PP
+The following alignment declarations can be used within \fIdefnlist\fR:
+.TP
+\fBoffset\fR \fIN\fR
+The next member begins at offset \fIN\fR.
+.TP
+\fBpad\fR \fIN\fR
+Add \fIN\fR bytes of padding to the previous member.
+.PP
+For example:
+.sp
+.nf
+.in +4
+\fBdefine content {
+        int status,
+        pad 8,
+        char id[3],
+        stringz name
+}\fR
+.fi
+.PP
+To define data consisting of a single data member, the following
+simplified construct can be used:
+.sp
+.nf
+.in +4
+\fBdefine\fR \fBkey\fR|\fBcontent\fR \fItype\fR
+.fi        
+.PP
+where \fItype\fR is one of the types discussed above.
+.PP
+\fBNOTE\fR: The \fBstring\fR type can reasonably be used only if it is
+the last or the only member of the data structure.  That's because it
+provides no information about the number of elements in the array, so
+it is interpreted to contain all bytes up to the end of the datum.
+.SH VARIABLES
+.TP
+.BR confirm ", boolean"
+Whether to ask for confirmation before certain destructive operations,
+such as truncating the existing database.  Default is
+.BR true .
+.TP
+.BR ps1 ", string"
+Primary prompt string.  Its value can contain \fIconversion
+specifiers\fR, consisting of the \fB%\fR character followed by another
+character.  These specifiers are expanded in the resulting prompt as
+follows: 
+.sp
+.nf
+.ta 8n 20n
+.ul
+	Sequence	Expansion
+	\fB%f\fR	name of the db file
+	\fB%p\fR	program name
+	\fB%P\fR	package name (\fBgdbm\fR)
+	\fB%_\fR	horizontal space (\fBASCII\fR 32)
+	\fB%v\fR	program version
+	\fB%%\fR	\fB%\fR
+.fi
+.sp
+The default prompt is \fB%p>%_\fR.
+.TP
+.BR ps2 ", string"
+Secondary prompt.  See
+.B ps1
+for a description of its value.
+This prompt is displayed before reading the second and subsequent
+lines of a multi-line command.
+
+The default value is \fB%_>%_\fR.
+.TP
+.BR delim1 ", string"
+A string used to delimit fields of a structured datum on output
+(see the section \fBDATA DEFINITIONS\fR).
+
+Default is \fB,\fR (a comma).  This variable cannot be unset.
+.TP
+.BR delim2 ", string"
+A string used to delimit array items when printing a structured datum.
+
+Default is \fB,\fR (a comma).  This variable cannot be unset.
+.TP
+.BR pager ", string"
+The name and command line of the pager program to pipe output to.
+This program is used in interactive mode when the estimated number of
+output lines is greater then the number of lines on your screen.
+
+The default value is inherited from the environment variable
+\fBPAGER\fR.  Unsetting this variable disables paging.
+.TP
+.BR quiet ", boolean"
+Whether to display welcome banner at startup.  This variable should
+be set in a startup script file.
+.PP
+The following variables control how the database is opened:
+.TP
+.BR cachesize ", numeric"
+Sets the cache size.  By default this variable is not set.
+.TP
+.BR blocksize ", numeric"
+Sets the block size.  Unset by default.
+.TP
+.BR open ", string"
+Open mode.  The following values are allowed:
+.RS 7
+.TP
+.BR newdb
+Truncate the database if it exists or create a new one.  Open it in
+read-write mode.
+.TP
+.BR wrcreat " or " rw
+Open the database in read-write mode.  Create it if it does not
+exist.  This is the default.
+.TP
+.BR reader " or " readonly
+Open the database in read-only mode.  Signal an error if it does not
+exist.
+.RE
+.TP
+.BR lock ", boolean"
+Lock the database.  This is the default.
+.TP
+.BR mmap ", boolean"
+Use memory mapping.  This is the default.
+
+.SH "SEE ALSO"
+.BR gdbm_dump (1),
+.BR gdbm_load (1),
+.BR gdbm (3).
+.SH "REPORTING BUGS"
+Report bugs to <bug\-gdbm@gnu.org>.
+.SH COPYRIGHT
+Copyright \(co 2013 Free Software Foundation, Inc
+.br
+.na
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+.br
+.ad
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+.\" Local variables:
+.\" eval: (add-hook 'write-file-hooks 'time-stamp)
+.\" time-stamp-start: ".TH GDBM[A-Z_-]* 1 \""
+.\" time-stamp-format: "%:B %:d, %:y"
+.\" time-stamp-end: "\""
+.\" time-stamp-line-limit: 20
+.\" end:

@@ -1,0 +1,34 @@
+******************************************************************************
+				 W A R N I N G
+******************************************************************************
+
+Gdbm files have never been `portable' between different operating systems,
+system architectures, or potentially even different compilers.  Differences
+in byte order, the size of file offsets, and even structure packing make
+gdbm files non-portable.
+
+Gdbm version 1.9 includes `large file' support, enabling it on operating
+systems where it is not the default.  `Large file' support is essentially
+when a system uses 64bit file offsets.  Gdbm has, of course, supported `large
+files' on systems where it was the default for a very long time.
+
+On some systems, such as Solaris, this functionality is not enabled by
+default.  Gdbm will now enable it.  THIS MEANS THAT GDBM 1.9 MAY NOT BE
+ABLE TO ACCESS DATABASES CREATED BY PREVIOUS VERIONS ON THE SAME SYSTEM.
+
+Running the `configure' script with the `--disable-largefile' flag should
+produce a backwards-compatible build on such a system.  However, for maximum
+compatibility, and increased functionality, you may want to have your
+application produce a portable copy of your database with the 1.8.3 version
+of the library, and then load it back into version 1.9.
+
+Gdbm 1.9 contains a utility designed to help you produce such a portable
+copy: gdbmexport.  To build it, configure the package with the
+--enable-gdbm-export option.  For the information on how to use this
+utility, refer to the documentation, chapter 17 "Export a database into
+a portable format." (run `info gdbm gdbmexport' to access it, once
+gdbm 1.9 has been installed, or `info -f doc/gdbm.info gdbmexport' to
+access the shipped info file).
+
+
+

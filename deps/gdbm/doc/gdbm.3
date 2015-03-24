@@ -1,0 +1,469 @@
+.\" This file is part of GDBM.
+.\" Copyright (C) 2011, 2013 Free Software Foundation, Inc.
+.\"
+.\" GDBM is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 3, or (at your option)
+.\" any later version.
+.\"
+.\" GDBM is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with GDBM. If not, see <http://www.gnu.org/licenses/>. */
+.TH GDBM 3 "May 8, 2013" "GDBM" "GDBM User Reference"
+.SH NAME
+GDBM \- The GNU database manager.  Includes \fBdbm\fR and \fBndbm\fR
+compatibility.
+.SH SYNOPSIS
+.nf
+.B #include <gdbm.h>
+.sp
+.BI "extern gdbm_error"  " gdbm_errno";
+.br
+.BI "extern char *" gdbm_version ;
+.br
+.BI "GDBM_FILE gdbm_open (const char *" name ", int " block_size ", "
+.ti +21
+.BI     "int " flags ", int " mode ", "
+.ti +21
+.BI "void (*" fatal_func ")(const char *))";
+.br
+.BI "void gdbm_close (GDBM_FILE " dbf ");"
+.br
+.BI "int gdbm_store (GDBM_FILE " dbf ", datum " key ", datum " content ", int " flag );
+.br
+.BI "datum gdbm_fetch (GDBM_FILE " dbf ", datum " key );
+.br
+.BI "int gdbm_delete (GDBM_FILE " dbf ", datum " key );
+.br
+.BI "datum gdbm_firstkey (GDBM_FILE " dbf ");"
+.br
+.BI "datum gdbm_nextkey (GDBM_FILE " dbf ", datum " key );
+.br
+.BI "int gdbm_reorganize (GDBM_FILE " dbf ");"
+.br
+.BI "void gdbm_sync (GDBM_FILE " dbf ");"
+.br
+.BI "int gdbm_exists (GDBM_FILE " dbf ", datum " key );
+.br
+.BI "const char *gdbm_strerror (gdbm_error " errno );
+.br
+.BI "int gdbm_setopt (GDBM_FILE " dbf ", int " option ", int " value ", int " size );
+.br
+.BI "int gdbm_fdesc (GDBM_FILE " dbf );
+.br
+.PP
+.SS DBM Compatability routines:
+.PP
+.B #include <dbm.h>
+.sp
+.BI "int dbminit (const char *" name ");"
+.br
+.BI "int store (datum " key ", datum " content );
+.br
+.BI "datum fetch (datum " key );
+.br
+.BI "int delete (datum " key );
+.br
+.BI "datum firstkey (void);"
+.br
+.BI "datum nextkey (datum " key );
+.br
+.BI "int dbmclose (void);"
+.PP
+.SS NDBM Compatability routines:
+.PP
+.B #include <ndbm.h>
+.sp
+.BI "DBM *dbm_open (const char *" name ", int " flags ", int " mode );
+.br
+.BI "void dbm_close (DBM *" file );
+.BI datum dbm_fetch (DBM *" file ", datum " key );
+.br
+.BI "int dbm_store (DBM *" file ", datum " key ", datum " content ", int " flags );
+.br
+.BI "int dbm_delete (DBM *" file ", datum " key );
+.br
+.BI "datum dbm_firstkey (DBM *" file );
+.br
+.BI "datum dbm_nextkey (DBM *" file ", datum " key );
+.br
+.BI "int dbm_error (DBM *" file );
+.br
+.BI "int dbm_clearerr (DBM *" file );
+.br
+.BI "int dbm_pagfno (DBM *" file );
+.br
+.BI "int dbm_dirfno (DBM *" file );
+.br
+.BI "int dbm_rdonly (DBM *" file );
+.SH DESCRIPTION
+\fBGNU dbm\fR is a library of routines that manages data files that contain
+key/data pairs.  The access provided is that of storing, 
+retrieval, and deletion by key and a non-sorted traversal of all
+keys.  A process is allowed to use multiple data files at the
+same time.
+
+This manpage is a short description of the \fBGDBM\fR library.
+For a detailed discussion, including examples of the configuration and
+usage recommendations, refer to the \fBGDBM Manual\fR available in
+Texinfo format.  To access it, run:
+
+  \fBinfo gdbm\fR
+
+Should any discrepancies occur between this manpage and the
+\fBGDBM Manual\fR, the later shall be considered the authoritative
+source.
+
+A process that opens a gdbm file is designated as a "reader" or a
+"writer".  Only one writer may open a gdbm file and many readers may
+open the file.  Readers and writers can not open the gdbm file at the
+same time. The procedure for opening a gdbm file is:
+
+.BI "GDBM_FILE gdbm_open (const char *" name ", int " block_size ", "
+.ti +21
+.BI     "int " flags ", int " mode ", "
+.ti +21
+.BI "void (*" fatal_func ")(const char *))";
+
+\fIName\fR is the name of the file (the complete name,
+gdbm does not append any characters to this name).  \fIBlock_size\fR is
+the size of a single transfer from disk to memory. This parameter is
+ignored unless the file is a new file.  The minimum size is 512.  If
+it is less than 512, dbm will use the stat block size for the file system.
+\fIRead_write\fR can have one of the following values:
+.TP
+.B GDBM_READER
+reader
+.TP
+.B GDBM_WRITER
+writer
+.TP
+.B GDBM_WRCREAT
+writer - if database does not exist create new one
+.TP
+.B GDBM_NEWDB
+writer - create new database regardless if one exists
+.PP
+The \fBGDBM_NOMMAP\fR added to \fIread_write\fR by bitwise or instructs
+\fBgdbm_open\fR to disable the use of
+.BR mmap (2).
+.PP
+For the last three (writers of the database) the following may be added
+added to \fIread_write\fR by bitwise or:
+.TP
+.B GDBM_SYNC
+Causes all database operations to be synchronized to the disk,
+.TP
+.B GDBM_NOLOCK
+Pevents the library from performing any locking on the database file.
+.PP
+The option
+.B GDBM_FAST
+is now obsolete, since gdbm defaults to no-sync mode.
+.PP
+\fIMode\fR is the file mode (see \fBchmod(2)\fR and \fBopen(2)\fR) if the
+file is created. \fI(*Fatal_func) ()\fR is a function for dbm to call
+if it detects a fatal error. The only parameter of this function is a string.
+If the value of 0 is provided, \fBgdbm\fR will use a default function.
+
+The return value is the pointer needed by all other routines to
+access that gdbm file.  If the return is the NULL pointer, \fBgdbm_open\fR
+was not successful.  The errors can be found in \fIgdbm_errno\fR for gdbm
+errors and in \fIerrno\fR for system errors.  (For error codes, see
+gdbmerrno.h.)
+
+In all of the following calls, the parameter \fIdbf\fR refers to the pointer
+returned from \fBgdbm_open\fR.
+
+It is important that every file opened is also closed.  This is needed to
+update the reader/writer count on the file.  This is done by:
+
+.BI "void gdbm_close (GDBM_FILE " dbf ");"
+
+The database is used by 3 primary routines.  The first stores data in the
+database.
+
+.BI "int gdbm_store (GDBM_FILE " dbf ", datum " key ", datum " content ", int " flag );
+
+\fIDbf\fR is the pointer returned by \fBgdbm_open\fR.  \fIKey\fR is the
+key data.  \fIContent\fR is the data to be associated with the \fIkey\fR.
+\fIFlag\fR can have one of the following values:
+.TP
+.B GDBM_INSERT
+Insert only, generate an error if key exists;
+.TP
+.B GDBM_REPLACE
+Replace contents if key exists.
+.PP
+If a reader calls \fBgdbm_store\fR, the return value will be  \-1.
+If called with \fBGDBM_INSERT\fR and \fIkey\fR is in the database, the return
+value will be 1.  Otherwise, the return value is 0.
+
+\fINOTICE: If you store data for a key that is already in the data base,
+\fBgdbm\fI replaces the old data with the new data if called with \fBGDBM_REPLACE\fI.
+You do not get two data items for the same key and you do not get an
+error from \fBgdbm_store\fI.
+
+NOTICE: The size in \fBgdbm\fI is not restricted like in \fBdbm\fI or \fBndbm\fI.  Your data
+can be as large as you want.\fR
+
+To search for some data, use:
+
+.BI "datum gdbm_fetch (GDBM_FILE " dbf ", datum " key );
+
+\fIDbf\fR is the pointer returned by \fBgdbm_open\fR.  \fIKey\fR is
+the key data.
+
+If the \fIdptr\fR element of the return value is NULL, no data was
+found.  Otherwise the return value is a pointer to the found data.
+The storage space for the \fIdptr\fR element is allocated using
+\fBmalloc(3)\fR.  \fBGdbm\fI does not automatically free this data.
+It is the programmer's responsibility to free this storage when it is
+no longer needed.
+
+To search for some data, without retrieving it:
+
+.BI "int gdbm_exists (GDBM_FILE " dbf ", datum " key );
+
+\fIDbf\fR is the pointer returned by \fBgdbm_open\fR.  \fIKey\fR is
+the key data to search for.
+
+If the \fIkey\fR is found within the database, the return value 
+will be true.  If nothing appropiate is found, false is returned.
+This routine is useful for checking for the existence of a record,
+without performing the memory allocation done by \fBgdbm_fetch\fR.
+.PP
+To remove some data from the database:
+
+.BI "int gdbm_delete (GDBM_FILE " dbf ", datum " key );
+
+\fIDbf\fR is the pointer returned by \fBgdbm_open\fR.  \fIKey\fR is the
+key data.
+
+The return value is \-1 if the item is not present or the requester is a reader.
+The return value is 0 if there was a successful delete.
+
+The next two routines allow for accessing all items in the database.  This 
+access is not key sequential, but it is guaranteed to visit every key in
+the database once.  (The order has to do with the hash values.)
+
+.BI "datum gdbm_firstkey (GDBM_FILE " dbf ");"
+.br
+.BI "datum gdbm_nextkey (GDBM_FILE " dbf ", datum " key );
+
+\fIDbf\fR is the pointer returned by \fBgdbm_open\fR. \fIKey\fR is the
+key data.
+
+The return values are both of type \fBdatum\fR.  If the \fIdptr\fR
+element of the return value is NULL, there is no first key or next key.
+Again notice that \fIdptr\fR points to data allocated by \fBmalloc(3)\fR
+and \fBgdbm\fR will not free it for you. 
+
+These functions were intended to visit the database in read-only algorithms,
+for instance, to validate the database or similar operations.
+
+File `visiting' is based on a `hash table'.  \fIgdbm_delete\fR re-arranges the
+hash table to make sure that any collisions in the table do not leave some item
+`un-findable'.  The original key order is NOT guaranteed to remain unchanged in
+ALL instances.  It is possible that some key will not be visited if a loop like
+the following is executed:
+.sp
+.nf
+.in +5
+key = gdbm_firstkey (dbf);
+while (key.dptr)
+  {
+    nextkey = gdbm_nextkey (dbf, key);
+    if (some condition)
+      gdbm_delete ( dbf, key );
+    free (key.dptr);
+    key = nextkey;
+  }
+.in
+.fi
+.PP
+The following routine should be used very infrequently.
+  
+.BI "int gdbm_reorganize (GDBM_FILE " dbf ");"
+
+If you have had a lot of deletions and would like to shrink the space
+used by the \fBgdbm\fR file, this routine will reorganize the database.
+\fBGdbm\fR will not shorten the length of a \fBgdbm\fR file except by
+using this reorganization.  (Deleted file space will be reused.)
+
+Unless your database was opened with the \fBGDBM_SYNC\fR flag, \fBgdbm\fR does not
+wait for writes to be flushed to the disk before continuing.
+The following routine can be used to guarantee that the database is
+physically written to the disk file.
+
+.BI "void gdbm_sync (GDBM_FILE " dbf ");"
+
+It will not return until the disk file state is syncronized with the
+in-memory state of the database.
+
+To convert a \fBgdbm\fR error code into English text, use this routine:
+
+.BI "const char *gdbm_strerror (gdbm_error " errno );
+
+\fBGdbm\fR now supports the ability to set certain options on an
+already open database.
+
+.BI "int gdbm_setopt (GDBM_FILE " dbf ", int " option ", int " value ", int " size );
+
+Where \fIdbf\fR is the return value from a previous call to \fBgdbm_open\fR,
+and \fIoption\fR specifies which option to set.  The valid options are
+currently:
+.TP
+.B GDBM_CACHESIZE
+Set the size of the internal bucket cache. This option may only be set once
+on each \fIGDBM_FILE\fR descriptor, and is set automatically to 100 upon the
+first access to the database.
+.TP
+.B GDBM_FASTMODE
+ Set \fBfast mode\fR to either on or off.  This allows \fBfast mode\fR to
+be toggled on an already open and active database. \fIvalue\fR (see below)
+should be set to either TRUE or FALSE.  \fIThis option is now obsolete.\fR
+.TP
+.B GDBM_SYNCMODE
+Turn on or off file system synchronization operations.  This setting defaults
+to off; \fIvalue\fR (see below) should be set to either TRUE or FALSE.
+.TP
+.B GDBM_CENTFREE
+Set \fBcentral free block pool\fR to either on or off.
+The default is off, which is how previous versions of \fBGdbm\fR
+handled free blocks. If set, this option causes all subsequent free
+blocks to be placed in the \fBglobal\fR pool, allowing (in thoery)
+more file space to be reused more quickly. \fIvalue\fR (see below) should
+be set to either TRUE or FALSE.
+\fINOTICE: This feature is still under study.\fR
+.TP
+.B GDBM_COALESCEBLKS
+Set \fBfree block merging\fR to either on or off.
+The default is off, which is how previous versions of \fBGdbm\fR
+handled free blocks. If set, this option causes adjacent free blocks
+to be merged.  This can become a CPU expensive process with time, though,
+especially if used in conjunction with \fBGDBM_CENTFREE\fR. \fIvalue\fR
+(see below) should be set to either TRUE or FALSE.
+\fINOTICE: This feature is still under study.\fR
+.PP
+\fIvalue\fR is the value to set \fIoption\fR to, specified as an integer
+pointer.  \fIsize\fR is the size of the data pointed to by \fIvalue\fR.
+The return value will be \-1 upon failure, or 0 upon success.  The global
+variable \fIgdbm_errno\fR will be set upon failure.
+
+For instance, to set a database to use a cache of 10, after opening it
+with \fBgdbm_open\fR, but prior to accessing it in any way, the following
+code could be used:
+.sp
+.nf
+.in +5
+int value = 10;
+  
+ret = gdbm_setopt( dbf, GDBM_CACHESIZE, &value, sizeof(int));
+.in
+.fi
+.PP
+If the database was opened with the \fBGDBM_NOLOCK\fR flag, the user may
+wish to perform their own file locking on the database file in order to
+prevent multiple writers operating on the same file simultaneously.
+
+In order to support this, the \fIgdbm_fdesc\fR routine is provided.
+
+.BI "int gdbm_fdesc (GDBM_FILE " dbf );
+
+Where \fIdbf\fR is the return value from a previous call to \fBgdbm_open\fR.
+The return value will be the file descriptor of the database.
+
+The following two external variables may be useful:
+
+\fIgdbm_errno\fR is the variable that contains more information about
+gdbm errors.  (gdbm.h has the definitions of the error values and
+defines gdbm_errno as an external variable.)
+
+\fIgdbm_version\fR is the string containing the version information.
+
+There are a few more things of interest.  First, \fBgdbm\fR files are
+not "sparse".  You can copy them with the UNIX \fBcp(1)\fR command and
+they will not expand in the copying process.  Also, there is a
+compatibility mode for use with programs that already use UNIX
+\fBdbm\fR.  In this compatibility mode, no \fRgdbm\fR file pointer is
+required by the programmer, and only one file may be opened at a time.
+All users in compatibility mode are assumed to be writers.  If the
+\fBgdbm\fR file is a read only, it will fail as a writer, but will
+also try to open it as a reader.  All returned pointers in datum
+structures point to data that \fBgdbm\fR WILL free.  They should be
+treated as static pointers (as standard UNIX \fBdbm\fR does).
+.SH LINKING
+This library is accessed by specifying \fI\-lgdbm\fR as the last
+parameter to the compile line, e.g.:
+.sp
+.nf
+.in +5
+gcc \-o prog prog.c \-lgdbm
+.in
+.fi
+.PP
+If you wish to use the \fBdbm\fR or \fBndbm\fR compatibility routines,
+you must link in the \fIgdbm_compat\fR library as well.  For example:
+.sp
+.nf
+.in +5
+gcc \-o prog proc.c \-lgdbm \-lgdbm_compat
+.in
+.fi
+.\" .SH BUGS
+
+.SH "BUG REPORTS"
+Send bug reports to <bug\-gdbm@gnu.org>.
+.SH "SEE ALSO"
+.BR gdbm_dump (1),
+.BR gdbm_load (1),
+.BR gdbmtool (1).
+.SH AUTHORS
+by Philip A. Nelson, Jason Downs and Sergey Poznyakoff.
+.SH COPYRIGHT
+Copyright \(co 1990 - 2011 Free Software Foundation, Inc.
+
+GDBM is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 1, or (at your option)
+any later version.
+
+GDBM is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with GDBM.  If not, see <http://gnu.org/licenses/gpl.html>
+.SH CONTACTS
+You may contact the original author by:
+.br
+   e-mail:  phil@cs.wwu.edu
+.br
+  us-mail:  Philip A. Nelson
+.br
+Computer Science Department
+.br
+Western Washington University
+.br
+Bellingham, WA 98226
+
+You may contact the current maintainers by:
+.br
+   e-mail:  downsj@downsj.com
+.br
+and
+   e-mail:  gray@gnu.org
+
+.\" Local variables:
+.\" eval: (add-hook 'write-file-hooks 'time-stamp)
+.\" time-stamp-start: ".TH GDBM 3 \""
+.\" time-stamp-format: "%:B %:d, %:y"
+.\" time-stamp-end: "\""
+.\" time-stamp-line-limit: 20
+.\" end:

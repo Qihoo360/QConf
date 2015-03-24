@@ -1,0 +1,108 @@
+.\" This file is part of GDBM.            -*- nroff -*-
+.\" Copyright (C) 2011, 2013 Free Software Foundation, Inc.
+.\"
+.\" GDBM is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 3, or (at your option)
+.\" any later version.
+.\"
+.\" GDBM is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with GDBM. If not, see <http://www.gnu.org/licenses/>. */
+.TH GDBM_LOAD 1 "December 25, 2013" "GDBM" "GDBM User Reference"
+.SH NAME
+gdbm_load \- re-create a GDBM database from a dump file.
+.SH SYNOPSIS
+\fBgdbm_load\fR [\fB\-Mnr\fR] [\fB\-b\fR \fINUM\fR] [\fB\-c\fR \fINUM]\
+ [\fB\-m\fR \fIMODE\fR]\
+ [\fB\-u\fR \fINAME\fR|\fIUID\fR[:\fINAME\fR|\fIGID\fR]]
+          [\fB\-\-block\-size\fR=\fINUM\fR] [\fB\-\-cache\-size\fR=\fINUM\fR]\
+ [\fB\-\-mmap\fR=\fINUM\fR]
+          [\fB\-\-mode\fR=\fIMODE\fR]\
+ [\fB\-\-no\-meta\fR] [\fB\-\-replace\fR]
+          [\fB\-\-user\fR=\fINAME\fR|\fIUID\fR[:\fINAME\fR|\fIGID\fR]]\
+ \fIFILE\fR [\fIDB_FILE\fR]
+			    
+.sp
+\fBgdbm_load\fR [\fB\-Vh\fR] [\fB\-\-help\fR] [\fB\-\-usage\fR] [\fB\-\-version\fR]
+.SH DESCRIPTION
+Create a
+.B gdbm
+database file
+.I DB_FILE
+from the dump file
+.IR FILE .
+If the
+.I FILE
+argument is not supplied, output the created database to the standard error.
+.PP
+If the input file is in ASCII dump format, the mode and ownership of
+the created database are restored from the information in the dump.
+This can be overridden using the command line options (see below).
+.SH OPTIONS
+.TP
+\fB\-b\fR, \fB\-\-block\-size\fR=\fINUM\fR
+Sets block size.
+.TP
+\fB\-c\fR, \fB\-\-cache\-size\fR=\fINUM\fR
+Sets cache size.
+.TP
+\fB\-M\fR, \fB\-\-mmap\fR
+Use memory mapping.
+.TP
+\fB\-m\fR, \fB\-\-mode\fR=\fIMODE\fR
+Set database file mode (octal number).
+.TP
+\fB\-n\fR, \fB\-\-no\-meta\fR
+Do not attempt to restore database meta-data (mode and ownership).
+.TP
+\fB\-r\fR, \fB\-\-replace\fR
+If the database exists, replace records in it.
+.TP
+\fB\-u\fR, \fB\-\-user\fR=\fINAME\fR|\fIUID\fR[:\fINAME\fR|\fIGID\fR]
+Set file ownership.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print a short usage summary.
+.TP
+\fB\-\-usage\fR
+Print a list of available options.
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print program version
+.SH "SEE ALSO"
+.BR gdbm_dump (1),
+.BR gdbmtool (1),
+.BR gdbm (3).
+.PP
+For a detailed description of
+.B gdbm_load
+and other
+.B gdbm
+utilities, refer to the \fBGDBM Manual\fR available in
+Texinfo format.  To access it, run:
+
+  \fBinfo gdbm\fR
+
+.SH "REPORTING BUGS"
+Report bugs to <bug\-gdbm@gnu.org>.
+.SH COPYRIGHT
+Copyright \(co 2013 Free Software Foundation, Inc
+.br
+.na
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+.br
+.ad
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+.\" Local variables:
+.\" eval: (add-hook 'write-file-hooks 'time-stamp)
+.\" time-stamp-start: ".TH GDBM[A-Z_-]* 1 \""
+.\" time-stamp-format: "%:B %:d, %:y"
+.\" time-stamp-end: "\""
+.\" time-stamp-line-limit: 20
+.\" end:

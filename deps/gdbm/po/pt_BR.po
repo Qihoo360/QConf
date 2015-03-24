@@ -1,0 +1,947 @@
+# Brazilian Portuguese translation for gdbm.
+# Copyright (C) 2013 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gdbm package.
+# Rafael Ferreira <rafael.f.f1@gmail.com>, 2013.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gdbm 1.10.90\n"
+"Report-Msgid-Bugs-To: bug-gdbm@gnu.org\n"
+"POT-Creation-Date: 2013-12-25 16:41+0200\n"
+"PO-Revision-Date: 2013-10-01 17:53-0300\n"
+"Last-Translator: Rafael Ferreira <rafael.f.f1@gmail.com>\n"
+"Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
+"net>\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.7\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: src/bucket.c:67 src/bucket.c:186
+msgid "couldn't init cache"
+msgstr "não foi possível inicializar o cache"
+
+#: src/bucket.c:97 src/bucket.c:346 src/falloc.c:185 src/falloc.c:282
+#: src/findkey.c:64 src/gdbmstore.c:139 src/update.c:36 src/update.c:82
+msgid "lseek error"
+msgstr "erro no lseek"
+
+#: src/bucket.c:224 src/falloc.c:259 src/findkey.c:57 src/gdbmfetch.c:56
+#: src/gdbmseq.c:73
+msgid "malloc error"
+msgstr "erro no malloc"
+
+#: src/falloc.c:181
+msgid "malloc failed"
+msgstr "falha no malloc"
+
+#: src/gdbm_dump.c:25
+msgid "select dump format"
+msgstr "seleciona o formato de despejo"
+
+#: src/gdbm_dump.c:67
+msgid "unknown dump format"
+msgstr "formato de despejo desconhecido"
+
+#: src/gdbm_dump.c:74 src/gdbm_load.c:215
+msgid "unknown option"
+msgstr "opção desconhecida"
+
+#: src/gdbm_dump.c:90 src/gdbm_load.c:231
+#, c-format
+msgid "too many arguments; try `%s -h' for more info"
+msgstr "número excessivo de argumentos; tente \"%s -h\" para mais informações"
+
+#: src/gdbm_dump.c:110 src/gdbm_load.c:251
+#, c-format
+msgid "cannot open %s"
+msgstr "não foi possível abrir %s"
+
+#: src/gdbm_dump.c:118 src/gdbm_load.c:261
+msgid "gdbm_open failed"
+msgstr "falha no gdbm_open"
+
+#: src/gdbm_dump.c:125
+msgid "dump error"
+msgstr "erro no despejo"
+
+#: src/gdbm_load.c:35
+msgid "replace records in the existing database"
+msgstr "substitui os registros no banco de dados existente"
+
+#: src/gdbm_load.c:36
+msgid "MODE"
+msgstr "MODO"
+
+#: src/gdbm_load.c:36
+msgid "set file mode"
+msgstr "define o modo do arquivo"
+
+#: src/gdbm_load.c:37
+msgid "NAME|UID[:NAME|GID]"
+msgstr "NOME|UID[:NOME|GID]"
+
+#: src/gdbm_load.c:37
+msgid "set file owner"
+msgstr "define o dono do arquivo"
+
+#: src/gdbm_load.c:38
+msgid "do not attempt to set file meta-data"
+msgstr "não tenta definir os metadados do arquivo"
+
+#: src/gdbm_load.c:39
+msgid "use memory mapping"
+msgstr ""
+
+#: src/gdbm_load.c:40 src/gdbm_load.c:41
+#, fuzzy
+msgid "NUM"
+msgstr "NÚMERO"
+
+#: src/gdbm_load.c:40
+#, fuzzy
+msgid "set the cache size"
+msgstr "define o tamanho do cache"
+
+#: src/gdbm_load.c:41
+#, fuzzy
+msgid "set the block size"
+msgstr "define o tamanho de bloco"
+
+#: src/gdbm_load.c:79
+#, fuzzy, c-format
+msgid "invalid number: %s"
+msgstr "nome de usuário inválido: %s"
+
+#: src/gdbm_load.c:84
+#, fuzzy, c-format
+msgid "invalid number: %s: %s"
+msgstr "nome de usuário inválido: %s"
+
+#: src/gdbm_load.c:136
+#, c-format
+msgid "invalid octal number"
+msgstr "número octal inválido"
+
+#: src/gdbm_load.c:161
+#, c-format
+msgid "invalid user name: %s"
+msgstr "nome de usuário inválido: %s"
+
+#: src/gdbm_load.c:180
+#, c-format
+msgid "invalid group name: %s"
+msgstr "nome de grupo inválido: %s"
+
+#: src/gdbm_load.c:192
+#, c-format
+msgid "no such UID: %lu"
+msgstr "UID inexistente: %lu"
+
+#: src/gdbm_load.c:267 src/gdbmtool.c:103 src/gdbmtool.c:849
+#, c-format
+msgid "gdbm_setopt failed: %s"
+msgstr "gdbm_setopt falhou: %s"
+
+#: src/gdbm_load.c:281 src/gdbm_load.c:299 src/gdbmtool.c:832
+#, c-format
+msgid "error restoring metadata: %s (%s)"
+msgstr "erro ao restaurar metadados: %s (%s)"
+
+#: src/gdbm_load.c:290
+#, c-format
+msgid "cannot load from %s"
+msgstr "não foi possível carregar de %s"
+
+#: src/gdbm_load.c:307
+msgid "gdbm_setopt failed"
+msgstr "gdbm_setopt falhou"
+
+#: src/gdbmerrno.c:31
+msgid "No error"
+msgstr "Nenhum erro"
+
+#: src/gdbmerrno.c:32
+msgid "Malloc error"
+msgstr "Erro no malloc"
+
+#: src/gdbmerrno.c:33
+msgid "Block size error"
+msgstr "Erro no tamanho do bloco"
+
+#: src/gdbmerrno.c:34
+msgid "File open error"
+msgstr "Erro ao abrir arquivo"
+
+#: src/gdbmerrno.c:35
+msgid "File write error"
+msgstr "Erro ao gravar arquivo"
+
+#: src/gdbmerrno.c:36
+msgid "File seek error"
+msgstr "Erro ao buscar arquivo"
+
+#: src/gdbmerrno.c:37
+msgid "File read error"
+msgstr "Erro ao ler arquivo"
+
+#: src/gdbmerrno.c:38
+msgid "Bad magic number"
+msgstr "Número mágico inválido"
+
+#: src/gdbmerrno.c:39
+msgid "Empty database"
+msgstr "Banco de dados vazio"
+
+#: src/gdbmerrno.c:40
+msgid "Can't be reader"
+msgstr "Não foi possível ser leitor"
+
+#: src/gdbmerrno.c:41
+msgid "Can't be writer"
+msgstr "Não foi possível ser gravador"
+
+#: src/gdbmerrno.c:42
+msgid "Reader can't delete"
+msgstr "Leitor não pode excluir"
+
+#: src/gdbmerrno.c:43
+msgid "Reader can't store"
+msgstr "Leitor não pode armazenar"
+
+#: src/gdbmerrno.c:44
+msgid "Reader can't reorganize"
+msgstr "Leitor não pode reorganizar"
+
+#: src/gdbmerrno.c:45
+msgid "Unknown update"
+msgstr "Atualização desconhecido"
+
+#: src/gdbmerrno.c:46 src/gdbmtool.c:416
+msgid "Item not found"
+msgstr "Item não localizado"
+
+#: src/gdbmerrno.c:47
+msgid "Reorganize failed"
+msgstr "Reorganização falhou"
+
+#: src/gdbmerrno.c:48
+msgid "Cannot replace"
+msgstr "Não foi possível substituir"
+
+#: src/gdbmerrno.c:49
+msgid "Illegal data"
+msgstr "Dados ilegais"
+
+#: src/gdbmerrno.c:50
+msgid "Option already set"
+msgstr "Opção já definida"
+
+#: src/gdbmerrno.c:51
+msgid "Illegal option"
+msgstr "Opção ilegal"
+
+#: src/gdbmerrno.c:52
+msgid "Byte-swapped file"
+msgstr "Arquivo com bytes trocados"
+
+#: src/gdbmerrno.c:53
+msgid "Wrong file offset"
+msgstr "Posição de arquivo incorreta"
+
+#: src/gdbmerrno.c:54
+msgid "Bad file flags"
+msgstr "Opções de arquivo incorretas"
+
+#: src/gdbmerrno.c:55
+msgid "Cannot stat file"
+msgstr "Não foi possível obter estado do arquivo"
+
+#: src/gdbmerrno.c:56
+msgid "Unexpected end of file"
+msgstr "Fim de arquivo inesperado"
+
+#: src/gdbmerrno.c:57
+msgid "Database name not given"
+msgstr "Nome do banco de dados não fornecido"
+
+#: src/gdbmerrno.c:58
+msgid "Failed to restore file owner"
+msgstr "Falha ao restaurar o dono do arquivo"
+
+#: src/gdbmerrno.c:59
+msgid "Failed to restore file mode"
+msgstr "Falha ao restaurar o modo do arquivo"
+
+#: src/gdbmerrno.c:67
+msgid "Unknown error"
+msgstr "Erro desconhecido"
+
+#: src/parseopt.c:49
+msgid "give this help list"
+msgstr "mostra esta lista de ajuda"
+
+#: src/parseopt.c:50
+msgid "print program version"
+msgstr "mostra a versão do programa"
+
+#: src/parseopt.c:51
+msgid "give a short usage message"
+msgstr "mostra uma curta mensagem sobre o uso"
+
+#: src/parseopt.c:347 src/parseopt.c:431
+msgid "Usage:"
+msgstr "Uso:"
+
+#: src/parseopt.c:349
+msgid "OPTION"
+msgstr "OPÇÃO"
+
+#: src/parseopt.c:364
+msgid ""
+"Mandatory or optional arguments to long options are also mandatory or "
+"optional for any corresponding short options."
+msgstr ""
+"Argumentos obrigatórios e opcionais para opções longas também são "
+"obrigatórios ou opcionais para qualquer opções curtas correspondentes."
+
+#. TRANSLATORS: The placeholder indicates the bug-reporting address
+#. for this package.  Please add _another line_ saying
+#. "Report translation bugs to <...>\n" with the address for translation
+#. bugs (typically your translation team's web or email address).
+#: src/parseopt.c:375
+#, c-format
+msgid "Report bugs to %s.\n"
+msgstr "Relate erros para %s.\n"
+
+#: src/parseopt.c:378
+#, c-format
+msgid "%s home page: <%s>\n"
+msgstr "Site do %s: <%s>\n"
+
+#. TRANSLATORS: Translate "(C)" to the copyright symbol
+#. (C-in-a-circle), if this symbol is available in the user's
+#. locale.  Otherwise, do not translate "(C)"; leave it as-is.
+#: src/parseopt.c:541
+msgid "(C)"
+msgstr "(C)"
+
+#: src/gdbmtool.c:84
+#, c-format
+msgid "database %s already exists; overwrite"
+msgstr "o banco de dados %s já existe; sobrescrever"
+
+#: src/gdbmtool.c:96
+#, c-format
+msgid "cannot open database %s: %s"
+msgstr "não foi possível abrir o banco de dados %s: %s"
+
+#: src/gdbmtool.c:120
+#, c-format
+msgid "warning: using default database file %s"
+msgstr "aviso: usando arquivo de banco de dados padrão %s"
+
+# resultado do comando: bucket
+#: src/gdbmtool.c:141
+#, c-format
+msgid ""
+"******* %s **********\n"
+"\n"
+"bits = %d\n"
+"count= %d\n"
+"Hash Table:\n"
+msgstr ""
+"******* %s **********\n"
+"\n"
+"bits = %d\n"
+"qtde = %d\n"
+"Tabela de hash:\n"
+
+# resultado do comando: bucket
+#: src/gdbmtool.c:144
+#, c-format
+msgid "     #    hash value     key size    data size     data adr  home\n"
+msgstr "     #    valor hash   tam. chave   tam. dados  endr. dados  home\n"
+
+# resultado do comando: bucket
+#: src/gdbmtool.c:154
+#, c-format
+msgid ""
+"\n"
+"Avail count = %1d\n"
+msgstr ""
+"\n"
+"Quantidade disponível = %1d\n"
+
+#: src/gdbmtool.c:155
+#, c-format
+msgid "Avail  adr     size\n"
+msgstr "endereços  tamanho  disponíveis\n"
+
+# resultado do comando: avail
+#: src/gdbmtool.c:218
+#, c-format
+msgid ""
+"\n"
+"header block\n"
+"size  = %d\n"
+"count = %d\n"
+msgstr ""
+"\n"
+"bloco de cabeçalho\n"
+"tam.  = %d\n"
+"qtde  = %d\n"
+
+#: src/gdbmtool.c:252
+#, c-format
+msgid ""
+"\n"
+"block = %d\n"
+"size  = %d\n"
+"count = %d\n"
+msgstr ""
+"\n"
+"bloco = %d\n"
+"tam.  = %d\n"
+"qtde  = %d\n"
+
+# resultado do comando: cache
+#: src/gdbmtool.c:273
+#, c-format
+msgid ""
+"Bucket Cache (size %d):\n"
+"  Index:  Address  Changed  Data_Hash \n"
+msgstr ""
+"Cache do bucket (tamanho %d):\n"
+" Índice: Endereço Alterado Hash_dados \n"
+
+# resultado do comando: cache
+#: src/gdbmtool.c:281
+msgid "True"
+msgstr "Verdadeiro"
+
+# resultado do comando: cache
+#: src/gdbmtool.c:281
+msgid "False"
+msgstr "Falso"
+
+# resultado do comando: cache
+#: src/gdbmtool.c:286
+#, c-format
+msgid "Bucket cache has not been initialized.\n"
+msgstr "Cache de bucket não foi inicializado.\n"
+
+#: src/gdbmtool.c:357
+msgid "nothing to close"
+msgstr "nada para fechar"
+
+#: src/gdbmtool.c:399
+msgid "count buffer overflow"
+msgstr ""
+
+#: src/gdbmtool.c:402
+#, fuzzy, c-format
+msgid "There is %s item in the database.\n"
+msgid_plural "There are %s items in the database.\n"
+msgstr[0] "Há %d item no banco de dados.\n"
+msgstr[1] "Há %d itens no banco de dados.\n"
+
+#: src/gdbmtool.c:418
+#, c-format
+msgid "Can't delete: %s"
+msgstr "Não foi possível excluir: %s"
+
+#: src/gdbmtool.c:434 src/gdbmtool.c:467 src/gdbmtool.c:497
+#, c-format
+msgid "No such item found.\n"
+msgstr "Item não encontrado.\n"
+
+#: src/gdbmtool.c:444
+#, c-format
+msgid "Item not inserted.\n"
+msgstr "Item não inserido.\n"
+
+#: src/gdbmtool.c:508
+#, c-format
+msgid "Reorganization failed.\n"
+msgstr "Reorganização falhou.\n"
+
+#: src/gdbmtool.c:510
+#, c-format
+msgid "Reorganization succeeded.\n"
+msgstr "Reorganização obteve sucesso.\n"
+
+#: src/gdbmtool.c:546
+msgid "Current bucket"
+msgstr "Bucket atual"
+
+# resultado do comando: bucket
+#: src/gdbmtool.c:547
+#, c-format
+msgid ""
+"\n"
+" current directory entry = %d.\n"
+msgstr ""
+"\n"
+" registro do diretório atual = %d.\n"
+
+# resultado do comando: bucket
+#: src/gdbmtool.c:549
+#, c-format
+msgid " current bucket address  = %lu.\n"
+msgstr " endereço do bucket atual  = %lu.\n"
+
+#: src/gdbmtool.c:560 src/gdbmtool.c:569
+#, c-format
+msgid "not a number (stopped near %s)\n"
+msgstr "não é um número (parou próximo a %s)\n"
+
+#: src/gdbmtool.c:591
+#, c-format
+msgid "Not a bucket.\n"
+msgstr "Não é um bucket.\n"
+
+#: src/gdbmtool.c:617
+#, c-format
+msgid "Hash table directory.\n"
+msgstr "Diretório de tabela de hash.\n"
+
+#: src/gdbmtool.c:618
+#, c-format
+msgid ""
+"  Size =  %d.  Bits = %d. \n"
+"\n"
+msgstr ""
+"  Tamanho = %d. Bits = %d. \n"
+"\n"
+
+#: src/gdbmtool.c:642
+#, c-format
+msgid ""
+"\n"
+"File Header: \n"
+"\n"
+msgstr ""
+"\n"
+"Cabeçalho de arquivo: \n"
+"\n"
+
+#: src/gdbmtool.c:643
+#, c-format
+msgid "  table        = %lu\n"
+msgstr "  tabela       = %lu\n"
+
+#: src/gdbmtool.c:645
+#, c-format
+msgid "  table size   = %d\n"
+msgstr "  tam. tabela  = %d\n"
+
+#: src/gdbmtool.c:646
+#, c-format
+msgid "  table bits   = %d\n"
+msgstr "  bits tabela  = %d\n"
+
+#: src/gdbmtool.c:647
+#, c-format
+msgid "  block size   = %d\n"
+msgstr "  tam. bloco   = %d\n"
+
+#: src/gdbmtool.c:648
+#, c-format
+msgid "  bucket elems = %d\n"
+msgstr "  elems bucket = %d\n"
+
+#: src/gdbmtool.c:649
+#, c-format
+msgid "  bucket size  = %d\n"
+msgstr "  tam. bucket  = %d\n"
+
+#: src/gdbmtool.c:650
+#, c-format
+msgid "  header magic = %x\n"
+msgstr "  mágica cabeç = %x\n"
+
+#: src/gdbmtool.c:651
+#, c-format
+msgid "  next block   = %lu\n"
+msgstr "  bloco segui. = %lu\n"
+
+#: src/gdbmtool.c:653
+#, c-format
+msgid "  avail size   = %d\n"
+msgstr "  tam. dispo.  = %d\n"
+
+#: src/gdbmtool.c:654
+#, c-format
+msgid "  avail count  = %d\n"
+msgstr "  quant. dispo = %d\n"
+
+#: src/gdbmtool.c:655
+#, c-format
+msgid "  avail nx blk = %lu\n"
+msgstr "  bloco nx disp= %lu\n"
+
+#: src/gdbmtool.c:663
+#, c-format
+msgid "hash value = %x. \n"
+msgstr "valor hash = %x. \n"
+
+#: src/gdbmtool.c:726
+msgid "cannot fetch data; the key was:"
+msgstr "não foi possível obter dados; a chave era:"
+
+#: src/gdbmtool.c:771 src/gdbmtool.c:804
+#, c-format
+msgid "unrecognized argument: %s"
+msgstr "argumento desconhecido: %s"
+
+#: src/gdbmtool.c:781
+#, c-format
+msgid "error dumping database: %s"
+msgstr "erro ao despejar o banco de dados: %s"
+
+#: src/gdbmtool.c:841
+#, c-format
+msgid "cannot load from %s: %s"
+msgstr "não foi possível carregar de %s: %s"
+
+#: src/gdbmtool.c:857
+#, c-format
+msgid "Database file: %s\n"
+msgstr "Arquivo de banco de dados: %s\n"
+
+#: src/gdbmtool.c:859
+msgid "No database name"
+msgstr "Nenhum nome de banco de dados"
+
+#: src/gdbmtool.c:861
+msgid "Database is open"
+msgstr "Banco de dados está aberto"
+
+#: src/gdbmtool.c:863
+msgid "Database is not open"
+msgstr "Banco de dados não está aberto"
+
+#: src/gdbmtool.c:905
+msgid "count (number of entries)"
+msgstr "quantidade (número de entradas)"
+
+#: src/gdbmtool.c:908 src/gdbmtool.c:918 src/gdbmtool.c:936 src/gdbmtool.c:965
+msgid "KEY"
+msgstr "CHAVE"
+
+#: src/gdbmtool.c:908
+msgid "delete a record"
+msgstr "exclui um registro"
+
+#: src/gdbmtool.c:911 src/gdbmtool.c:921 src/gdbmtool.c:1116
+msgid "FILE"
+msgstr "ARQUIVO"
+
+#: src/gdbmtool.c:915
+msgid "export"
+msgstr "exporta"
+
+#: src/gdbmtool.c:918
+msgid "fetch record"
+msgstr "obtém registro"
+
+#: src/gdbmtool.c:925
+msgid "import"
+msgstr "importa"
+
+#: src/gdbmtool.c:928
+msgid "list"
+msgstr "lista"
+
+#: src/gdbmtool.c:931
+msgid "[KEY]"
+msgstr "[CHAVE]"
+
+#: src/gdbmtool.c:933
+msgid "nextkey"
+msgstr "próxima-chave"
+
+#: src/gdbmtool.c:937
+msgid "DATA"
+msgstr "DADOS"
+
+#: src/gdbmtool.c:939
+msgid "store"
+msgstr "armazena"
+
+#: src/gdbmtool.c:942
+msgid "firstkey"
+msgstr "primeira-chave"
+
+#: src/gdbmtool.c:945
+msgid "reorganize"
+msgstr "reorganiza"
+
+#: src/gdbmtool.c:948
+msgid "print avail list"
+msgstr "mostra lista disponível"
+
+#: src/gdbmtool.c:951
+msgid "NUMBER"
+msgstr "NÚMERO"
+
+#: src/gdbmtool.c:952
+msgid "print a bucket"
+msgstr " mostra um bucket"
+
+#: src/gdbmtool.c:956
+msgid "print current bucket"
+msgstr "mostra bucket atual"
+
+#: src/gdbmtool.c:959
+msgid "print hash directory"
+msgstr "mostra diretório hash"
+
+#: src/gdbmtool.c:962
+msgid "print database file header"
+msgstr "mostra cabeçalho de arquivo de banco de dados"
+
+#: src/gdbmtool.c:966
+msgid "hash value of key"
+msgstr "valor de hash da chave"
+
+#: src/gdbmtool.c:969
+msgid "print the bucket cache"
+msgstr "mostra o cache de bucket"
+
+#: src/gdbmtool.c:972
+msgid "print current program status"
+msgstr "mostra o estado atual do programa"
+
+#: src/gdbmtool.c:975
+msgid "print version of gdbm"
+msgstr "mostra a versão do gdbm"
+
+#: src/gdbmtool.c:978
+msgid "print this help list"
+msgstr "mostra esta lista de ajuda"
+
+#: src/gdbmtool.c:981
+msgid "quit the program"
+msgstr "sai do programa"
+
+#: src/gdbmtool.c:984
+msgid "set or list variables"
+msgstr "define ou lista variáveis"
+
+#: src/gdbmtool.c:987
+msgid "unset variables"
+msgstr "retira definição de variáveis"
+
+#: src/gdbmtool.c:992
+msgid "define datum structure"
+msgstr "define a estrutura em detalhes"
+
+#: src/gdbmtool.c:996
+msgid "source command script"
+msgstr "script fonte de programa"
+
+#: src/gdbmtool.c:999
+msgid "close the database"
+msgstr "fecha o banco de dados"
+
+#: src/gdbmtool.c:1003
+msgid "open new database"
+msgstr "abre um novo banco de dados"
+
+#: src/gdbmtool.c:1101
+msgid "Invalid command. Try ? for help."
+msgstr "Comando inválido; Tente ? para ajuda."
+
+#: src/gdbmtool.c:1102
+msgid "Unknown command"
+msgstr "Comando desconhecido"
+
+#: src/gdbmtool.c:1110
+msgid "examine and/or modify a GDBM database"
+msgstr "examina a/ou modifica um banco de dados GDBM"
+
+#: src/gdbmtool.c:1111
+msgid "DBFILE"
+msgstr "ARQUIVO-BD"
+
+#: src/gdbmtool.c:1114 src/gdbmtool.c:1115
+msgid "SIZE"
+msgstr "TAMANHO"
+
+#: src/gdbmtool.c:1114
+msgid "set block size"
+msgstr "define o tamanho de bloco"
+
+#: src/gdbmtool.c:1115
+msgid "set cache size"
+msgstr "define o tamanho do cache"
+
+#: src/gdbmtool.c:1116
+msgid "read commands from FILE"
+msgstr "lê comandos de ARQUIVO"
+
+#: src/gdbmtool.c:1118
+msgid "disable file locking"
+msgstr "desabilita trava do arquivo"
+
+#: src/gdbmtool.c:1119
+msgid "do not use mmap"
+msgstr "não usa mmap"
+
+#: src/gdbmtool.c:1120
+msgid "create database"
+msgstr "cria um banco de dados"
+
+#: src/gdbmtool.c:1121
+msgid "do not read .gdbmtoolrc file"
+msgstr "não lê do arquivo .gdbmtoolrc"
+
+#: src/gdbmtool.c:1122
+msgid "open database in read-only mode"
+msgstr "abre o banco de dados no modo somente leitura"
+
+#: src/gdbmtool.c:1123
+msgid "synchronize to disk after each write"
+msgstr "sincroniza o disco após cada gravação"
+
+#: src/gdbmtool.c:1124
+msgid "don't print initial banner"
+msgstr "não mostra o banner inicial"
+
+#: src/gdbmtool.c:1364
+#, c-format
+msgid "cannot coerce %s to %s"
+msgstr "não foi possível coagir %s para %s"
+
+#: src/gdbmtool.c:1411
+#, c-format
+msgid "%s: not enough arguments"
+msgstr "%s: número insuficiente de argumentos."
+
+#: src/gdbmtool.c:1418
+msgid "unexpected eof"
+msgstr "fim de arquivo inesperado"
+
+#: src/gdbmtool.c:1441
+#, c-format
+msgid "%s: too many arguments"
+msgstr "%s: número excessivo de argumentos"
+
+#: src/gdbmtool.c:1468
+#, c-format
+msgid "cannot run pager `%s': %s"
+msgstr "não foi possível executar o paginador \"%s\": %s"
+
+#: src/gdbmtool.c:1509
+msgid "cannot find home directory"
+msgstr "não foi possível localizar a pasta pessoal"
+
+#: src/gdbmtool.c:1606
+#, c-format
+msgid "unknown option; try `%s -h' for more info"
+msgstr "opção desconhecida; tente \"%s h\" para mais informações"
+
+#: src/gdbmtool.c:1616
+msgid "too many arguments"
+msgstr "número excessivo de argumentos"
+
+#: src/gdbmtool.c:1633
+#, c-format
+msgid ""
+"\n"
+"Welcome to the gdbm tool.  Type ? for help.\n"
+"\n"
+msgstr ""
+"\n"
+"Bem-vindo à ferramenta do gdbm. Tente ? para ajuda.\n"
+"\n"
+
+#: src/update.c:110
+#, c-format
+msgid "gdbm fatal: %s\n"
+msgstr "gdbm fatal: %s\n"
+
+#: src/gram.y:216
+#, c-format
+msgid "expected \"key\" or \"content\", but found \"%s\""
+msgstr "esperava \"key\" ou \"content\", mas encontrou \"%s\""
+
+#: src/gram.y:287 src/gram.y:308 src/gram.y:340
+#, c-format
+msgid "no such variable: %s"
+msgstr "variável inexistente: %s"
+
+#: src/gram.y:291
+#, c-format
+msgid "%s is not a boolean variable"
+msgstr "%s não é uma variável booleana"
+
+#: src/gram.y:295 src/gram.y:320
+#, c-format
+msgid "unexpected error setting %s: %d"
+msgstr "erro inesperado ao definir %s: %d"
+
+#: src/gram.y:312
+#, c-format
+msgid "%s: bad variable type"
+msgstr "%s: tipo de variável incorreta"
+
+#: src/gram.y:316
+#, c-format
+msgid "%s: value %s is not allowed"
+msgstr "%s: valor %s não é permitido"
+
+#: src/gram.y:344
+#, c-format
+msgid "%s: variable cannot be unset"
+msgstr "%s: variável não pode ter retirada a definição"
+
+#: src/lex.l:150
+#, c-format
+msgid "cannot open `%s': %s"
+msgstr "não foi possível abrir \"%s\": %s"
+
+#: src/lex.l:155
+#, c-format
+msgid "%s is not a regular file"
+msgstr "%s não é um arquivo normal"
+
+#: src/lex.l:162
+msgid "recursive sourcing"
+msgstr "carregamento recursivo"
+
+#: src/lex.l:164
+#, c-format
+msgid "%s already sourced here"
+msgstr "%s já carregado aqui"
+
+#: src/lex.l:171
+#, c-format
+msgid "cannot open %s for reading: %s"
+msgstr "não foi possível abrir %s para leitura: %s"
+
+#: src/lex.l:227 src/lex.l:237
+msgid "invalid #line statement"
+msgstr "declaração de #line inválida"
+
+#: src/datconv.c:254
+#, c-format
+msgid "(not enough data)"
+msgstr "(dados insuficientes)"
+
+#: src/datconv.c:329
+msgid "mixing tagged and untagged values is not allowed"
+msgstr "a mistura de valores marcados e não marcados não é permitida"
+
+#: src/datconv.c:345
+msgid "cannot convert"
+msgstr "não foi possível converter"
+
+#: src/datconv.c:356
+#, c-format
+msgid "cannot convert value #%d: %s"
+msgstr "não foi possível converter o valor #%d: %s"

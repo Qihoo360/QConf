@@ -1,0 +1,73 @@
+# This file is part of GDBM.                                   -*- autoconf -*-
+# Copyright (C) 2011 Free Software Foundation, Inc.
+#
+# GDBM is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+#
+# GDBM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GDBM. If not, see <http://www.gnu.org/licenses/>. */
+
+m4_version_prereq([2.52g])
+
+m4_define([AT_SKIP_TEST],[exit 77])
+
+dnl AT_SORT_PREREQ - Skip test if sort utility outputs unwanted data on stderr
+m4_define([AT_SORT_PREREQ],[
+test -z "`sort < /dev/null 2>&1`" || AT_SKIP_TEST
+])
+
+m4_define([AT_COMPAT_PREREQ],[
+test $COMPAT -eq 1 || AT_SKIP_TEST
+])
+
+dnl # Begin tests
+
+AT_INIT
+m4_include([version.at])
+
+AT_BANNER([GDBM interface])
+
+m4_include([create00.at])
+
+m4_include([fetch00.at])
+m4_include([fetch01.at])
+
+m4_include([delete00.at])
+m4_include([delete01.at])
+m4_include([delete02.at])
+
+AT_BANNER([Compatibility library (dbm/ndbm)])
+
+m4_include([dbmcreate00.at])
+
+m4_include([dbmcvt.at])
+
+m4_include([dbmfetch00.at])
+m4_include([dbmfetch01.at])
+m4_include([dbmfetch02.at])
+m4_include([dbmfetch03.at])
+
+m4_include([dbmdel00.at])
+m4_include([dbmdel01.at])
+m4_include([dbmdel02.at])
+
+AT_BANNER([DB options])
+
+m4_include([setopt00.at])
+m4_include([setopt01.at])
+
+AT_BANNER([Cloexec])
+
+m4_include([cloexec00.at])
+m4_include([cloexec01.at])
+m4_include([cloexec02.at])
+m4_include([cloexec03.at])
+
+# End of testsuite.at

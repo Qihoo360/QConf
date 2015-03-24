@@ -1,0 +1,99 @@
+GNU dbm README
+Copyright (C) 2011 Free Software Foundation, Inc.
+See the end of file for copying conditions.
+
+* Introduction
+
+This file contains brief information about configuring, testing
+and using GNU dbm.  It is *not* intended as a replacement
+for the documentation, instead it is provided as a brief reference
+only. The complete documentation is available in doc/ subdirectory.
+To read the manpage without installing the package use `man
+doc/gdbm.3'.  To read texinfo documentation without installing the
+package, run `info -f doc/gdbm.info'.  After the package is installed
+the documentation can be accessed by running `man gdbm' and
+`info gdbm'.
+
+* Overview
+
+GNU dbm is a set of database routines that use extendible hashing and
+works similar to the standard UNIX dbm routines.  The library provides
+also an optional compatibility layer for UNIX-like dbm and ndbm calls.
+
+* Configuration
+
+   a)  configure [PARAMETERS]
+   b)  make 
+
+For a list of generic PARAMETERS, see the file INCLUDE.  The gdbm-specific
+parameters are:
+
+** --enable-memory-mapped-io
+
+Enable the use of mmap(2) for I/O optimizations.  This is the default,
+if mmap is available.  To disable mmap, use --disable-memory-mapped-io.
+
+** --enable-libgdbm-compat
+
+Build and install libgdbm_compat, a compatibility layer which provides
+UNIX-like dbm and ndbm interfaces.
+
+** --enable-gdbm-export
+
+Build and install gdbmexport with the specified gdbm 1.8 library.
+
+** --with-gdbm183-library=LIB
+
+Build gdbmexport with specified (static) library.  LIB must be
+a loader argument valid for the use with cc(1), e.g.: -lgdbm-1.8.
+
+** --gdbm183-libdir=DIR
+
+Build gdbmexport with the gdbm library from the specified directory.
+
+** --gdbm183-includedir=DIR
+
+Build gdbmexport with gdbm.h from the specified directory.
+
+* Installation 
+
+  make install
+
+* Bug reporting
+
+Please report bugs to <bug-gdbm@gnu.org>
+
+* Documentation, updates etc.
+
+For the latest updates, visit <http://www.gnu.org/software/gdbm>,
+
+In particular, a copy of GDBM documentation in various formats is
+available online at <http://www.gnu.org/software/gdbm/manual>.
+
+Latest versions of GDBM can be downloaded from anonymous
+ftp://ftp.gnu.org/gnu/gdbm.
+
+To track the development, visit 
+<http://puszcza.gnu.org.ua/projects/gdbm>.
+
+
+* Copyright information:
+
+Copyright (C) 2011 Free Software Foundation, Inc.
+
+   Permission is granted to anyone to make or distribute verbatim copies
+   of this document as received, in any medium, provided that the
+   copyright notice and this permission notice are preserved,
+   thus giving the recipient permission to redistribute in turn.
+
+   Permission is granted to distribute modified versions
+   of this document, or of portions of it,
+   under the above conditions, provided also that they
+   carry prominent notices stating who last changed them.
+
+
+Local Variables:
+mode: outline
+paragraph-separate: "[ 	]*$"
+version-control: never
+End:

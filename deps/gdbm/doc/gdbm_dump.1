@@ -1,0 +1,88 @@
+.\" This file is part of GDBM.
+.\" Copyright (C) 2013 Free Software Foundation, Inc.
+.\"
+.\" GDBM is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 3, or (at your option)
+.\" any later version.
+.\"
+.\" GDBM is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with GDBM. If not, see <http://www.gnu.org/licenses/>. */
+.TH GDBM_DUMP 1 "May 8, 2013" "GDBM" "GDBM User Reference"
+.SH NAME
+gdbm_dump \- dump a GDBM database to a file
+.SH SYNOPSIS
+\fBgdbm_dump\fR [\fB\-H \fIFMT\fR] [\fB\-\-format\fR=\fIFMT\fR] \fIDB_FILE\fR [\fIFILE\fR]
+.sp
+\fBgdbm_dump\fR [\fB\-Vh\fR] [\fB\-\-help\fR] [\fB\-\-usage\fR] [\fB\-\-version\fR]
+.SH DESCRIPTION
+The
+.B gdbm_dump
+utility creates a dump of the specified
+.BR gdbm (3)
+database file.  The name for the output dump file is supplied by the
+second argument (\fIFILE\fR).  If not specified, the output goes to
+the standard error.
+.PP
+The created dump can be given as argument to the
+.BR gdbm_load (1)
+utility in order to re-create an exact copy of the \fIDB_FILE\fR.
+.SH OPTIONS
+.TP
+\fB\-H\fR, \fB\-\-format\fR=\fIFMT\fR
+Select dump format.  The value \fBbinary\fR (or \fB0\fR) instructs
+.B gdbm_dump
+to produce a binary dump, compatible with earlier
+.B gdbm
+versions (up to version 1.9).  The value \fBascii\fR (or \fB1\fR)
+instructs it to create an ASCII dump (this is the default).  The
+latter is preferred because, apart from the actual data, it also
+contains meta-information which will allow
+.BR gdbm_load (1)
+to recreate an exact copy of the file.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print a short usage summary.
+.TP
+\fB\-\-usage\fR
+Print a list of available options.
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print program version
+.SH "SEE ALSO"
+.BR gdbm_load (1),
+.BR gdbmtool (1),
+.BR gdbm (3).
+.PP
+For a detailed description of
+.B gdbm_dump
+and other
+.B gdbm
+utilities, refer to the \fBGDBM Manual\fR available in
+Texinfo format.  To access it, run:
+
+  \fBinfo gdbm\fR
+
+.SH "REPORTING BUGS"
+Report bugs to <bug\-gdbm@gnu.org>.
+.SH COPYRIGHT
+Copyright \(co 2013 Free Software Foundation, Inc
+.br
+.na
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+.br
+.ad
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+.\" Local variables:
+.\" eval: (add-hook 'write-file-hooks 'time-stamp)
+.\" time-stamp-start: ".TH GDBM[A-Z_-]* 1 \""
+.\" time-stamp-format: "%:B %:d, %:y"
+.\" time-stamp-end: "\""
+.\" time-stamp-line-limit: 20
+.\" end:

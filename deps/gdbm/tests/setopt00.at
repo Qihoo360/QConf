@@ -1,0 +1,61 @@
+# This file is part of GDBM.                                   -*- autoconf -*-
+# Copyright (C) 2011 Free Software Foundation, Inc.
+#
+# GDBM is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+#
+# GDBM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GDBM. If not, see <http://www.gnu.org/licenses/>. */
+
+AT_SETUP([setopt])
+AT_KEYWORDS([setopt setopt00])
+
+AT_CHECK([
+num2word 1:1000 | gtload test.db || exit 2
+gtopt test.db '!MMAP'
+],
+[0],
+[GDBM_GETFLAGS: PASS
+* CACHESIZE:
+initial GDBM_SETCACHESIZE: PASS
+GDBM_GETCACHESIZE: PASS
+second GDBM_SETCACHESIZE: XFAIL
+* SYNCMODE:
+initial GDBM_GETSYNCMODE: PASS
+GDBM_SETSYNCMODE: PASS
+GDBM_GETSYNCMODE: PASS
+GDBM_SETSYNCMODE true: PASS
+GDBM_GETSYNCMODE: PASS
+GDBM_SETSYNCMODE false: PASS
+GDBM_GETSYNCMODE: PASS
+* CENTFREE:
+initial GDBM_GETCENTFREE: PASS
+GDBM_SETCENTFREE: PASS
+GDBM_GETCENTFREE: FAIL
+GDBM_SETCENTFREE true: PASS
+GDBM_GETCENTFREE: FAIL
+GDBM_SETCENTFREE false: PASS
+GDBM_GETCENTFREE: FAIL
+* COALESCEBLKS:
+initial GDBM_GETCOALESCEBLKS: PASS
+GDBM_SETCOALESCEBLKS: PASS
+GDBM_GETCOALESCEBLKS: PASS
+GDBM_SETCOALESCEBLKS true: PASS
+GDBM_GETCOALESCEBLKS: PASS
+GDBM_SETCOALESCEBLKS false: PASS
+GDBM_GETCOALESCEBLKS: PASS
+GDBM_GETDBNAME: PASS
+])
+
+AT_CLEANUP
+
+
+
+
