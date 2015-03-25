@@ -25,7 +25,7 @@ static qhasharr_t *_qconf_hashtbl  = NULL;
 static key_t _qconf_hashtbl_key    = QCONF_DEFAULT_SHM_KEY;
 
 static int _qconf_msqid            = QCONF_INVALID_SEM_ID;
-static key_t _qconf_msqid_key        = QCONF_DEFAULT_MSG_QUEUE_KEY;
+static key_t _qconf_msqid_key      = QCONF_DEFAULT_MSG_QUEUE_KEY;
 
 static int init_shm(); 
 static int init_msg();

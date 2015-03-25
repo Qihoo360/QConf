@@ -28,7 +28,7 @@ static int qconf_get_host_(const char *path, char *buf, size_t buf_len, const ch
 int qconf_init()
 {
     srand(time(NULL));
-	return init_qconf_env();
+    return init_qconf_env();
 }
 
 int qconf_destroy()

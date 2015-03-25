@@ -88,7 +88,8 @@ cd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start
 ```
 
 ## Document
-[Getting Started](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20Getting%20Started%20Guide.md) - a tutorial-style guide for developers to install, run, and program to QConf
+* [Getting Started](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20Getting%20Started%20Guide.md) - a tutorial-style guide for developers to install, run, and program to QConf
+* [wiki](https://github.com/Qihoo360/QConf/wiki)
 
 
 ## Contact
