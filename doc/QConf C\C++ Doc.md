@@ -1,4 +1,4 @@
-QConf C/C++ Doc
+QConf C\C++ Doc
 =====
 
 ## C Interface

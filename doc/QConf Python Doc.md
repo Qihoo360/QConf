@@ -24,7 +24,7 @@ more information about python [Setup Script](https://docs.python.org/2/distutils
 
 ### get_conf
 
-`get_conf(path idc)`
+`get_conf(path, idc)`
 
 Description
 >get configure value
