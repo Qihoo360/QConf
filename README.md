@@ -1,7 +1,7 @@
 QConf
 =====
 
-## Introduction [中文]()
+## Introduction [中文](https://github.com/Qihoo360/QConf/blob/master/README_ZH.md)
 QConf is a Distrubuted Configuration Management System!
 A better replacement of the traditional configuration file. As designed, configuration items which is constantly accessed and modified should be completely separated with application code, and QConf is where it should be.
 
@@ -86,6 +86,10 @@ cd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start
       // Destroy qconf env
       qconf_destroy();
 ```
+
+## Document
+[Getting Started](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20Getting%20Started%20Guide.md) - a tutorial-style guide for developers to install, run, and program to QConf
+
 
 ## Contact
 

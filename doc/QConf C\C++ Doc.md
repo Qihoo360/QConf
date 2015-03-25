@@ -2,7 +2,7 @@ QConf C/C++ Doc
 =====
 
 ## C Interface
-- ### **Environment initialisation and destroy functions.**
+### **Environment initialisation and destroy functions.**
 
 -------
 
@@ -10,35 +10,35 @@ QConf C/C++ Doc
 
 `int qconf_init();`
 
-**Description** 
+Description
 > Initial qconf environment
 
-**Parameters**
+Parameters
 
-**Return Value**
+Return Value**
 
 > QCONF_OK if success,  others if failed. 
 
-**Example**
+Example
 > int ret = qconf_init();
 
 ### **qconf_destroy**
 `int qconf_destroy();`
 
-**Description**
+Description
 
 >destroy qconf environment
 
-**Parameters**
+Parameters
 
-**Return Value**
+Return Value
 
-**Example**
+Example
 >qconf_destroy();
 
 ---
 
-- ### **QConf access functions wait version, retry sometime if configure not exist**
+### **QConf access functions wait version, retry sometime if configure not exist**
 
 ----
 
@@ -46,46 +46,56 @@ QConf C/C++ Doc
 
 `int qconf_get_conf(const char *path, char *buf, unsigned int buf_len, const char *idc);`
 
-**Description**
+Description
 >get configure value
 
-**Parameters**
+Parameters
 >path - key of configuration.
+>
 >buf - out parameter, buffer for value
+>
 >buf_len - lenghth of value buffer
+>
 >idc - from which idc to get the value，get from local idc if idc is NULL
 
-**Return Value**
+Return Value
 >QCONF_OK if success,  others if failed. QCONF_ERR_NOT_FOUND if configuration is not exists
  
-**Example** 
+Example 
 >char value[QCONF_CONF_BUF_MAX_LEN];
+>
 >int ret = qconf_get_conf("demo/conf1", value, sizeof(value), NULL);
+>
 >assert(QCONF_OK == ret);   
 
 ### **qconf_get_batch_keys**
 
 `int qconf_get_batch_keys(const char *path, string_vector_t *nodes, const char *idc);`
 
-**Description**
+Description
 >get all children nodes'key
 
-**Parameters**
+Parameters
 >path - key of configuration.
+>
 >nodes - out parameter, keep all children nodes'key
+>
 >idc - from which idc to get the keys，get from local idc if idc is NULL
 
-**Return Value**
+Return Value
 >QCONF_OK if success,  others if failed. QCONF_ERR_NOT_FOUND if not exists
  
-**Example** 
+Example
 >string_vector_t bnodes_key;
+>
 >init_string_vector(&bnodes_key);
 > 
 >int ret = qconf_get_batch_keys(path, &bnodes_key, NULL);
+>
 >assert(QCONF_OK == ret);
 > 
 >for (i = 0; i < bnodes_key.count; i++)
+>
 >{ cout << bnodes_key.data[i] << endl;}
 > 
 >destroy_string_vector(&bnodes_key); 
@@ -95,25 +105,30 @@ QConf C/C++ Doc
 
 `int qconf_get_batch_conf(const char *path, string_vector_t *nodes, const char *idc);`
 
-**Description**
+Description
 >get all children nodes' key and value
 
-**Parameters**
+Parameters
 > path - key of configuration.
+>
 > nodes - out parameter, keep all children nodes' key and value
+>
 > idc - from which idc to get the children configurations，get from local idc if idc is NULL
 
-**Return Value**
+Return Value
 >QCONF_OK if success,  others if failed. QCONF_ERR_NOT_FOUND if not exists
  
-**Example** 
+Example
  >qconf_batch_nodes bnodes;
+ >
  >init_qconf_batch_nodes(&bnodes);
  > 
  >int ret = qconf_get_batch_conf(path, &bnodes, NULL);
+ >
  >assert(QCONF_OK == ret);
  > 
  >for (i = 0; i < bnodes.count; i++)
+ >
  >{cout << bnodes.nodes[i].key << " : " << bnodes.nodes[i].value;}
  > 
  >destroy_qconf_batch_nodes(&bnodes); 
@@ -122,25 +137,30 @@ QConf C/C++ Doc
 
 `int qconf_get_allhost(const char *path, string_vector_t *nodes, const char *idc);`
 
-**Description**
+Description
 >get all available services under given path
 
-**Parameters**
+Parameters
  > path - key of configuration.
+ >
  > nodes - out parameter, keep all available services
+ >
  > idc - from which idc to get the services，get from local idc if idc is NULL
 
-**Return Value**
+Return Value
 >QCONF_OK if success,  others if failed. QCONF_ERR_NOT_FOUND if not exists
  
-**Example** 
+Example 
 >string_vector_t nodes;
+>
 >init_string_vector(&nodes);
 > 
 >int ret = qconf_get_batch_conf(path, &nodes, NULL);
+>
 >assert(QCONF_OK == ret);
 > 
 >for (i = 0; i < nodes.count; i++)
+>
 >{cout << nodes.data[i] << endl;}
 > 
 >destroy_string_vector(&nodes_key); 
@@ -149,25 +169,30 @@ QConf C/C++ Doc
 
 `int qconf_get_host(const char *path, char *buf, unsigned int buf_len, const char *idc);`
 
-**Description**
+Description
 >get one available service
 
-**Parameters**
+Parameters
 >path - key of configuration.
+>
 >buf - out parameter, keep the service
+>
 >buf_len - lenghth of buf
+>
 >idc - from which idc to get the value，get from local idc if idc is NULL
 
-**Return Value**
+Return Value
 >QCONF_OK if success,  others if failed. QCONF_ERR_NOT_FOUND if configuration is not exists
  
-**Example** 
+Example 
 >char host[QCONF_HOST_BUF_MAX_LEN] = {0};
+>
 >int ret = qconf_get_host(path, host, sizeof(host), NULL);
+>
 >assert(QCONF_OK == ret);   
 
 ---
-- ### **Data structure related functions**
+### **Data structure related functions**
 
 ----
 ``` c
@@ -181,36 +206,40 @@ typedef struct
 
 `int init_string_vector(string_vector_t *nodes);`
 
-**Description**
+Description
 >initial array for keeping services
+>
 >**Tips:** the function should be called before calling qconf_get_batchkeys or qconf_get_allhosts
 
-**Parameters**
+Parameters
 >nodes - out parameter,  the array for keeping batch keys or services
 
-**Return Value**
+Return Value
 >QCONF_OK if success,  others if failed. QCONF_ERR_PARAM if nodes is null
  
-**Example** 
+Example 
 >string_vector_t bnodes_key;
+>
 >init_string_vector(&bnodes_key);
 
 ### **destroy_string_vector**
 
 `int destroy_string_vector(string_vector_t *nodes);`
 
-**Description**
+Description
 >destroy the array for keeping batch keys or services
+>
 >**Tips:** remember to call this function after the last use of string_vector_t
 
-**Parameters**
+Parameters
 >nodes - out parameter,  qconf_batch_nodes keeping batch keys or services
 
-**Return Value**
+Return Value
 >QCONF_OK if success,  others if failed. QCONF_ERR_PARAM if nodes is null
  
-**Example** 
+Example 
 >qconf_batch_nodes nodes;
+>
 >destroy_string_vector(&nodes);
 
 
@@ -234,36 +263,40 @@ typedef struct qconf_node
 
 `int init_qconf_batch_nodes(qconf_batch_nodes *bnodes);`
 
-**Description**
+Description
 >initial nodes array for keeping batch conf
+>
 >**Tips:** the function should be called before calling qconf_get_batchconf
 
-**Parameters**
+Parameters
 >bnodes - out parameter,  qconf_batch_nodes to keeping batch nodes
 
-**Return Value**
+Return Value
 >QCONF_OK if success,  others if failed. QCONF_ERR_PARAM if nodes is null
  
-**Example** 
+Example 
 >qconf_batch_nodes bnodes;
+>
 >init_qconf_batch_nodes(&bnodes);  
 
 ### **destroy_qconf_batch_nodes**
 
 `int destroy_qconf_batch_nodes(qconf_batch_nodes *bnodes);`
 
-**Description**
+Description
 >destroy the nodes array for keeping batch conf
+>
 >**Tips:** remember to call this function after the last use of qconf_batch_nodes
 
-**Parameters**
+Parameters
 >bnodes - out parameter,  qconf_batch_nodes keeping batch nodes
 
-**Return Value**
+Return Value
 >QCONF_OK if success,  others if failed. QCONF_ERR_PARAM if nodes is null
  
-**Example** 
+Example
 >qconf_batch_nodes bnodes;
+>
 >destroy_qconf_batch_nodes(&bnodes);
 
 
@@ -271,7 +304,7 @@ typedef struct qconf_node
 
 ## Shell Command
 
-- **Usage**:
+### Usage:
 
 ``` c
 qconf command key [idc]
@@ -284,7 +317,8 @@ command: can be one of below commands:
 key    : the path of your configure items
 idc    : query from current idc if be omitted
 ```
-- **Example**:
+### Example:
+
 ``` shell
        qconf get_conf "demo/conf"
        qconf get_conf "demo/conf" "test"

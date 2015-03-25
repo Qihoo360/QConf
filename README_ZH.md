@@ -1,7 +1,7 @@
 QConf
 =====
 
-## 简介 [English]()
+## 简介 [English](https://github.com/Qihoo360/QConf/blob/master/README.md)
 QConf 是一个分布式配置管理工具。
 用来替代传统的配置文件，将配置信息与程序代码分离，透明的完成配置信息的多机器同步及高效读取。使工程师从琐碎的配置修改、代码提交、配置上线流程中解放出来，极大的简化了配置管理工作。
 
@@ -87,6 +87,8 @@ cd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start
       qconf_destroy();
 ```
 
+## 文档
+[Getting Started](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20Getting%20Started%20Guide.md) - QConf 使用说明，包括QConf的安装，运行，API等信息
 ## 联系方式
 
 * 邮箱: g-qconf@list.qihoo.net

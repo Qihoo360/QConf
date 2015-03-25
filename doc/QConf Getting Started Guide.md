@@ -61,14 +61,14 @@ cd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start
 * **share memory**,  QConf use share memory as the local cache of all configuration items needed by current client.
 * **interface** in different programming languages, chose your language for accessing of QConf.  
 
-![enter image description here](http://d.pcs.baidu.com/thumbnail/f1eeb4d1419f620c8e5cd689d73d4820?fid=237891803-250528-137309509566779&time=1427187600&sign=FDTAER-DCb740ccc5511e5e8fedcff06b081203-KVht4tlVOQXVuS7Ev9MugLEC7kE%3D&rt=sh&expires=2h&r=457518565&sharesign=unknown&size=c710_u500&quality=100 "QConf Componengt.png")
+![enter image description here](http://d.pcs.baidu.com/thumbnail/f1eeb4d1419f620c8e5cd689d73d4820?fid=237891803-250528-137309509566779&time=1427248800&sign=FDTAER-DCb740ccc5511e5e8fedcff06b081203-Zlnv%2F364PFwU9iZgXobTuBsq5fQ%3D&rt=sh&expires=2h&r=499015445&sharesign=unknown&size=c710_u500&quality=100)
 
 
 ## Document
-* [C Doc]() - the C reference to QConf APIs
-* [PyDoc]() - Python 2.4,  2.5,  2.6 or 2.7 is required. Python 3.x is not yet supported.
-* [PHP Doc]() -  the PHP reference to QConf APIs
-* [Shell Command]() - the command qconf can be use in command line
+* [C Doc](https://github.com/Qihoo360/QConf/blob/master/doc/API%20Document.md) - the C reference to QConf APIs
+* [Python Doc](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20Python%20Doc.md) - the Python reference to QConf APIs，Python 2.4,  2.5,  2.6 or 2.7 is required. Python 3.x is not yet supported.
+* [PHP Doc](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20PHP%20Doc.md) -  the PHP reference to QConf APIs
+* [Shell Command](https://github.com/Qihoo360/QConf/blob/master/doc/API%20Document.md) - the command qconf can be use in command line
 
 ## Example
 * **C Exmaple**

@@ -18,106 +18,118 @@ more information about python [Setup Script](https://docs.python.org/2/distutils
 ## API Doc
 
 
-- **QConf access functions **
+### QConf access functions 
 
 ----
 
-get_conf
+### get_conf
 
-: `get_conf(path idc)`
+`get_conf(path idc)`
 
-: Description
+Description
 >get configure value
 
-: Parameters
+Parameters
 >path - key of configuration.
+>
 >idc - Optional，from which idc to get the value，get from local idc if  omit
 
-: Return Value
+Return Value
 >value of the configuation, throw Exception qconf_py.Error if failed 
  
- : Example 
+Example 
  >value = qconf.get_conf(key) 
 
-get_batch_keys
+### get_batch_keys
 
-: `get_batch_keys(path, idc);`
+`get_batch_keys(path, idc);`
 
-: Description
+Description
 
-: >get all children nodes'key
+>get all children nodes'key
 
-: Parameters
+Parameters
 >path - key of configuration.
+>
 >idc - Optional，from which idc to get the keys，get from local idc if  omit
 
-: Return Value
+Return Value
 >python list of the node's keys, throw Exception qconf_py.Error if failed 
  
- : Example 
+Example 
  >children_keys = qconf.get_batch_keys(key)
+ >
  > for item in children_keys:
+ >
  > // iterate python list
 
 
-get_batch_conf
+### get_batch_conf
 
-: `get_batch_conf(path, idc);`
+`get_batch_conf(path, idc);`
 
-: Description
+Description
 >get all children nodes' key and value
 
-: Parameters
+Parameters
 >path - key of configuration.
+>
 >idc - Optional， from which idc to get the children configurations，get from local idc if  omit
 
-: Return Value
+Return Value
 >python dictionary of the children configuration, throw Exception qconf_py.Error if failed 
  
- : Example 
+ Example 
  >children = qconf.get_batch_conf(key)
+ >
  >for k, v in children.iteritems():
+ >
  >//iterate dictionary
 
-get_allhost
+### get_allhost
 
-: `get_allhost(path, idc);`
+`get_allhost(path, idc);`
 
-: Description
+Description
 >get all available services under given path
 
-: Parameters
+Parameters
 >path - key of configuration.
 >idc - Optional， from which idc to get the services，get from local idc if  omit
 
-: Return Value
+Return Value
 >python list of all available services, throw Exception qconf_py.Error if failed 
  
- : Example 
+Example 
 >hosts = qconf.get_allhost(key)
- > for item in hosts:
- > // iterate python list
+>
+> for item in hosts:
+>
+> // iterate python list
 
-get_host
+### get_host
 
-: `get_host(path, idc);`
+`get_host(path, idc);`
 
-: Description
+Description
 >get one available service
 
-: Parameters
+Parameters
 >path - key of configuration.
+>
 >idc - Optional，from which idc to get the host，get from local idc if  omit
 
-: Return Value
+Return Value
 >available host, throw Exception qconf_py.Error if failed
  
- : Example 
- >host = qconf.get_host(key)
+Example 
+>host = qconf.get_host(key)
 
 ---
 ## Example
+
 ``` python
+
  try:
       #get conf value
       value = qconf.get_conf(key)
