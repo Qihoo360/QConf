@@ -70,7 +70,7 @@ cd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start
 * [Python Doc](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20Python%20Doc.md) - the Python reference to QConf APIs，Python 2.4,  2.5,  2.6 or 2.7 is required. Python 3.x is not yet supported.
 * [PHP Doc](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20PHP%20Doc.md) -  the PHP reference to QConf APIs
 * [Shell Doc](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20C%5CC%2B%2B%20Doc.md) - the command qconf can be use in command line
-* [LuaJit Doc]() - the LuaJit reference to QConf APIs
+* [LuaJit Doc](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20LuaJit%20Doc.md) - the LuaJit reference to QConf APIs
 
 ## Example
 * **C Exmaple**
