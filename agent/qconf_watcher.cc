@@ -133,7 +133,7 @@ static void lock_ht_delete(map<K, V> &ht, pthread_mutex_t &mu, const K &key)
 
 int qconf_init_shm_tbl()
 {
-    return create_hash_tbl(_shm_tbl, QCONF_DEFAULT_SHM_KEY, 0666);
+    return create_hash_tbl(_shm_tbl, QCONF_DEFAULT_SHM_KEY, 0644);
 }
 
 void qconf_clear_shm_tbl()
