@@ -8,6 +8,8 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 cmake_minimum_required(VERSION 2.6)
 #build libzookeeper
+execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/zookeeper COMMAND
+    patch -f -p1 -i zookeeper-3.4.5.patch)
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/zookeeper COMMAND ./configure
     --prefix=${PROJECT_SOURCE_DIR}/deps/zookeeper/_install)
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/zookeeper COMMAND
