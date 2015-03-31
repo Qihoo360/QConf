@@ -1,0 +1,6 @@
+编译使用方式
+1, make ：在qconf_jar下面编译生成libqconf_java.so 以及jar包
+5，使用，javac -classpath {JAR_PATH}/qconf-client-0.3.1.jar {java 文件}
+         java  -classpath {JAR_PATH}/qconf-client-0.3.1.jar:. {java 类}
+         
+

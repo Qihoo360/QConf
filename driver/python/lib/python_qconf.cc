@@ -118,7 +118,7 @@ static PyObject* Qconf_get_conf(PyObject *self, PyObject *args)
         return NULL;
     char value[QCONF_CONF_BUF_MAX_LEN];
     int ret = qconf_get_conf(path, value, sizeof(value), idc);
-    if (QCONF_OK != ret && QCONF_ERR_NULL_VALUE != ret)
+    if (QCONF_OK != ret)
     {
         print_error_message(ret);
         return NULL;
@@ -135,7 +135,7 @@ static PyObject* Qconf_get_host(PyObject *self, PyObject *args)
         return NULL;
     char host[QCONF_HOST_BUF_MAX_LEN] = {0};
     int ret = qconf_get_host(path, host, sizeof(host), idc);
-    if (QCONF_OK != ret && QCONF_ERR_NULL_VALUE != ret)
+    if (QCONF_OK != ret)
     {
         print_error_message(ret);
         return NULL;
@@ -204,7 +204,7 @@ static PyObject* Qconf_get_allhost(PyObject *self, PyObject *args)
         return NULL;
     }
     ret = qconf_get_allhost(path, &nodes, idc);
-    if (QCONF_OK != ret && QCONF_ERR_NULL_VALUE != ret)
+    if (QCONF_OK != ret)
     {
         destroy_string_vector(&nodes);
         print_error_message(ret);
@@ -236,7 +236,7 @@ static PyObject* Qconf_get_batch_conf(PyObject *self, PyObject *args)
         return NULL;
     }
     ret = qconf_get_batch_conf(path, &bnodes, idc);
-    if (QCONF_OK != ret && QCONF_ERR_NULL_VALUE != ret)
+    if (QCONF_OK != ret)
     {
         destroy_qconf_batch_nodes(&bnodes);
         print_error_message(ret);
@@ -269,7 +269,7 @@ static PyObject* Qconf_get_batch_keys(PyObject *self, PyObject *args)
         return NULL;
     }
     ret = qconf_get_batch_keys(path, &bnodes_key, idc);
-    if (QCONF_OK != ret && QCONF_ERR_NULL_VALUE != ret)
+    if (QCONF_OK != ret)
     {
         destroy_string_vector(&bnodes_key);
         print_error_message(ret);
