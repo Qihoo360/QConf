@@ -1,5 +1,5 @@
-#ifndef __QCONF_ERRNO_H__
-#define __QCONF_ERRNO_H__
+#ifndef QCONF_ERRNO_H
+#define QCONF_ERRNO_H
 
 #define QCONF_ERR_OTHER                     -1
 #define QCONF_OK                            0

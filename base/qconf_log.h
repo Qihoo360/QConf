@@ -1,5 +1,5 @@
-#ifndef __QCONF_LOG_H__
-#define __QCONF_LOG_H__
+#ifndef QCONF_LOG_H
+#define QCONF_LOG_H
 
 #include <string>
 

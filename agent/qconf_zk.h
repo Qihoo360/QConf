@@ -1,5 +1,5 @@
-#ifndef __QCONF_ZK_H__
-#define __QCONF_ZK_H__
+#ifndef QCONF_ZK_H
+#define QCONF_ZK_H
 
 #include <string>
 #include <vector>
@@ -35,4 +35,4 @@ int qconf_init_zoo_log(const std::string &log_dir, const std::string &zoo_log = 
  */
 void qconf_destroy_zoo_log();
 
-#endif // __QCONF_ZK_H__
+#endif

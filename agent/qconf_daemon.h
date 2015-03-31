@@ -1,5 +1,5 @@
-#ifndef __QCONF_DAEMON_H__
-#define __QCONF_DAEMON_H__
+#ifndef QCONF_DAEMON_H
+#define QCONF_DAEMON_H
 
 #include <string>
 

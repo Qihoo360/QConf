@@ -1,5 +1,5 @@
-#ifndef __QCONF_CONST_H__
-#define __QCONF_CONST_H__
+#ifndef QCONF_CONST_H
+#define QCONF_CONST_H
 
 #include "qconf_common.h"
 

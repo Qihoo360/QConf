@@ -1,5 +1,5 @@
-#ifndef __QCONF_CMD_H__
-#define __QCONF_CMD_H__
+#ifndef QCONF_CMD_H
+#define QCONF_CMD_H
 
 #include <string>
 

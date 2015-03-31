@@ -1,5 +1,5 @@
-#ifndef __QCONF_FEEDBACK_H__
-#define __QCONF_FEEDBACK_H__
+#ifndef QCONF_FEEDBACK_H
+#define QCONF_FEEDBACK_H
 
 #include <string>
 #include <vector>

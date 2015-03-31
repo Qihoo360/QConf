@@ -1,5 +1,5 @@
-#ifndef __QCONF_SHM_H__
-#define __QCONF_SHM_H__
+#ifndef QCONF_SHM_H
+#define QCONF_SHM_H
 
 #include <string>
 

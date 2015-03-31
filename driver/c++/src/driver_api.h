@@ -1,5 +1,5 @@
-#ifndef __DRIVER_API_H__ 
-#define __DRIVER_API_H__ 
+#ifndef DRIVER_API_H
+#define DRIVER_API_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -113,4 +113,4 @@ int qconf_get_batchnode_keys(const std::string &path, string_vector_t &nodes, co
 }
 #endif
 
-#endif // __DRIVER_API_H__ 
+#endif

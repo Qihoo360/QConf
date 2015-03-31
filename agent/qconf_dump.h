@@ -1,5 +1,5 @@
-#ifndef __QCONF_DUMP_H__
-#define __QCONF_DUMP_H__
+#ifndef QCONF_DUMP_H
+#define QCONF_DUMP_H
 
 #include <string>
 

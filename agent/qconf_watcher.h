@@ -1,5 +1,5 @@
-#ifndef __QCONF_WATCHER_H__
-#define __QCONF_WATCHER_H__
+#ifndef QCONF_WATCHER_H
+#define QCONF_WATCHER_H
 
 #include <string>
 

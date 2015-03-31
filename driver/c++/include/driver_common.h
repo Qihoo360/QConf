@@ -1,5 +1,5 @@
-#ifndef __DRIVER_COMMON_H__
-#define __DRIVER_COMMON_H__
+#ifndef DRIVER_COMMON_H
+#define DRIVER_COMMON_H
 
 #ifdef __cplusplus
 extern "C" {

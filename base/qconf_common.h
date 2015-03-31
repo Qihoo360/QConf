@@ -1,5 +1,5 @@
-#ifndef __QCONF_COMMON_H__
-#define __QCONF_COMMON_H__
+#ifndef QCONF_COMMON_H
+#define QCONF_COMMON_H
 
 #include <zookeeper.h>
 

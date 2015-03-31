@@ -1,5 +1,5 @@
-#ifndef __QCONF_FORMAT_H__
-#define __QCONF_FORMAT_H__
+#ifndef QCONF_FORMAT_H
+#define QCONF_FORMAT_H
 
 #include <vector>
 #include <string>

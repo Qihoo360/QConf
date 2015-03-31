@@ -1,5 +1,5 @@
-#ifndef __QCONF_H__
-#define __QCONF_H__
+#ifndef QCONF_H
+#define QCONF_H
 
 #ifdef __cplusplus
 extern "C" {

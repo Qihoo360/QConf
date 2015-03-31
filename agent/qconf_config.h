@@ -1,5 +1,5 @@
-#ifndef __QCONF_CONFIG_H__
-#define __QCONF_CONFIG_H__
+#ifndef QCONF_CONFIG_H
+#define QCONF_CONFIG_H
 
 #include <map>
 #include <string>
@@ -29,4 +29,4 @@ void qconf_destroy_conf_map();
  */
 int get_integer(const std::string &cnt, long &integer);
 
-#endif // __QCONF_CONFIG_H__
+#endif
