@@ -10,7 +10,7 @@ A better replacement of the traditional configuration file. As designed, configu
 * High query efficiency.
 * Convenient deployment and simple interface.
 * High robustness and  fault-tolerance.
-* support c/c++, shell, php, python, lua and etc.
+* support c/c++, shell, php, python, lua, java, go and etc.
 
 ## Install
 The QConf is built using CMake (version 2.6 or newer).
@@ -73,6 +73,12 @@ cd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start
  
 ## Example
 
+* **shell** 
+``` shell
+    qconf get_conf /demo/node1   # get the value of '/demo/node1'
+```
+
+* **c/c++**
 ``` c
 	  // Init the qconf env
       ret = qconf_init();
@@ -90,7 +96,7 @@ cd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start
 ## Document
 * [Getting Started](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20Getting%20Started%20Guide.md) - a tutorial-style guide for developers to install, run, and program to QConf
 * [wiki](https://github.com/Qihoo360/QConf/wiki)
-
+* [qconf video guide](https://github.com/Qihoo360/QConf/wiki/QConf-%E7%AE%80%E6%98%93%E9%83%A8%E7%BD%B2%E5%92%8C%E4%BD%BF%E7%94%A8)
 
 ## Contact
 

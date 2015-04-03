@@ -10,7 +10,7 @@ QConf 是一个分布式配置管理工具。
 * 高效读取配置
 * 安装部署方便，使用简单
 * 服务器宕机、网络中断、集群迁移等异常情况对用户透明
-* 支持c/c++、shell、php、python、lua 等语言
+* 支持c/c++、shell、php、python、lua、java、go 等语言
 
 
 ## 编译安装
@@ -73,6 +73,12 @@ cd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start
 
 ## 使用样例
 
+* **shell** 
+``` shell
+    qconf get_conf /demo/node1   # get the value of '/demo/node1'
+```
+
+* **c/c++**
 ``` c
 	  // Init the qconf env
       ret = qconf_init();
@@ -90,6 +96,7 @@ cd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start
 ## 文档
 * [Getting Started](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20Getting%20Started%20Guide.md) - QConf 使用说明，包括QConf的安装，运行，API等信息
 * [wiki](https://github.com/Qihoo360/QConf/wiki)
+* [qconf video guide](https://github.com/Qihoo360/QConf/wiki/QConf-%E7%AE%80%E6%98%93%E9%83%A8%E7%BD%B2%E5%92%8C%E4%BD%BF%E7%94%A8)
 
 
 ## 联系方式
