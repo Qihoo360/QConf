@@ -615,6 +615,7 @@ static PHP_METHOD(QConfig, GetBatchKeys)
 }
 /* }}} */
 
+#ifdef QCONF_INTERNAL
 /* {{{ QConfig::GetBatchKeysNative( .. )
    */
 static PHP_METHOD(QConfig, GetBatchKeysNative)
@@ -666,6 +667,7 @@ static PHP_METHOD(QConfig, GetBatchKeysNative)
 	return;
 }
 /* }}} */
+#endif
 
 /****************************************
   Internal support code
@@ -750,7 +752,9 @@ static zend_function_entry qconfig_class_methods[] = {
     QC_ME_STATIC(QConfig, GetChild,       arginfo_GetChild)
     QC_ME_STATIC(QConfig, GetBatchConf,   arginfo_GetBatchConf)
     QC_ME_STATIC(QConfig, GetBatchKeys,   arginfo_GetBatchKeys)
+#ifdef QCONF_INTERNAL
     QC_ME_STATIC(QConfig, GetBatchKeysNative,       arginfo_GetBatchKeysNative)
+#endif
 
     { NULL, NULL, NULL }
 };
