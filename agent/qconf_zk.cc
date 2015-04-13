@@ -1,5 +1,7 @@
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <zookeeper.h>
@@ -15,9 +17,57 @@
 using namespace std;
 
 static FILE *_zoo_log_fp = NULL;
+static pthread_key_t _qconf_safe_key;
+static pthread_once_t _qconf_once_control = PTHREAD_ONCE_INIT;
 
 static int zk_get_service_status(zhandle_t *zh, const string &path, char &status);
 static int children_node_cmp(const void* p1, const void* p2);
+
+static char *zk_get_node_buf_();
+static void destroy_safe_key_(void *p);
+static void init_once_routine_();
+
+static char *zk_get_node_buf_()
+{
+    char *buf = NULL;
+    
+    int ret = pthread_once(&_qconf_once_control, init_once_routine_);
+    if (0 != ret)
+    {
+        LOG_ERR("Failed to exec pthread_once! ret:%d", ret);
+        return NULL;
+    }
+
+    buf = (char*)pthread_getspecific(_qconf_safe_key);
+    if (NULL == buf)
+    {
+        buf = (char*)calloc(QCONF_MAX_VALUE_SIZE, sizeof(char));
+        if (NULL == buf)
+        {
+            LOG_ERR("Failed to malloc space! errno:%d", errno);
+            return NULL;
+        }
+        ret = pthread_setspecific(_qconf_safe_key, (void*)buf);
+        if (0 != ret)
+        {
+            LOG_ERR("Faield to exec pthread_setspecific! ret:%d", ret);
+            free(buf);
+            return NULL;
+        }
+    }
+
+    return buf;
+}
+
+static void init_once_routine_()
+{
+    pthread_key_create(&_qconf_safe_key,  destroy_safe_key_);
+}
+
+static void destroy_safe_key_(void *p)
+{
+    free(p);
+}
 
 /**
  * Get znode from zookeeper, and set a watcher
@@ -25,8 +75,14 @@ static int children_node_cmp(const void* p1, const void* p2);
 int zk_get_node(zhandle_t *zh, const string &path, string &buf)
 {
     int ret = 0;
-    char buffer[QCONF_MAX_VALUE_SIZE];
     int buffer_len = QCONF_MAX_VALUE_SIZE;
+
+    char *buffer = zk_get_node_buf_();
+    if (NULL == buffer)
+    {
+        LOG_ERR("Failed to get zk node buf");
+        return QCONF_ERR_MEM;
+    }
 
     for (int i = 0; i < QCONF_GET_RETRIES; ++i)
     {

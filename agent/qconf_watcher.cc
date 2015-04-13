@@ -1,4 +1,6 @@
 #include <string.h>
+#include <unistd.h>
+#include <pthread.h>
 
 #include <map>
 #include <set>
@@ -388,6 +390,12 @@ static bool diff_with_zk(const string &tblkey, const string &tblval)
 
     memset(&chdnodes, 0, sizeof(string_vector_t));
     deserialize_from_tblkey(tblkey, data_type, idc, path);
+    if (QCONF_DATA_TYPE_ZK_HOST == data_type ||
+        QCONF_DATA_TYPE_LOCAL_IDC == data_type)
+    {
+        return false;
+    }
+
     zhandle_t *zh = get_zhandle_by_idc(idc);
     if (NULL != zh)
     {

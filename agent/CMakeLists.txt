@@ -38,7 +38,15 @@ add_executable(qconf_agent ${DIR_SRCS})
 # link libpthread
 find_package (Threads)
 target_link_libraries (qconf_agent ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries (qconf_agent rt)
+
+IF(WIN32)
+    MESSAGE(STATUS "This is windows")
+ELSEIF(APPLE)
+    MESSAGE(STATUS "This is apple")
+ELSEIF(UNIX)
+    MESSAGE(STATUS "This is unix, and add the librt.so")
+    target_link_libraries (qconf_agent rt)
+ENDIF(WIN32)
 
 #build libcurl
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../deps/curl COMMAND ./configure
@@ -68,8 +76,21 @@ target_link_libraries(qconf_agent
 target_link_libraries(qconf_agent ${PROJECT_SOURCE_DIR}/../deps/gdbm/_install/lib/libgdbm.a)
 file(WRITE lockfile "")
 
-install(CODE "execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/bin COMMAND
-sed -i s:^agentdir=.*$:agentdir=${CMAKE_INSTALL_PREFIX}:g agent-cmd.sh)")
+IF(WIN32)
+    MESSAGE(STATUS "This is windows")
+ELSEIF(APPLE)
+    MESSAGE(STATUS "This is apple, and remove file lock")
+    install(CODE "execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/bin COMMAND
+    sed -i.bak s:^agentdir=..$:agentdir=${CMAKE_INSTALL_PREFIX}:g agent-cmd.sh)")
+    install(CODE "execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/bin COMMAND
+    sed -i.bak \"s:^(flock:#(flock:g\" agent-cmd.sh)")
+    install(CODE "execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/bin COMMAND
+    sed -i.bak \"s:^)200:#)200:g\" agent-cmd.sh)")
+ELSEIF(UNIX)
+    install(CODE "execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/bin COMMAND
+    sed -i.bak s:^agentdir=.*$:agentdir=${CMAKE_INSTALL_PREFIX}:g agent-cmd.sh)")
+    MESSAGE(STATUS "This is unix")
+ENDIF(WIN32)
 
 install(DIRECTORY bin DESTINATION .)
 install(DIRECTORY conf DESTINATION .)

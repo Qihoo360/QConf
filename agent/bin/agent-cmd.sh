@@ -341,8 +341,7 @@ common_process () {
     wait_process
 }
 
-(
-flock -n -e 200 || { echo "instance already exist, please wait and try later!" ; exit 1 ; }
+(flock -n -e 200 || { echo "instance already exist, please wait and try later!" ; exit 1 ; }
 
 #Entry
 if [ "$1" == "stop" ]; then
