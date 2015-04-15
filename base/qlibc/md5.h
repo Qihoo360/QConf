@@ -24,28 +24,28 @@
 #ifndef _Q_MD5_H_
 #define _Q_MD5_H_
 
-#define MD5_BLOCK_LENGTH		64
-#define MD5_DIGEST_LENGTH		16
-#define MD5_DIGEST_STRING_LENGTH	(MD5_DIGEST_LENGTH * 2 + 1)
+#define QMD5_BLOCK_LENGTH		64
+#define QMD5_DIGEST_LENGTH		16
+#define QMD5_DIGEST_STRING_LENGTH	(QMD5_DIGEST_LENGTH * 2 + 1)
 
-/* MD5 context. */
-typedef struct MD5Context
+/* QMD5 context. */
+typedef struct QMD5Context
 {
     u_int32_t state[4];	/* state (ABCD) */
     u_int32_t count[2];	/* number of bits, modulo 2^64 (lsb first) */
     unsigned char buffer[64];	/* input buffer */
-} MD5_CTX;
+} QMD5_CTX;
 
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-void   MD5Init (MD5_CTX *);
-void   MD5Update (MD5_CTX *, const unsigned char *, unsigned int);
-void   MD5Final (unsigned char [16], MD5_CTX *);
-char * MD5End(MD5_CTX *, char *);
-char * MD5File(const char *, char *);
-char * MD5FileChunk(const char *, char *, off_t, off_t);
-char * MD5Data(const unsigned char *, unsigned int, char *);
+void   QMD5Init (QMD5_CTX *);
+void   QMD5Update (QMD5_CTX *, const unsigned char *, unsigned int);
+void   QMD5Final (unsigned char [16], QMD5_CTX *);
+char * QMD5End(QMD5_CTX *, char *);
+char * QMD5File(const char *, char *);
+char * QMD5FileChunk(const char *, char *, off_t, off_t);
+char * QMD5Data(const unsigned char *, unsigned int, char *);
 __END_DECLS
 
 #endif /* _Q_MD5_H_ */

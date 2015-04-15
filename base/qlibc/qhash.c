@@ -75,12 +75,12 @@ bool qhashmd5(const void *data, size_t nbytes, void *retbuf)
         return false;
     }
 
-    MD5_CTX context;
-    MD5Init(&context);
-    //MD5Update(&context, (unsigned char *)data, (unsigned int)nbytes);
-    //MD5Final(retbuf, &context);
-    MD5Update(&context, (unsigned char *)tmp, (unsigned int)nbytes);
-    MD5Final((unsigned char*)tmpretbuf, &context);
+    QMD5_CTX context;
+    QMD5Init(&context);
+    //QMD5Update(&context, (unsigned char *)data, (unsigned int)nbytes);
+    //QMD5Final(retbuf, &context);
+    QMD5Update(&context, (unsigned char *)tmp, (unsigned int)nbytes);
+    QMD5Final((unsigned char*)tmpretbuf, &context);
 
     return true;
 }
