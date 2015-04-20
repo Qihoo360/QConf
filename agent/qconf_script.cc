@@ -129,7 +129,8 @@ int find_script(const string &path,  string &script)
         return QCONF_ERR_SCRIPT_DIR_NOT_INIT;
     }
     //find exist script file
-    string script_path(_qconf_script_dir), tmp_path(path), file_path;
+    string script_path(_qconf_script_dir), tmp_path, file_path;
+    tmp_path = (path[0] == '/') ? path.substr(1) : path;
     replace(tmp_path.begin(), tmp_path.end(), '/', QCONF_SCRIPT_SEPARATOR);
     script_path.append(tmp_path);
     size_t index = script_path.size();

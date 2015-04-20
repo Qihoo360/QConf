@@ -4,7 +4,7 @@
 #include "qconf_common.h"
 
 // agent version
-#define QCONF_AGENT_VERSION                 "1.0.0"
+#define QCONF_AGENT_VERSION                 "1.0.2"
 
 #define QCONF_AGENT_NAME                    "qconf_agent"
 
