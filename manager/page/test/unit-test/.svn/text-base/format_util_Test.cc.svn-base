@@ -1,0 +1,2741 @@
+#include "gtest/gtest.h"
+#include "format_util.h"
+#include "const_def.h"
+
+#define TEST_TBLVAL_MAX_LEN 1024
+#define TEST_MAX_NODE_COUNT 20
+
+
+//unit test case for format_util.c
+
+//Related test environment set up:
+class format_utilTestF : public ::testing::Test
+{
+protected:
+    virtual void SetUp()
+    {
+        char tmp[TEST_TBLVAL_MAX_LEN] = {0};
+        //init nodes
+        nodes.count = TEST_MAX_NODE_COUNT;
+        nodes.data = (char**)malloc(sizeof(char*)*nodes.count);
+
+        for(int i = 0; i < nodes.count; i++)
+        {
+            snprintf(tmp, TEST_TBLVAL_MAX_LEN, "10.15.16.17:%d", i);
+            nodes.data[i] = (char*)malloc(sizeof(char) * (strlen(tmp) + 1));
+            memcpy(nodes.data[i], tmp, strlen(tmp));
+            nodes.data[i][strlen(tmp)] = '\0';
+        }
+    }
+
+    virtual void TearDown()
+    {
+        int i = 0;
+        free_String_vector((&nodes), i, nodes.count);
+    }
+
+    String_vector_t nodes;
+};
+
+/**
+  *===================================================================================================================================
+  *Begin_Test_for function: int serialize_to_tblkey(char data_type, const char* idc, const char* path, char* tblkey, int tblkey_size)
+  */
+
+//Test for serialize_to_tblkey: invalid data_type
+TEST(format_utilTest, serialize_to_tblkey_invalid_data_type)
+{
+    int retCode = 0;
+    const char* idc = "test";
+    const char* path = "/qconf/demo";
+    char tblkey[QCONF_TBLKEY_MAX_LEN] = {0};
+    int tblkey_size = QCONF_TBLKEY_MAX_LEN;
+
+    retCode = serialize_to_tblkey('0', idc, path, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_ERR_DATA_TYPE, retCode);
+}
+
+//Test for serialize_to_tblkey: idc=NULL
+TEST(format_utilTest, serialize_to_tblkey_idc_null)
+{
+    int retCode = 0;
+    const char* path = "/qconf/demo";
+    char tblkey[QCONF_TBLKEY_MAX_LEN] = {0};
+    int tblkey_size = QCONF_TBLKEY_MAX_LEN;
+
+    retCode = serialize_to_tblkey('1', NULL, path, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for serialize_to_tblkey: tblkey=NULL
+TEST(format_utilTest, serialize_to_tblkey_path_null)
+{
+    int retCode = 0;
+    const char* idc = NULL;
+    const char* path = "/qconf/demo";
+
+    retCode = serialize_to_tblkey('1', idc, path, NULL, 0);
+}
+
+//Test for serialize_to_tblkey: tblkey_size<0
+TEST(format_utilTest, serialize_to_tblkey_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* idc = NULL;
+    const char* path = "/qconf/demo";
+    char tblkey[QCONF_TBLKEY_MAX_LEN] = {0};
+    int tblkey_size = -1;
+
+    retCode = serialize_to_tblkey('1', idc, path, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_ZK_HOST & tblkey_size not enough
+TEST(format_utilTest, serialize_to_tblkey_data_type_zk_host_and_size_not_enough)
+{
+    int retCode = 0;
+    const char* idc = "test";
+    char tblkey[8] = {0};
+    int tblkey_size = 8;
+
+    retCode = serialize_to_tblkey('1', idc, NULL, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_ZK_HOST & tblkey_size is just right
+TEST(format_utilTest, serialize_to_tblkey_data_type_zk_host_and_size_just_right)
+{
+    int retCode = 0;
+    const char* idc = "test";
+    char tblkey[9] = {0};
+    int tblkey_size = 9;
+
+    retCode = serialize_to_tblkey('1', idc, NULL, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("1:4:test", tblkey);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_ZK_HOST & tblkey_size is enough
+TEST(format_utilTest, serialize_to_tblkey_data_type_zk_host_and_size_is_enough)
+{
+    int retCode = 0;
+    const char* idc = "test";
+    char tblkey[QCONF_TBLKEY_MAX_LEN] = {0};
+    int tblkey_size = QCONF_TBLKEY_MAX_LEN;
+
+    retCode = serialize_to_tblkey('1', idc, NULL, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("1:4:test", tblkey);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_NODE & path=NULL
+TEST(format_utilTest, serialize_to_tblkey_data_type_node_and_nullpath)
+{
+    int retCode = 0;
+    const char* idc = "test";
+    char tblkey[QCONF_TBLKEY_MAX_LEN] = {0};
+    int tblkey_size = QCONF_TBLKEY_MAX_LEN;
+
+    retCode = serialize_to_tblkey('2', idc, NULL, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for serialize_to_tblkey: data_type_QCONF_DATA_TYPE_NODE & tblkey_size not enough
+TEST(format_utilTest, serialize_to_tblkey_data_type_node_and_tblkey_size_not_enough)
+{
+    int retCode = 0;
+    const char* idc = "test123456789";
+    const char* path = "/qconf/demo";
+    char tblkey[32] = {0};
+    int tblkey_size = 32;
+
+    retCode = serialize_to_tblkey('2', idc, path, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_NODE & tblkey_size is just right
+TEST(format_utilTest, serialize_to_tblkey_data_type_node_and_tblkey_size_is_just_right)
+{
+    int retCode = 0;
+    const char* idc = "test123456789";
+    const char* path = "/qconf/demo";
+    char tblkey[33] = {0};
+    int tblkey_size = 33;
+
+    retCode = serialize_to_tblkey('2', idc, path, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("2:13:test12345678911:/qconf/demo", tblkey);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_NODE & tblkey_size is enouth
+TEST(format_utilTest, serialize_to_tblkey_data_type_node_and_tblkey_size_is_enough)
+{
+    int retCode = 0;
+    const char* idc = "test123456789";
+    const char* path = "/qconf/demo";
+    char tblkey[QCONF_TBLKEY_MAX_LEN] = {0};
+    int tblkey_size = QCONF_TBLKEY_MAX_LEN;
+
+    retCode = serialize_to_tblkey('2', idc, path, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("2:13:test12345678911:/qconf/demo", tblkey);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_SERVICE & path=NULL
+TEST(format_utilTest, serialize_to_tblkey_data_type_service_and_nullpath)
+{
+    int retCode = 0;
+    const char* idc = "abcdefghijk";
+    char tblkey[QCONF_TBLKEY_MAX_LEN] = {0};
+    int tblkey_size = QCONF_TBLKEY_MAX_LEN;
+
+    retCode = serialize_to_tblkey('3', idc, NULL, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_SERVICE & tblkey_size not enough
+TEST(format_utilTest, serialize_to_tblkey_data_type_service_and_size_not_enough)
+{
+    int retCode = 0;
+    const char* idc = "abcdefghijk";
+    const char* path = "/qconf/test123";
+    char tblkey[33] = {0};
+    int tblkey_size = 33;
+
+    retCode = serialize_to_tblkey('3', idc, path, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_SERVICE & tblkey_size is just right
+TEST(format_utilTest, serialize_to_tblkey_data_type_service_and_size_is_just_right)
+{
+    int retCode = 0;
+    const char* idc = "abcdefghijk";
+    const char* path = "/qconf/test123";
+    char tblkey[34] = {0};
+    int tblkey_size = 34;
+
+    retCode = serialize_to_tblkey('3', idc, path, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("3:11:abcdefghijk14:/qconf/test123", tblkey);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_SERVICE & tblkey_size is enough
+TEST(format_utilTest, serialize_to_tblkey_data_type_service_and_size_is_enough)
+{
+    int retCode = 0;
+    const char* idc = "abcdefghijk";
+    const char* path = "/qconf/test123";
+    char tblkey[QCONF_TBLKEY_MAX_LEN] = {0};
+    int tblkey_size = QCONF_TBLKEY_MAX_LEN;
+
+    retCode = serialize_to_tblkey('3', idc, path, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("3:11:abcdefghijk14:/qconf/test123", tblkey);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_BATCH_NODE & path=NULL
+TEST(format_utilTest, serialize_to_tblkey_data_type_batch_node__and_nullpath)
+{
+    int retCode = 0;
+    const char* idc = "abcdefghijk";
+    char tblkey[QCONF_TBLKEY_MAX_LEN] = {0};
+    int tblkey_size = QCONF_TBLKEY_MAX_LEN;
+
+    retCode = serialize_to_tblkey('4', idc, NULL, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_BATCH_NODE & tblkey_size not enough
+TEST(format_utilTest, serialize_to_tblkey_data_type_batch_node_and_size_not_enough)
+{
+    int retCode = 0;
+    const char* idc = "abcdefghijk";
+    const char* path = "/qconf/test123";
+    char tblkey[33] = {0};
+    int tblkey_size = 33;
+
+    retCode = serialize_to_tblkey('4', idc, path, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_BATCH_NODE & tblkey_size is just right
+TEST(format_utilTest, serialize_to_tblkey_data_type_batch_node_and_size_is_just_right)
+{
+    int retCode = 0;
+    const char* idc = "abcdefghijk";
+    const char* path = "/qconf/test123";
+    char tblkey[34] = {0};
+    int tblkey_size = 34;
+
+    retCode = serialize_to_tblkey('4', idc, path, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("4:11:abcdefghijk14:/qconf/test123", tblkey);
+}
+
+//Test for serialize_to_tblkey: data_type=QCONF_DATA_TYPE_BATCH_NODE & tblkey_size is enough
+TEST(format_utilTest, serialize_to_tblkey_data_type_batch_node_and_size_is_enough)
+{
+    int retCode = 0;
+    const char* idc = "abcdefghijk";
+    const char* path = "/qconf/test123";
+    char tblkey[QCONF_TBLKEY_MAX_LEN] = {0};
+    int tblkey_size = QCONF_TBLKEY_MAX_LEN;
+
+    retCode = serialize_to_tblkey('4', idc, path, tblkey, tblkey_size);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("4:11:abcdefghijk14:/qconf/test123", tblkey);
+}
+/**
+  *End_Test_for function: int serialize_to_tblkey(char data_type, const char* idc, const char* path, char* tblkey, int tblkey_size)
+  *================================================================================================================================
+  */
+
+/**
+  *================================================================================================================================
+  *Begin_Test_for function: int deserialize_from_tblkey(const char *tblkey, char *idc, int idc_size, char *path, int path_size, char *data_type)
+  */
+
+//Test for deserialize_from_tblkey: err param: null tblkey
+TEST(format_utilTest, deserialize_from_tblkey_null_tblkey)
+{
+    int retCode = 0;
+    //const char* tblkey="2:4:corp11:/qconf/demo33:2:4:corp11:/qconf/demo9:demo-test";
+    char idc[100] = {0};
+    char path[100] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(NULL, idc, 100, path, 100, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_tblkey: errparam: null idc
+TEST(format_utilTest, deserialize_from_tblkey_null_idc)
+{
+    int retCode = 0;
+    const char* tblkey = "2:4:corp11:/qconf/demo33:2:4:corp11:/qconf/demo9:demo-test";
+    char path[100] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, NULL, 0, path, 100, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_tblkey: err param: null data_type
+TEST(format_utilTest, deserialize_from_tblkey_null_data_type)
+{
+    int retCode = 0;
+    const char* tblkey = "2:4:corp11:/qconf/demo33:2:4:corp11:/qconf/demo9:demo-test";
+    char idc[100] = {0};
+    char path[100] = {0};
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 100, path, 100, NULL);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_tblkey: invalid data_type
+TEST(format_utilTest, deserialize_from_tblkey_invalid_data_type)
+{
+    int retCode = 0;
+    const char* tblkey = "0:4:corp11:/qconf/demo33:2:4:corp11:/qconf/demo9:demo-test";
+    char idc[100] = {0};
+    char path[100] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 100, path, 100, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+}
+
+//Test for deserialize_from_tblkey: err param: idc_size<0
+TEST(format_utilTest, deserialize_from_tblkey_idc_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* tblkey = "2:4:corp11:/qconf/demo33:2:4:corp11:/qconf/demo9:demo-test";
+    char idc[100] = {0};
+    char path[100] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, -1, path, 100, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_tblkey: invalid tblkey format
+TEST(format_utilTest, deserialize_from_tblkey_invalid_tblkey_format)
+{
+    int retCode = 0;
+    const char* tblkey = "2,4,corp11,/qconf/demo33,2,4.corp11./qconf/demo9.demo-test";
+    char idc[100] = {0};
+    char path[100] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 100, path, 100, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+}
+
+//Test for deserialize_from_tblkey: invalid idc_size
+TEST(format_utilTest, deserialize_from_tblkey_invalid_idc_size)
+{
+    int retCode = 0;
+    const char* tblkey = "2:-1,corp11:/qconf/demo33:2:4:corp11:/qconf/demo9:demo-test";
+    char idc[100] = {0};
+    char path[100] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 100, path, 100, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_LEN_NON_POSITIVE, retCode);
+}
+
+//Test for deserialize_fromo_tblkey: invalid idc_size: less than the length of actual idc
+TEST(format_utilTest, deserialize_from_tblkey_idc_size_less_than_length_of_actual_idc)
+{
+    int retCode = 0;
+    const char* tblkey = "2:4:corp11:/qconf/demo33:2:4:corp11:/qconf/demo9:demo-test";
+    char idc[3] = {0};
+    char path[100] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 3, path, 100, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for deserialize_from_tblkey: invalid idc_size: equals with the length of strlen(idc)
+TEST(format_utilTest, deserialize_from_tblkey_idc_size_equals_with_length_of_actual_idc)
+{
+    int retCode = 0;
+    const char* tblkey = "2:4:corp11:/qconf/demo33:2:4:corp11:/qconf/demo9:demo-test";
+    char idc[4] = {0};
+    char path[100] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 4, path, 100, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for deserialize_from_tblkey: tblkey->data_type:'1' & idc_size is enough
+TEST(format_utilTest, deserialize_from_tblkey_data_type_zk_host_and_idc_size_is_enough)
+{
+    int retCode = 0;
+    const char* tblkey = "1:4:corp";
+    char idc[5] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 5, NULL, 0, &data_type);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ('1', data_type);
+    EXPECT_STREQ("corp", idc);
+}
+
+//Test for deserialize_from_tblkey: tblkey->data_type: '2' & path=NULL
+TEST(format_utilTest, deserialize_from_tblkey_data_type_node_and_nullpath)
+{
+    int retCode = 0;
+    const char* tblkey = "2:4:corp11:/qconf/demo33:2:4:corp11:/qconf/demo9:demo-test";
+    char idc[5] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 5, NULL, 0, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_tblkey: tblkey->data_type: '2' & path_size<0
+TEST(format_utilTest, deserialize_from_tblkey_data_type_node_and_path_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* tblkey = "2:4:corp11:/qconf/demo33:2:4:corp11:/qconf/demo9:demo-test";
+    char idc[5] = {0};
+    char path[100] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 5, path, -1, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_tblkey: tblkey->data_type: '2' & invalid path_size: less than the length of actual path
+TEST(format_utilTest, deserialize_from_tblkey_data_type_node_and_path_size_less_than_length_of_path)
+{
+    int retCode = 0;
+    const char* tblkey = "2:4:corp11:/qconf/demo33:2:4:corp11:/qconf/demo9:demo-test";
+    char idc[5] = {0};
+    char path[10] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 5, path, 10, &data_type);
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for deserialize_from_tblkey: tblkey->data_type:'2' & invalid path_size: equals with strlen(path)
+TEST(format_utilTest, deserialize_from_tblkey_data_type_node_and_path_size_equals_with_length_of_path)
+{
+    int retCode = 0;
+    const char* tblkey = "2:4:corp11:/qconf/demo33:2:4:corp11:/qconf/demo9:demo-test";
+    char idc[5] = {0};
+    char path[11] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 5, path, 11, &data_type);
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for deserialize_from_tblkey: tblkey->data_type:'2' & valid path_size
+TEST(format_utilTest, deserialize_from_tblkey_data_type_node_and_path_size_more_than_length_of_path)
+{
+    int retCode = 0;
+    const char* tblkey = "2:4:corp11:/qconf/demo33:2:4:corp11:/qconf/demo9:demo-test";
+    char idc[5] = {0};
+    char path[12] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 5, path, 12, &data_type);
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("corp", idc);
+    EXPECT_STREQ("/qconf/demo", path);
+    EXPECT_EQ('2', data_type);
+}
+
+//Test for deserialize_from_tblkey: tblkey->data_type:'3' & path=NULL
+TEST(format_utilTest, deserialize_from_tblkey_data_type_service_and_nullpath)
+{
+    int retCode = 0;
+    const char* tblkey = "3:4:corp26:/qconf/__qconf_anchor_node69:3:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80";
+    char idc[10] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 5, NULL, 0, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_tblkey: tblkye->data_type: '3' & path_size<0
+TEST(format_utilTest, deserialize_from_tblkey_data_type_service_and_path_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* tblkey = "3:4:corp26:/qconf/__qconf_anchor_node69:3:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80";
+    char idc[10] = {0};
+    char path[50] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 5, path, -1, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_tblkey: tblkey->data_type: '3' & invalid path_size less than strlen(path)
+TEST(format_utilTest, deserialize_from_tblkey_data_type_service_and_path_size_less_than_length_of_path)
+{
+    int retCode = 0;
+    const char* tblkey = "3:4:corp26:/qconf/__qconf_anchor_node69:3:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80";
+    char idc[10] = {0};
+    char path[25] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 10, path, 25, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for deserialize_From_tblkey: tblkey->data_type: '3' & invalid path_size equals with strlen(path)
+TEST(format_utilTest, deserialize_from_tblkey_data_type_service_and_path_size_equals_with_length_of_path)
+{
+    int retCode = 0;
+    const char* tblkey = "3:4:corp26:/qconf/__qconf_anchor_node69:3:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80";
+    char idc[10] = {0};
+    char path[26] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 10, path, 26, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for deserialize_from_tblkey: tblkey->data_type: '3' & valid path_size
+TEST(format_utilTest, deserialize_from_tblkey_data_type_service_and_path_size_enough)
+{
+    int retCode = 0;
+    const char* tblkey = "3:4:corp26:/qconf/__qconf_anchor_node69:3:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80";
+    char idc[10] = {0};
+    char path[27] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 10, path, 27, &data_type);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("corp", idc);
+    EXPECT_STREQ("/qconf/__qconf_anchor_node", path);
+    EXPECT_EQ('3', data_type);
+}
+
+//Test for deserialize_from_tblkey: tblkey->data_type:'4' & path=NULL
+TEST(format_utilTest, deserialize_from_tblkey_data_type_batch_node_and_nullpath)
+{
+    int retCode = 0;
+    const char* tblkey = "4:4:corp26:/qconf/__qconf_anchor_node69:4:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80";
+    char idc[10] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 5, NULL, 0, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_tblkey: tblkye->data_type: '4' & path_size<0
+TEST(format_utilTest, deserialize_from_tblkey_data_type_batch_node_and_path_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* tblkey = "4:4:corp26:/qconf/__qconf_anchor_node69:4:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80";
+    char idc[10] = {0};
+    char path[50] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 5, path, -1, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_tblkey: tblkey->data_type: '4' & invalid path_size less than strlen(path)
+TEST(format_utilTest, deserialize_from_tblkey_data_type_batch_node_and_path_size_less_than_length_of_path)
+{
+    int retCode = 0;
+    const char* tblkey = "4:4:corp26:/qconf/__qconf_anchor_node69:4:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80";
+    char idc[10] = {0};
+    char path[25] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 10, path, 25, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for deserialize_From_tblkey: tblkey->data_type: '4' & invalid path_size equals with strlen(path)
+TEST(format_utilTest, deserialize_from_tblkey_data_type_batch_node_and_path_size_equals_with_length_of_path)
+{
+    int retCode = 0;
+    const char* tblkey = "4:4:corp26:/qconf/__qconf_anchor_node69:4:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80";
+    char idc[10] = {0};
+    char path[26] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 10, path, 26, &data_type);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for deserialize_from_tblkey: tblkey->data_type: '4' & valid path_size
+TEST(format_utilTest, deserialize_from_tblkey_data_type_batch_node_and_path_size_enough)
+{
+    int retCode = 0;
+    const char* tblkey = "4:4:corp26:/qconf/__qconf_anchor_node69:4:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80";
+    char idc[10] = {0};
+    char path[27] = {0};
+    char data_type;
+
+    retCode = deserialize_from_tblkey(tblkey, idc, 10, path, 27, &data_type);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("corp", idc);
+    EXPECT_STREQ("/qconf/__qconf_anchor_node", path);
+    EXPECT_EQ('4', data_type);
+}
+/**
+  *End_Test_for function: int deserialize_from_tblkey(const char *tblkey, char *idc, int idc_size, char *path, int path_size, char *data_type)
+  *============================================================================================================================================
+  */
+
+/**
+  *============================================================================================================================================
+  *Begin_Test_for function: int nodeval_to_tblval(const char* key, const char* nodeval, int nodeval_len, char* tblval_buf, int buf_size)
+  */
+
+//Test for nodeval_to_tblval: key=NULL
+TEST(format_utilTest, nodeval_to_tblval_null_key)
+{
+    int retCode = 0;
+    const char* nodeval = "qconfAnchor";
+    char tblval_buf[1024] = {0};
+
+    retCode = nodeval_to_tblval(NULL, nodeval, strlen(nodeval), tblval_buf, 1024);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for nodeval_to_tblval: tblval_buf=NULL
+TEST(format_utilTest, nodeval_to_tblval_null_tblval_buf)
+{
+    int retCode = 0;
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    const char* nodeval = "qconfAnchor";
+
+    retCode = nodeval_to_tblval(key, nodeval, 0, NULL, 0);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for nodeval_to_tblval: buf_size<0
+TEST(format_utilTest, nodeval_to_tblval_buf_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    const char* nodeval = "qconfAnchor";
+    char tblval_buf[1024] = {0};
+
+    retCode = nodeval_to_tblval(key, nodeval, strlen(nodeval), tblval_buf, -1);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for nodeval_to_tblval: nodeval=NULL & buf_size is not enough
+TEST(format_utilTest, nodeval_to_tblval_nodeval_null_and_buf_size_not_enough)
+{
+    int retCode = 0;
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[38] = {0};
+
+    retCode = nodeval_to_tblval(key, NULL, -1, tblval_buf, 38);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for nodeval_to_tblval: nodeval=NULL & buf_size is not enough
+TEST(format_utilTest, nodeval_to_tblval_nodeval_null_and_buf_size_not_enough2)
+{
+    int retCode = 0;
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[39] = {0};
+
+    retCode = nodeval_to_tblval(key, NULL, -1, tblval_buf, 39);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+    //EXPECT_STREQ("2:4:corp26:/qconf/__qconf_anchor_node0:",tblval_buf);
+}
+
+//Test for nodeval_to_tblval: nodeval=NULL & buf_size is enough
+TEST(format_utilTest, nodeval_to_tblval_nodeval_null_and_buf_size_enough)
+{
+    int retCode = 0;
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[40] = {0};
+
+    retCode = nodeval_to_tblval(key, NULL, -1, tblval_buf, 40);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("2:4:corp26:/qconf/__qconf_anchor_node0:", tblval_buf);
+}
+
+//Test for nodeval_to_tblval: nodeval!=NULL & buf_size is not enough
+TEST(format_utilTest, nodeval_to_tblval_buf_size_not_enough)
+{
+    int retCode = 0;
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    const char* nodeval = "qconfAnchor";
+    char tblval_buf[50] = {0};
+
+    retCode = nodeval_to_tblval(key, nodeval, 11, tblval_buf, 50);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for nodeval_to_tblval: nodeval!=NULL & buf_size is not enough
+TEST(format_utilTest, nodeval_to_tblval_buf_size_not_enough2)
+{
+    int retCode = 0;
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    const char* nodeval = "qconfAnchor";
+    char tblval_buf[51] = {0};
+
+    retCode = nodeval_to_tblval(key, nodeval, 11, tblval_buf, 51);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+    //EXPECT_STREQ("2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor",tblval_buf);
+}
+
+//Test for nodeval_to_tblval: nodeval!=NULL & buf_size is enough
+TEST(format_utilTest, nodeval_to_tblval_buf_size_enough)
+{
+    int retCode = 0;
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    const char* nodeval = "qconfAnchor";
+    char tblval_buf[52] = {0};
+
+    retCode = nodeval_to_tblval(key, nodeval, 11, tblval_buf, 52);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor", tblval_buf);
+}
+/**
+  *End_Test_for function: int nodeval_to_tblval(const char* key, const char* nodeval, int nodeval_len, char* tblval_buf, int buf_size)
+  *==================================================================================================================================
+  */
+
+/**
+  *==================================================================================================================================
+  *Begin_Test_for function: int tblval_to_nodeval(const char* tblval, char** nodeval, int *nodeval_len, char *idc, int idc_size, char* path, int path_size)
+  */
+
+//Test for tblval_to_nodeval: tblval=NULL
+TEST(format_utilTest, tblval_to_nodeval_null_tblval)
+{
+    int retCode = 0;
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(NULL, &nodeval, &nodeval_len, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_nodeval: nodeval=NULL
+TEST(format_utilTest, tblval_to_nodeval_null_nodeval)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, NULL, &nodeval_len, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_nodeval: nodeval_len=NULL
+TEST(format_utilTest, tblval_to_nodeval_null_nodeval_len)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, NULL, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_nodeval: idc=NULL
+TEST(format_utilTest, tblval_to_nodeval_null_idc)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, NULL, 0, path, 27);
+}
+
+//Test for tblval_to_nodeval: path=NUL
+TEST(format_utilTest, tblval_to_nodeval_null_path)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, NULL, 0);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_nodeval: idc_size<0
+TEST(format_utilTest, tblval_to_nodeval_idc_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, -1, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_nodeval: path_size<0
+TEST(format_utilTest, tblval_to_nodeval_path_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, path, -1);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_nodeval: invalid data_type
+TEST(format_utilTest, tblval_to_nodeval_invalid_data_type)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_DATA_TYPE, retCode);
+}
+
+//Test for tblval_to_nodeval: invalid data format
+TEST(format_utilTest, tblval_to_nodeval_invalid_data_format)
+{
+    int retCode = 0;
+    const char* tblval = "2,4,corp26,/qconf/__qconf_anchor_node11,qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+}
+
+//Test for tblval_to_nodeval: idc_size < strlen(idc)
+TEST(format_utilTest, tblval_to_nodeval_idc_size_less_than_length_of_idc)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[3] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 3, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_nodeval: idc_size=strlen(idc)
+TEST(format_utilTest, tblval_to_nodeval_idc_size_equals_with_length_of_idc)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[4] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 4, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_nodeval: idc_size>strlen(idc)
+TEST(format_utilTest, tblval_to_nodeval_idc_size_more_than_length_of_idc)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+}
+
+//Test for tblval_to_nodeval: length of actual idc =0
+TEST(format_utilTest, tblval_to_nodeval_length_of_idc_is_zero)
+{
+    int retCode = 0;
+    const char* tblval = "2:a:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_LEN_NON_POSITIVE, retCode);
+}
+
+//Test for tblval_to_nodeval: path_size<strlen(path)
+TEST(format_utilTest, tblval_to_nodeval_path_size_less_than_length_of_path)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[25] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, path, 25);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_nodeval: path_size=strlen(path)
+TEST(format_utilTest, tblval_to_nodeval_path_size_equals_with_length_of_path)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[26] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, path, 26);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_nodeval: path_size>strlen(path)
+TEST(format_utilTest, tblval_to_nodeval_path_size_more_than_length_of_path)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("corp", idc);
+    EXPECT_STREQ("/qconf/__qconf_anchor_node", path);
+}
+
+//Test for tblval_to_nodeval: length of path is 0
+TEST(format_utilTest, tblval_to_nodeval_length_of_path_zero)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corpa:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_LEN_NON_POSITIVE, retCode);
+}
+
+//Test for tblval_to_node_val: invalid length of nodeval
+TEST(format_utilTest, tblval_to_nodeval_invalid_length_of_nodeval)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_nodea:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_NULL_VALUE, retCode);
+}
+
+//Test for tblval_to_nodeval: length of nodeval is zero
+TEST(format_utilTest, tblval_to_nodeval_length_of_nodeval_zero)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node0:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_NULL_VALUE, retCode);
+}
+
+//Test for tblval_to_nodeval: empty nodeval
+TEST(format_utilTest, tblval_to_nodeval_empty_nodeval)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+}
+
+//Test for tblval_to_nodeval: valid params
+TEST(format_utilTest, tblval_to_nodeval_all_params_valid)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    char* nodeval = NULL;
+    int nodeval_len = 0;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_nodeval(tblval, &nodeval, &nodeval_len, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("corp", idc);
+    EXPECT_STREQ("/qconf/__qconf_anchor_node", path);
+    EXPECT_STREQ("qconfAnchor", nodeval);
+}
+/**
+  *End_Test_for function: int tblval_to_nodeval(const char* tblval, char** nodeval, int *nodeval_len, char *idc, int idc_size, char* path, int path_size)
+  *=====================================================================================================================================================
+  */
+
+/**
+  *=====================================================================================================================================================
+  *Begin_Test_for function: int idcval_to_tblval(const char* key, const char* host, char* tblval_buf, int buf_size)
+  */
+
+//Test for idcval_to_tblval: key=NULL
+TEST(format_utilTest, idcval_to_tblval_null_key)
+{
+    int retCode = 0;
+    const char* host = "10.15.16.17:2525";
+    char tblval_buf[100];
+
+    retCode = idcval_to_tblval(NULL, host, tblval_buf, 100);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for idcval_to_tblval: host=NULL
+TEST(format_utilTest, idcval_to_tblval_null_host)
+{
+    int retCode = 0;
+    const char* key = "1:4:test";
+    char tblval_buf[100];
+
+    retCode = idcval_to_tblval(key, NULL, tblval_buf, 100);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for idcval_to_tblval: tblval_buf=NULL
+TEST(format_utilTest, idcval_to_tblval_null_tblval_buf)
+{
+    int retCode = 0;
+    const char* key = "1:4:test";
+    const char* host = "10.15.16.17:2223";
+
+    retCode = idcval_to_tblval(key, host, NULL, 0);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for idcval_to_tblval: buf_size<0
+TEST(format_utilTest, idcval_to_tblval_buf_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* key = "1:4:test";
+    const char* host = "10.15.16.17:22";
+    char tblval_buf[100];
+
+    retCode = idcval_to_tblval(key, host, tblval_buf, -1);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for idcval_to_tblval: buf_size less than need size
+TEST(format_utilTest, idcval_to_tblval_buf_size_less_than_need_size)
+{
+    int retCode = 0;
+    const char* key = "1:4:test";
+    const char* host = "10.15.16.17:22";
+    char tblval_buf[24];
+
+    retCode = idcval_to_tblval(key, host, tblval_buf, 24);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for idcval_to_tblval: buf_size equals with need size
+TEST(format_utilTest, idcval_to_tblval_buf_size_equals_with_need_size)
+{
+    int retCode = 0;
+    const char* key = "1:4:test";
+    const char* host = "10.15.16.17:22";
+    char tblval_buf[25];
+    retCode = idcval_to_tblval(key, host, tblval_buf, 25);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for idcval_to_tblval: buf_size more than need size
+TEST(format_utilTest, idcval_to_tblval_buf_size_more_than_need_size)
+{
+    int retCode = 0;
+    const char* key = "1:4:test";
+    const char* host = "10.15.16.17:22";
+    char tblval_buf[26];
+
+    retCode = idcval_to_tblval(key, host, tblval_buf, 26);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("1:4:test14:10.15.16.17:22", tblval_buf);
+}
+/**
+  *End_Test_for function: int idcval_to_tblval(const char* key, const char* host, char* tblval_buf, int buf_size)
+  *=======================================================================================================================
+  */
+
+/**
+  *=======================================================================================================================
+  *Begin_Test_for function: int tblval_to_idcval(const char* tblval, char* host, int host_size, char*idc, int idc_size)
+  */
+
+//Test for tblval_to_idcval: tblval=NULL
+TEST(format_utilTest, tblval_to_idcval_null_tblval)
+{
+    int retCode = 0;
+    char host[50] = {0};
+    char idc[50] = {0};
+
+    retCode = tblval_to_idcval(NULL, host, 50, idc, 50);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_idcval: host=NULL
+TEST(format_utilTest, tblval_to_idcval_null_host)
+{
+    int retCode = 0;
+    const char* tblval = "1:4:test14:10.15.16.17:22";
+    char idc[50] = {0};
+
+    retCode = tblval_to_idcval(tblval, NULL, 0, idc, 50);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_idcval: idc=NULL
+TEST(format_utilTest, tblval_to_idcval_null_idc)
+{
+    int retCode = 0;
+    const char* tblval = "1:4:test14:10.15.16.17:22";
+    char host[50] = {0};
+
+    retCode = tblval_to_idcval(tblval, host, 50, NULL, 0);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_idcval: host_size<0
+TEST(format_utilTest, tblval_to_idcval_host_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* tblval = "1:4:test14:10.15.16.17:22";
+    char host[50] = {0};
+    char idc[50] = {0};
+
+    retCode = tblval_to_idcval(tblval, host, -1, idc, 50);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_idcval: idc_size<0
+TEST(format_utilTest, tblval_to_idcval_idc_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* tblval = "1:4:test14:10.15.16.17:22";
+    char host[50] = {0};
+    char idc[50] = {0};
+
+    retCode = tblval_to_idcval(tblval, host, 50, idc, -1);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_idcval: invalid data_type
+TEST(format_utilTest, tblval_to_idcval_invalid_data_type)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:test14:10.15.16.17:22";
+    char host[50] = {0};
+    char idc[50] = {0};
+
+    retCode = tblval_to_idcval(tblval, host, 50, idc, 50);
+
+    EXPECT_EQ(QCONF_ERR_DATA_TYPE, retCode);
+}
+
+//Test for tblval_to_idcval: invalid data format
+TEST(format_utilTest, tblval_to_idcval_invalid_data_format)
+{
+    int retCode = 0;
+    const char* tblval = "1,4,test14,10.15.16.17,22";
+    char host[15] = {0};
+    char idc[5] = {0};
+
+    retCode = tblval_to_idcval(tblval, host, 15, idc, 5);
+
+    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+}
+
+//Test for tblval_to_idcval: idc_size less than strlen(idc)
+TEST(format_utilTest, tblval_to_idcval_idc_size_less_than_length_of_idc)
+{
+    int retCode = 0;
+    const char* tblval = "1:4:test14:10.15.16.17:22";
+    char host[15] = {0};
+    char idc[3] = {0};
+
+    retCode = tblval_to_idcval(tblval, host, 15, idc, 3);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_idcval: idc_size equals with strlen(idc)
+TEST(format_utilTest, tblval_to_idcval_idc_size_equals_with_length_of_idc)
+{
+    int retCode = 0;
+    const char* tblval = "1:4:test14:10.15.16.17:22";
+    char host[15] = {0};
+    char idc[4] = {0};
+
+    retCode = tblval_to_idcval(tblval, host, 15, idc, 4);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_idcval: strlen(idc)<0
+TEST(format_utilTest, tblval_to_idcval_length_of_idc_less_than_zero)
+{
+    int retCode = 0;
+    const char* tblval = "1:-1:test14:10.15.16.17:22";
+    char host[15] = {0};
+    char idc[5] = {0};
+
+    retCode = tblval_to_idcval(tblval, host, 15, idc, 5);
+
+    EXPECT_EQ(QCONF_ERR_LEN_NON_POSITIVE, retCode);
+}
+
+//Test for tblval_to_idcval: host_size<strlen(host)
+TEST(format_utilTest, tblval_to_idcval_host_size_less_than_length_of_host)
+{
+    int retCode = 0;
+    const char* tblval = "1:4:test14:10.15.16.17:22";
+    char host[13] = {0};
+    char idc[5] = {0};
+
+    retCode = tblval_to_idcval(tblval, host, 13, idc, 5);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_idcvla: host_size equals with strlen(host)
+TEST(format_utilTest, tblval_to_idcval_host_size_equals_with_length_of_host)
+{
+    int retCode = 0;
+    const char* tblval = "1:4:test14:10.15.16.17:22";
+    char host[14] = {0};
+    char idc[5] = {0};
+
+    retCode = tblval_to_idcval(tblval, host, 14, idc, 5);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_idcval: length of strlen(host) less than zero
+TEST(format_utilTest, tblval_to_idcval_length_of_host_less_than_zero)
+{
+    int retCode = 0;
+    const char* tblval = "1:4:test-1:10.15.16.17:22";
+    char host[15] = {0};
+    char idc[5] = {0};
+
+    retCode = tblval_to_idcval(tblval, host, 15, idc, 5);
+
+    EXPECT_EQ(QCONF_ERR_LEN_NON_POSITIVE, retCode);
+}
+
+//Test for tblval_to_idcval: all args valid
+TEST(format_utilTest, tblval_to_idcval_valid)
+{
+    int retCode = 0;
+    const char* tblval = "1:4:test14:10.15.16.17:22";
+    char host[15] = {0};
+    char idc[5] = {0};
+
+    retCode = tblval_to_idcval(tblval, host, 15, idc, 5);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("test", idc);
+    EXPECT_STREQ("10.15.16.17:22", host);
+}
+/**
+  *End_Test_for function: int tblval_to_idcval(const char* tblval, char* host, int host_size, char*idc, int idc_size)
+  *=====================================================================================================================
+  */
+
+/**
+  *=====================================================================================================================
+  *Begin_Test_for function: int serialize_to_idc_host(const char* idc, const char* host, char* dest, int dest_size)
+  */
+
+//Test for serialize_to_idc_host: idc=NULL
+TEST(format_utilTest, serialize_to_idc_host_null_idc)
+{
+    int retCode = 0;
+    const char* host = "10.15.16.17:22";
+    char dest[50] = {0};
+
+    retCode = serialize_to_idc_host(NULL, host, dest, 50);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for serialize_to_idc_host: host=NULL
+TEST(format_utilTest, serialize_to_idc_host_null_host)
+{
+    int retCode = 0;
+    const char* idc = "test";
+    char dest[50] = {0};
+
+    retCode = serialize_to_idc_host(idc, NULL, dest, 50);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for serialize_to_idc_host: dest=NULL
+TEST(format_utilTest, serialize_to_idc_host_null_dest)
+{
+    int retCode = 0;
+    const char* idc = "test";
+    const char* host = "10.15.16.17:22";
+
+    retCode = serialize_to_idc_host(idc, host, NULL, 0);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for serialize_to_idc_host: dest_size less than zero
+TEST(format_utilTest, serialize_to_idc_host_dest_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* idc = "test";
+    const char* host = "10.15.16.17:22";
+    char dest[50] = {0};
+
+    retCode = serialize_to_idc_host(idc, host, dest, -1);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for serialize_to_idc_host: dest_size not enough
+TEST(format_utilTest, serialize_to_idc_host_dest_size_not_enough)
+{
+    int retCode = 0;
+    const char* idc = "test";
+    const char* host = "10.15.16.17:22";
+    char dest[22] = {0};
+
+    retCode = serialize_to_idc_host(idc, host, dest, 22);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for serialize_to_idc_host: dest_size not enough
+TEST(format_utilTest, serialize_to_idc_host_dest_size_not_enough2)
+{
+    int retCode = 0;
+    const char* idc = "test";
+    const char* host = "10.15.16.17:22";
+    char dest[23] = {0};
+
+    retCode = serialize_to_idc_host(idc, host, dest, 23);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for serialize_to_idc_host: dest_size more than need
+TEST(format_utilTest, serialize_to_idc_host_dest_size_more_than_need)
+{
+    int retCode = 0;
+    const char* idc = "test";
+    const char* host = "10.15.16.17:22";
+    char dest[24] = {0};
+
+    retCode = serialize_to_idc_host(idc, host, dest, 24);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("4:test14:10.15.16.17:22", dest);
+}
+/**
+  *End_Test_for function: int serialize_to_idc_host(const char* idc, const char* host, char* dest, int dest_size)
+  *============================================================================================================================
+  */
+
+/**
+  *============================================================================================================================
+  *Begin_Test_for function: int deserialize_from_idc_host(const char* idc_host, char* idc, int idc_size, char* host, int host_size)
+  */
+
+//Test for deserialize_from_idc_host: idc_host=NULL
+TEST(format_utilTest, deserialize_from_idc_host_null_idc_host)
+{
+    int retCode = 0;
+    char idc[5] = {0};
+    char host[15] = {0};
+
+    retCode = deserialize_from_idc_host(NULL, idc, 5, host, 15);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_idc_host: idc=NULL
+TEST(format_utilTest, deserialize_from_idc_host_null_idc)
+{
+    int retCode = 0;
+    const char* idc_host = "4:test14:10.15.16.17:22";
+    char host[15] = {0};
+
+    retCode = deserialize_from_idc_host(idc_host, NULL, 0, host, 15);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_idc_host: host=NULL
+TEST(format_utilTest, deserialize_from_idc_host_null_host)
+{
+    int retCode = 0;
+    const char* idc_host = "4:test14:10.15.16.17:22";
+    char idc[5] = {0};
+
+    retCode = deserialize_from_idc_host(idc_host, idc, 5, NULL, 0);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_idc_host: idc_size<0
+TEST(format_utilTest, deserialize_from_idc_host_idc_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* idc_host = "4:test14:10.15.16.17:22";
+    char idc[5] = {0};
+    char host[15] = {0};
+
+    retCode = deserialize_from_idc_host(idc_host, idc, -1, host, 15);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_idc_host: host_size<0
+TEST(format_utilTest, deserialize_from_idc_host_host_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* idc_host = "4:test14:10.15.16.17:22";
+    char idc[5] = {0};
+    char host[15] = {0};
+
+    retCode = deserialize_from_idc_host(idc_host, idc, 5, host, -1);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for deserialize_from_idc_host: idc_size < strlen(idc)
+TEST(format_utilTest, deserialize_from_idc_host_idc_size_less_than_length_of_idc)
+{
+    int retCode = 0;
+    const char* idc_host = "4:test14:10.15.16.17:22";
+    char idc[3] = {0};
+    char host[15] = {0};
+
+    retCode = deserialize_from_idc_host(idc_host, idc, 3, host, 15);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for deserialize_from_idc_host: idc_size = strlen(idc)
+TEST(format_utilTest, deserialize_from_idc_host_idc_size_equals_with__length_of_idc)
+{
+    int retCode = 0;
+    const char* idc_host = "4:test14:10.15.16.17:22";
+    char idc[4] = {0};
+    char host[15] = {0};
+
+    retCode = deserialize_from_idc_host(idc_host, idc, 4, host, 15);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for deserialize_from_idc_host: length of idc less than zero
+TEST(format_utilTest, deserialize_from_idc_host_length_of_idc_less_than_zero)
+{
+    int retCode = 0;
+    const char* idc_host = "-1:test14:10.15.16.17:22";
+    char idc[5] = {0};
+    char host[15] = {0};
+
+    retCode = deserialize_from_idc_host(idc_host, idc, 5, host, 15);
+
+    EXPECT_EQ(QCONF_ERR_LEN_NON_POSITIVE, retCode);
+}
+
+//Test for deserialize_from_idc_host: host_size < strlen(host)
+TEST(format_utilTest, deserialize_from_idc_host_host_size_less_than_length_of_host)
+{
+    int retCode = 0;
+    const char* idc_host = "4:test14:10.15.16.17:22";
+    char idc[5] = {0};
+    char host[13] = {0};
+
+    retCode = deserialize_from_idc_host(idc_host, idc, 5, host, 13);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for deserialize_from_idc_host: host_size == strlen(host)
+TEST(format_utilTest, deserialize_from_idc_host_host_size_equals_with_length_of_host)
+{
+    int retCode = 0;
+    const char* idc_host = "4:test14:10.15.16.17:22";
+    char idc[5] = {0};
+    char host[14] = {0};
+
+    retCode = deserialize_from_idc_host(idc_host, idc, 5, host, 14);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for deserialize_from_idc_host: length of host <0
+TEST(format_utilTest, deserialize_from_idc_host_length_of_host_less_than_zero)
+{
+    int retCode = 0;
+    const char* idc_host = "4:test-1:10.15.16.17:22";
+    char idc[5] = {0};
+    char host[15] = {0};
+
+    retCode = deserialize_from_idc_host(idc_host, idc, 5, host, 15);
+
+    EXPECT_EQ(QCONF_ERR_LEN_NON_POSITIVE, retCode);
+}
+
+//Test for deserialize_from_idc_host: valid args
+TEST(format_utilTest, deserialize_from_idc_host_valid)
+{
+    int retCode = 0;
+    const char* idc_host = "4:test14:10.15.16.17:22";
+    char idc[5] = {0};
+    char host[15] = {0};
+
+    retCode = deserialize_from_idc_host(idc_host, idc, 5, host, 15);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("test", idc);
+    EXPECT_STREQ("10.15.16.17:22", host);
+}
+/**
+  *End_Test_for function: int deserialize_from_idc_host(const char* idc_host, char* idc, int idc_size, char* host, int host_size)
+  *================================================================================================================================
+  */
+
+/**
+  *Begin_Test_for function: int chdnodeval_to_tblval(const char *key, String_vector_t *nodes, char* tblval_buf, int buf_size, char* valid_flg)
+  *================================================================================================================================
+  */
+
+//Test for chdnodeval_to_tblval: key=NULL
+TEST_F(format_utilTestF, chdnodeval_to_tblval_null_key)
+{
+    int retCode = 0;
+    char tblval_buf[TEST_TBLVAL_MAX_LEN] = {0};
+    int buf_size = TEST_TBLVAL_MAX_LEN;
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+
+    retCode = chdnodeval_to_tblval(NULL, &nodes, tblval_buf, buf_size, valid_flg);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for chdnodeval_to_tblval: nodes=NULL
+TEST_F(format_utilTestF, chdnodeval_to_tblval_null_nodes)
+{
+    int retCode = 0;
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[TEST_TBLVAL_MAX_LEN] = {0};
+    int buf_size = TEST_TBLVAL_MAX_LEN;
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+
+    retCode = chdnodeval_to_tblval(key, NULL, tblval_buf, buf_size, valid_flg);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for chdnodeval_to_tblval: tblval_buf=NULL
+TEST_F(format_utilTestF, chdnodeval_to_tblval_null_tblval_buf)
+{
+    int retCode = 0;
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+
+    retCode = chdnodeval_to_tblval(key, &nodes, NULL, 0, valid_flg);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for chdnodeval_to_tblval: valid_flag=NULL
+/*TEST_F(format_utilTestF,chdnodeval_to_tblval_null_valid_flag)
+{
+	int retCode=0;
+	const char* key="3:4:corp26:/qconf/__qconf_anchor_node";
+	char tblval_buf[TEST_TBLVAL_MAX_LEN]={0};
+	int buf_size=TEST_TBLVAL_MAX_LEN;
+
+	retCode=chdnodeval_to_tblval(key,&nodes,tblval_buf,buf_size,NULL);
+
+	EXPECT_EQ(QCONF_ERR_PARAM,retCode);
+}*/
+
+//Test for chdnodeval_to_tblval: buf_size<0
+TEST_F(format_utilTestF, chdnodeval_to_tblval_buf_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[TEST_TBLVAL_MAX_LEN] = {0};
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+
+    retCode = chdnodeval_to_tblval(key, &nodes, tblval_buf, -1, valid_flg);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for chdnodeval_to_tblval: count of nodes=0
+TEST(format_utilTest, chdnodeval_to_tblval_count_of_nodes_zero)
+{
+    int retCode = 0;
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    String_vector_t nodes;
+    memset(&nodes, 0, sizeof(nodes));
+    char tblval_buf[TEST_TBLVAL_MAX_LEN] = {0};
+    int buf_size = TEST_TBLVAL_MAX_LEN;
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+
+    retCode = chdnodeval_to_tblval(key, &nodes, tblval_buf, buf_size, valid_flg);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("3:4:corp26:/qconf/__qconf_anchor_node0:", tblval_buf);
+}
+
+//Test for chdnodeval_to_tblval: count of nodes!=0 but count of valid nodes = 0
+TEST_F(format_utilTestF, chdnodeval_to_tblval_count_of_valid_nodes_zero)
+{
+    int retCode = 0;
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[TEST_TBLVAL_MAX_LEN] = {0};
+    int buf_size = TEST_TBLVAL_MAX_LEN;
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+
+    retCode = chdnodeval_to_tblval(key, &nodes, tblval_buf, buf_size, valid_flg);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("3:4:corp26:/qconf/__qconf_anchor_node0:", tblval_buf);
+}
+
+//Test for chdnodeval_to_tblval: buf_size < strlen(prefix)
+TEST_F(format_utilTestF, chdnodeval_to_tblval_buf_size_not_enough_for_prefix)
+{
+    int retCode = 0;
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[38] = {0};
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+
+    retCode = chdnodeval_to_tblval(key, &nodes, tblval_buf, 38, valid_flg);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for chdnodeval_to_tblval: buf_size = strlen(prefix)
+TEST_F(format_utilTestF, chdnodeval_to_tblval_buf_size_not_enough_for_prefix2)
+{
+    int retCode = 0;
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[39] = {0};
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+
+    retCode = chdnodeval_to_tblval(key, &nodes, tblval_buf, 39, valid_flg);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for chdnodeval_to_tblval: buf_size < strlen(tblval) and count of nodes = 1
+TEST_F(format_utilTestF, chdnodeval_to_tblval_buf_size_not_enough_for_tblval_with_one_valid_node)
+{
+    int retCode = 0;
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[54] = {0};
+    char valid_flg[TEST_MAX_NODE_COUNT];
+    valid_flg[0] = 1;
+    memset(valid_flg + 1, 0, TEST_MAX_NODE_COUNT - 1);
+
+    retCode = chdnodeval_to_tblval(key, &nodes, tblval_buf, 54, valid_flg);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for chdnodeval_to_tblval: buf_size = strlen(tblval) and count of node = 1
+TEST_F(format_utilTestF, chdnodeval_to_tblval_buf_size_not_enough_for_tblval_with_one_valid_node2)
+{
+    int retCode = 0;
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[55] = {0};
+    char valid_flg[TEST_MAX_NODE_COUNT];
+    valid_flg[0] = 1;
+    memset(valid_flg + 1, 0, TEST_MAX_NODE_COUNT - 1);
+
+    retCode = chdnodeval_to_tblval(key, &nodes, tblval_buf, 55, valid_flg);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for chdnodeval_to_tblval: buf_size > strlen(tblval) and count of node =1
+TEST_F(format_utilTestF, chdnodeval_to_tblval_buf_size_enough_for_tblval_with_one_valid_node)
+{
+    int retCode = 0;
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[56] = {0};
+    char valid_flg[TEST_MAX_NODE_COUNT];
+    valid_flg[0] = 1;
+    memset(valid_flg + 1, 0, TEST_MAX_NODE_COUNT - 1);
+
+    retCode = chdnodeval_to_tblval(key, &nodes, tblval_buf, 56, valid_flg);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("3:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0", tblval_buf);
+}
+
+//Test for chdnodeval_to_tblval: buf_size < strlen(tblval) and count of nodes >1
+TEST_F(format_utilTestF, chdnodeval_to_tblval_buf_size_not_enough_for_tblval_with_several_valid_node)
+{
+    int retCode = 0;
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[204] = {0};
+    char valid_flg[TEST_MAX_NODE_COUNT];
+
+    for(int i = 0; i < TEST_MAX_NODE_COUNT; i++)
+    {
+        if(i % 2 == 0)
+            valid_flg[i] = 1;
+        else
+            valid_flg[i] = 0;
+    }
+
+    retCode = chdnodeval_to_tblval(key, &nodes, tblval_buf, 204, valid_flg);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for chdnodeval_to_tblval: buf_size = strlen(tblval) and count of nodes > 1
+TEST_F(format_utilTestF, chdnodeval_to_tblval_buf_size_not_enough_for_tblval_with_several_valid_node2)
+{
+    int retCode = 0;
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[205] = {0};
+    char valid_flg[TEST_MAX_NODE_COUNT];
+
+    for(int i = 0; i < TEST_MAX_NODE_COUNT; i++)
+    {
+        if(i % 2 == 0)
+            valid_flg[i] = 1;
+        else
+            valid_flg[i] = 0;
+    }
+
+    retCode = chdnodeval_to_tblval(key, &nodes, tblval_buf, 205, valid_flg);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for chdnodeval_to_tblval: buf_size > strlen(tblval) and count of nodes >1
+TEST_F(format_utilTestF, chdnodeval_to_tblval_buf_size_enough_for_tblval_with_several_valid_node)
+{
+    int retCode = 0;
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[206] = {0};
+    char valid_flg[TEST_MAX_NODE_COUNT];
+
+    for(int i = 0; i < TEST_MAX_NODE_COUNT; i++)
+    {
+        if(i % 2 == 0)
+            valid_flg[i] = 1;
+        else
+            valid_flg[i] = 0;
+    }
+
+    retCode = chdnodeval_to_tblval(key, &nodes, tblval_buf, 206, valid_flg);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("3:4:corp26:/qconf/__qconf_anchor_node10:13:10.15.16.17:013:10.15.16.17:213:10.15.16.17:413:10.15.16.17:613:10.15.16.17:814:10.15.16.17:1014:10.15.16.17:1214:10.15.16.17:1414:10.15.16.17:1614:10.15.16.17:18", tblval_buf);
+}
+
+/**
+  *Begin_Test_for function: int batchnodeval_to_tblval(const char *key, String_vector_t *nodes, char* tblval_buf, int buf_size)
+  *================================================================================================================================
+  */
+
+//Test for batchnodeval_to_tblval: key=NULL
+TEST_F(format_utilTestF, batchnodeval_to_tblval_null_key)
+{
+    int retCode = 0;
+    char tblval_buf[TEST_TBLVAL_MAX_LEN] = {0};
+    int buf_size = TEST_TBLVAL_MAX_LEN;
+
+    retCode = batchnodeval_to_tblval(NULL, &nodes, tblval_buf, buf_size);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for batchnodeval_to_tblval: nodes=NULL
+TEST_F(format_utilTestF, batchnodeval_to_tblval_null_nodes)
+{
+    int retCode = 0;
+    const char* key = "4:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[TEST_TBLVAL_MAX_LEN] = {0};
+    int buf_size = TEST_TBLVAL_MAX_LEN;
+
+    retCode = batchnodeval_to_tblval(key, NULL, tblval_buf, buf_size);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for batchnodeval_to_tblval: tblval_buf=NULL
+TEST_F(format_utilTestF, batchnodeval_to_tblval_null_tblval_buf)
+{
+    int retCode = 0;
+    const char* key = "4:4:corp26:/qconf/__qconf_anchor_node";
+
+    retCode = batchnodeval_to_tblval(key, &nodes, NULL, 0);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for batchnodeval_to_tblval: buf_size<0
+TEST_F(format_utilTestF, batchnodeval_to_tblval_buf_size_less_than_zero)
+{
+    int retCode = 0;
+    const char* key = "4:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[TEST_TBLVAL_MAX_LEN] = {0};
+
+    retCode = batchnodeval_to_tblval(key, &nodes, tblval_buf, -1);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for batchnodeval_to_tblval: count of nodes=0
+TEST(format_utilTest, batchnodeval_to_tblval_count_of_nodes_zero)
+{
+    int retCode = 0;
+    const char* key = "4:4:corp26:/qconf/__qconf_anchor_node";
+    String_vector_t nodes;
+    memset(&nodes, 0, sizeof(nodes));
+    char tblval_buf[TEST_TBLVAL_MAX_LEN] = {0};
+    int buf_size = TEST_TBLVAL_MAX_LEN;
+
+    retCode = batchnodeval_to_tblval(key, &nodes, tblval_buf, buf_size);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("4:4:corp26:/qconf/__qconf_anchor_node0:", tblval_buf);
+}
+
+//Test for batchnodeval_to_tblval: buf_size < strlen(prefix)
+TEST_F(format_utilTestF, batchnodeval_to_tblval_buf_size_not_enough_for_prefix)
+{
+    int retCode = 0;
+    const char* key = "4:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[38] = {0};
+
+    retCode = batchnodeval_to_tblval(key, &nodes, tblval_buf, 38);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for batchnodeval_to_tblval: buf_size = strlen(prefix)
+TEST_F(format_utilTestF, batchnodeval_to_tblval_buf_size_not_enough_for_prefix2)
+{
+    int retCode = 0;
+    const char* key = "4:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[39] = {0};
+
+    retCode = batchnodeval_to_tblval(key, &nodes, tblval_buf, 39);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for batchnodeval_to_tblval: buf_size > strlen(tblval) and count of nodes >1
+TEST_F(format_utilTestF, batchnodeval_to_tblval_buf_size_enough_for_tblval)
+{
+    int retCode = 0;
+    const char* key = "4:4:corp26:/qconf/__qconf_anchor_node";
+    char tblval_buf[371] = {0};
+
+    retCode = batchnodeval_to_tblval(key, &nodes, tblval_buf, 371); 
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("4:4:corp26:/qconf/__qconf_anchor_node20:13:10.15.16.17:013:10.15.16.17:113:10.15.16.17:213:10.15.16.17:313:10.15.16.17:413:10.15.16.17:513:10.15.16.17:613:10.15.16.17:713:10.15.16.17:813:10.15.16.17:914:10.15.16.17:1014:10.15.16.17:1114:10.15.16.17:1214:10.15.16.17:1314:10.15.16.17:1414:10.15.16.17:1514:10.15.16.17:1614:10.15.16.17:1714:10.15.16.17:1814:10.15.16.17:19", tblval_buf);
+}
+/**
+  *End_Test_for function: int batchnodeval_to_tblval(const char *key, String_vector_t *nodes, char* tblval_buf, int buf_size, char* valid_flg)
+  *===========================================================================================================================================
+  */
+
+/**
+  *===========================================================================================================================================
+  *Begin_Test_for function: int tblval_to_chdnodeval(const char* tblval, String_vector_t *nodes, char *idc, int idc_size, char *path, int path_size)
+  */
+
+//Test for tblval_to_chdnodeval: tblval=NULL
+TEST(format_utilTest, tblval_to_chdnodeval_null_tblval)
+{
+    int retCode = 0;
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_chdnodeval(NULL, &nodes, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_chdnodeval: nodes=NULL
+TEST(format_utilTest, tblval_to_chdnodeval_null_nodes)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, NULL, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_chdnodeval: idc=NULL
+TEST(format_utilTest, tblval_to_chdnodeval_null_idc)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char path[27] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, NULL, 0, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_chdnodeval: path=NULL
+TEST(format_utilTest, tblval_to_chdnodeval_null_path)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[5] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, idc, 5, NULL, 0);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_chdnodeval: invalid data type
+TEST(format_utilTest, tblval_to_chdnodeval_invalid_data_type)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_DATA_TYPE, retCode);
+}
+
+//Test for tblval_to_chdnodeval: invalid data format
+TEST(format_utilTest, tblval_to_chdnodeval_invalid_data_format)
+{
+    int retCode = 0;
+    const char* tblval = "3,4,corp26,/qconf/__qconf_anchor_node1,13,10.15.16.17,0";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+}
+
+//Test for tblval_to_chdnodeval: idc_size < strlen(idc)
+TEST(format_utilTest, tblval_to_chdnodeval_idc_size_less_than_length_of_idc)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[3] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, idc, 3, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_chdnodeval: idc_size = strlen(idc)
+TEST(format_utilTest, tblval_to_chdnodeval_idc_size_equals_with_length_of_idc)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[4] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, idc, 4, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_chdnodeval: path_size < strlen(path)
+TEST(format_utilTest, tblval_to_chdnodeval_path_size_less_than_length_of_path)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[25] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, idc, 5, path, 25);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_chdnodeval: path_size = strlen(path)
+TEST(format_utilTest, tblval_to_chdnodeval_path_size_equals_with_length_of_path)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[26] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, idc, 5, path, 26);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_chdnodeval: num of nodes = zero
+TEST(format_utilTest, tblval_to_chdnodeval_num_of_nodes_is_zero)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:corp26:/qconf/__qconf_anchor_node0:";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_NULL_VALUE, retCode);
+}
+
+//Test for tblva_to_chdnodeval: num of nodes =1
+TEST(format_utilTest, tblval_to_chdnodeval_one_node)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("corp", idc);
+    EXPECT_STREQ("/qconf/__qconf_anchor_node", path);
+    EXPECT_EQ(1, nodes.count);
+    EXPECT_STREQ("10.15.16.17:0", nodes.data[0]);
+}
+
+//Test for tblval_to_chdnodeval: num of nodes = 15
+TEST(format_utilTest, tblval_to_chdnodeval_several_nodes)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:test11:/qconf/demo15:16:test_2000service10:test_eight14:test_expension15:test_expension115:test_expension315:test_expension49:test_five9:test_four7:test_my9:test_nine8:test_one9:test_serv8:test_six10:test_three8:test_two";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[12] = {0};
+    const char* datas[15] = {"test_2000service", "test_eight", "test_expension", "test_expension1", "test_expension3", "test_expension4", "test_five", "test_four", "test_my", "test_nine", "test_one", "test_serv", "test_six", "test_three", "test_two"};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, idc, 5, path, 12);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("test", idc);
+    EXPECT_STREQ("/qconf/demo", path);
+    EXPECT_EQ(15, nodes.count);
+
+    for(int i = 0; i < nodes.count; i++)
+    {
+        EXPECT_STREQ(datas[i], nodes.data[i]);
+    }
+}
+
+//Test for tblval_to_chdnodeval: length of one node's value = 0
+TEST(format_utilTest, tblval_to_chdnodeval_length_of_chdnodeval_is_zero)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:test11:/qconf/demo15:16:test_2000service10:test_eight14:test_expension15:test_expension115:test_expe     nsion315:test_expension49:test_five9:test_four7:test_my9:test_nine8:test_one9:test_serv8:test_six10:test_three0:test_two";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[12] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, idc, 5, path, 12);
+
+    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+    EXPECT_EQ(0, nodes.count);
+}
+
+//Test for tblval_to_chdnodeval: invalid chdnodeval format
+TEST(format_utilTest, tblval_to_chdnodeval_invalid_chdnodeval_format)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:test11:/qconf/demo15:16:test_2000service10:test_eight14:test_expension15:test_expension115:test_expe          nsion315:test_expension49:test_five9:test_four7:test_my9:test_nine8:test_one9:test_serv8:test_six10:test_three8,test_two";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[12] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, idc, 5, path, 12);
+
+    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+    EXPECT_EQ(0, nodes.count);
+}
+
+//Test for tbval_to_chdnodeval: invalid chdnodeval format
+TEST(format_utilTest, tblval_to_chdnodeval_invalid_chdnodeval_format2)
+{
+    int retCode = 0;
+    const char* tblval = "3:4:test11:/qconf/demo15:a:test_2000service10:test_eight14:test_expension15:test_expension115:test_expe               nsion315:test_expension49:test_five9:test_four7:test_my9:test_nine8:test_one9:test_serv8:test_six10:test_three8:test_two";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[12] = {0};
+
+    retCode = tblval_to_chdnodeval(tblval, &nodes, idc, 5, path, 12);
+
+    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+    EXPECT_EQ(0, nodes.count);
+}
+/**
+  *End_Test_for function: int tblval_to_chdnodeval(const char* tblval, String_vector_t *nodes, char *idc, int idc_size, char *path, int path_size)
+  *====================================================================================================================
+  */
+
+/**
+  *===========================================================================================================================================
+  *Begin_Test_for function: int tblval_to_batchnodeval(const char* tblval, String_vector_t *nodes, char *idc, int idc_size, char *path, int path_size)
+  */
+
+//Test for tblval_to_batchnodeval: tblval=NULL
+TEST(format_utilTest, tblval_to_batchnodeval_null_tblval)
+{
+    int retCode = 0;
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_batchnodeval(NULL, &nodes, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_batchnodeval: nodes=NULL
+TEST(format_utilTest, tblval_to_batchnodeval_null_nodes)
+{
+    int retCode = 0;
+    const char* tblval = "4:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, NULL, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_batchnodeval: idc=NULL
+TEST(format_utilTest, tblval_to_batchnodeval_null_idc)
+{
+    int retCode = 0;
+    const char* tblval = "4:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char path[27] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, NULL, 0, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_batchnodeval: path=NULL
+TEST(format_utilTest, tblval_to_batchnodeval_null_path)
+{
+    int retCode = 0;
+    const char* tblval = "4:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[5] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, idc, 5, NULL, 0);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for tblval_to_batchnodeval: invalid data type
+TEST(format_utilTest, tblval_to_batchnodeval_invalid_data_type)
+{
+    int retCode = 0;
+    const char* tblval = "2:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_DATA_TYPE, retCode);
+}
+
+//Test for tblval_to_batchnodeval: invalid data format
+TEST(format_utilTest, tblval_to_batchnodeval_invalid_data_format)
+{
+    int retCode = 0;
+    const char* tblval = "4,4,corp26,/qconf/__qconf_anchor_node1,13,10.15.16.17,0";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+}
+
+//Test for tblval_to_batchnodeval: idc_size < strlen(idc)
+TEST(format_utilTest, tblval_to_batchnodeval_idc_size_less_than_length_of_idc)
+{
+    int retCode = 0;
+    const char* tblval = "4:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[3] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, idc, 3, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_batchnodeval: idc_size = strlen(idc)
+TEST(format_utilTest, tblval_to_batchnodeval_idc_size_equals_with_length_of_idc)
+{
+    int retCode = 0;
+    const char* tblval = "4:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[4] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, idc, 4, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_batchnodeval: path_size < strlen(path)
+TEST(format_utilTest, tblval_to_batchnodeval_path_size_less_than_length_of_path)
+{
+    int retCode = 0;
+    const char* tblval = "4:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[25] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, idc, 5, path, 25);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_batchnodeval: path_size = strlen(path)
+TEST(format_utilTest, tblval_to_batchnodeval_path_size_equals_with_length_of_path)
+{
+    int retCode = 0;
+    const char* tblval = "4:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[26] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, idc, 5, path, 26);
+
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+//Test for tblval_to_batchnodeval: num of nodes = zero
+TEST(format_utilTest, tblval_to_batchnodeval_num_of_nodes_is_zero)
+{
+    int retCode = 0;
+    const char* tblval = "4:4:corp26:/qconf/__qconf_anchor_node0:";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_ERR_NULL_VALUE, retCode);
+}
+
+//Test for tblva_to_batchnodeval: num of nodes =1
+TEST(format_utilTest, tblval_to_batchnodeval_one_node)
+{
+    int retCode = 0;
+    const char* tblval = "4:4:corp26:/qconf/__qconf_anchor_node1:13:10.15.16.17:0";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[27] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, idc, 5, path, 27);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("corp", idc);
+    EXPECT_STREQ("/qconf/__qconf_anchor_node", path);
+    EXPECT_EQ(1, nodes.count);
+    EXPECT_STREQ("10.15.16.17:0", nodes.data[0]);
+}
+
+//Test for tblval_to_batchnodeval: num of nodes = 15
+TEST(format_utilTest, tblval_to_batchnodeval_several_nodes)
+{
+    int retCode = 0;
+    const char* tblval = "4:4:test11:/qconf/demo15:16:test_2000service10:test_eight14:test_expension15:test_expension115:test_expension315:test_expension49:test_five9:test_four7:test_my9:test_nine8:test_one9:test_serv8:test_six10:test_three8:test_two";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[12] = {0};
+    const char* datas[15] = {"test_2000service", "test_eight", "test_expension", "test_expension1", "test_expension3", "test_expension4", "test_five", "test_four", "test_my", "test_nine", "test_one", "test_serv", "test_six", "test_three", "test_two"};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, idc, 5, path, 12);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("test", idc);
+    EXPECT_STREQ("/qconf/demo", path);
+    EXPECT_EQ(15, nodes.count);
+
+    for(int i = 0; i < nodes.count; i++)
+    {
+        EXPECT_STREQ(datas[i], nodes.data[i]);
+    }
+}
+
+//Test for tblval_to_batchnodeval: length of one node's value = 0
+TEST(format_utilTest, tblval_to_batchnodeval_length_of_chdnodeval_is_zero)
+{
+    int retCode = 0;
+    const char* tblval = "4:4:test11:/qconf/demo15:16:test_2000service10:test_eight14:test_expension15:test_expension115:test_expe     nsion315:test_expension49:test_five9:test_four7:test_my9:test_nine8:test_one9:test_serv8:test_six10:test_three0:test_two";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[12] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, idc, 5, path, 12);
+
+    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+    EXPECT_EQ(0, nodes.count);
+}
+
+//Test for tblval_to_batchnodeval: invalid chdnodeval format
+TEST(format_utilTest, tblval_to_batchnodeval_invalid_chdnodeval_format)
+{
+    int retCode = 0;
+    const char* tblval = "4:4:test11:/qconf/demo15:16:test_2000service10:test_eight14:test_expension15:test_expension115:test_expe          nsion315:test_expension49:test_five9:test_four7:test_my9:test_nine8:test_one9:test_serv8:test_six10:test_three8,test_two";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[12] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, idc, 5, path, 12);
+
+    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+    EXPECT_EQ(0, nodes.count);
+}
+
+//Test for tbval_to_batchnodeval: invalid chdnodeval format
+TEST(format_utilTest, tblval_to_batchnodeval_invalid_chdnodeval_format2)
+{
+    int retCode = 0;
+    const char* tblval = "4:4:test11:/qconf/demo15:a:test_2000service10:test_eight14:test_expension15:test_expension115:test_expe               nsion315:test_expension49:test_five9:test_four7:test_my9:test_nine8:test_one9:test_serv8:test_six10:test_three8:test_two";
+    String_vector_t nodes;
+    char idc[5] = {0};
+    char path[12] = {0};
+
+    retCode = tblval_to_batchnodeval(tblval, &nodes, idc, 5, path, 12);
+
+    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+    EXPECT_EQ(0, nodes.count);
+}
+/**
+  *End_Test_for function: int tblval_to_batchnodeval(const char* tblval, String_vector_t *nodes, char *idc, int idc_size, char *path, int path_size)
+  *====================================================================================================================
+  */
+
+/**
+  *====================================================================================================================
+  *Begin_Test_for function: int calc_chdnode_tblval_size(const char* key, String_vector_t *nodes, char* valid_flg)
+  */
+
+//Test for calc_chdnode_tblval_size: key=NULL
+TEST_F(format_utilTestF, calc_chdnode_tblval_size_null_key)
+{
+    int retCode = 0;
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+
+    retCode = calc_chdnode_tblval_size(NULL, &nodes, valid_flg);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for calc_chdnode_tblval_size: nodes=NULL
+TEST_F(format_utilTestF, calc_chdnode_tblval_size_null_nodes)
+{
+    int retCode = 0;
+    const char* key = "test";
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+
+    retCode = calc_chdnode_tblval_size(key, NULL, valid_flg);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for calc_chdnode_tblval_size: valid_flg=NULL
+TEST_F(format_utilTestF, calc_chdnode_tblval_size_null_valid_flg)
+{
+    int retCode = 0;
+    const char* key = "test";
+    retCode = calc_chdnode_tblval_size(key, &nodes, NULL);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for calc_chdnode_tblval_size: nodes.count = 0
+TEST(format_utilTest, calc_chdnode_tblval_size_count_of_nodes_is_zero)
+{
+    int retCode = 0;
+    const char* key = "test";
+    String_vector_t nodes;
+    memset(&nodes, 0, sizeof(nodes));
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+
+    retCode = calc_chdnode_tblval_size(key, &nodes, valid_flg);
+
+    EXPECT_EQ(7, retCode);
+}
+
+//Test for calc_chdnode_tblval_size: nodes.count!=0 but valid_cnt=0
+TEST_F(format_utilTestF, calc_chdnode_tblval_size_count_of_valid_node_is_zero)
+{
+    int retCode = 0;
+    const char* key = "test";
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+
+    retCode = calc_chdnode_tblval_size(key, &nodes, valid_flg);
+
+    EXPECT_EQ(7, retCode);
+}
+
+//Test for calc_chdnode_tblval_size: nodes.count!=0 and only the first node is valid
+TEST_F(format_utilTestF, calc_chdnode_tblval_size_only_the_first_node_is_valid)
+{
+    int retCode = 0;
+    const char* key = "test";
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+    valid_flg[0] = 1;
+
+    retCode = calc_chdnode_tblval_size(key, &nodes, valid_flg);
+
+    EXPECT_EQ(23, retCode);
+}
+
+//Test for calc_chdnode_tblval_size: nodes.count!=0 and only the last node is valid
+TEST_F(format_utilTestF, calc_chdnode_tblval_size_only_the_last_node_is_valid)
+{
+    int retCode = 0;
+    const char* key = "test";
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+    valid_flg[TEST_MAX_NODE_COUNT - 1] = 1;
+
+    retCode = calc_chdnode_tblval_size(key, &nodes, valid_flg);
+
+    EXPECT_EQ(24, retCode);
+}
+
+//Test for calc_chdnode_tblval_size: nodes.count!=0 and only a mid node is valid
+TEST_F(format_utilTestF, calc_chdnode_tblval_size_only_a_mid_node_is_valid)
+{
+    int retCode = 0;
+    const char* key = "test";
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+    valid_flg[10] = 1;
+
+    retCode = calc_chdnode_tblval_size(key, &nodes, valid_flg);
+
+    EXPECT_EQ(24, retCode);
+}
+
+//Test for calc_chdnode_tblval_size: nodes.count!=0 and 10 nodes are valid
+TEST_F(format_utilTestF, calc_chdnode_tblval_size_ten_nodes_valid)
+{
+    int retCode = 0;
+    const char* key = "test";
+    char valid_flg[TEST_MAX_NODE_COUNT];
+
+    for(int i = 0; i < TEST_MAX_NODE_COUNT; i++)
+    {
+        if(i % 2 == 0)
+            valid_flg[i] = 1;
+        else
+            valid_flg[i] = 0;
+    }
+
+    retCode = calc_chdnode_tblval_size(key, &nodes, valid_flg);
+
+    EXPECT_EQ(173, retCode);
+}
+
+//Test for calc_chdnode_tblval_size: node.count!=0 and 8 nodes are valid irregually
+TEST_F(format_utilTestF, calc_chdnode_tblval_size_eight_nodes_valid_irregually)
+{
+    int retCode = 0;
+    const char* key = "test";
+    char valid_flg[TEST_MAX_NODE_COUNT] = {1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0};
+
+    retCode = calc_chdnode_tblval_size(key, &nodes, valid_flg);
+
+    EXPECT_EQ(139, retCode);
+}
+
+//Test for calc_chdnode_tblval_size: node.count-1 nodes valid
+TEST_F(format_utilTestF, calc_chdnode_tblval_size_valid_cnt_less_than_count_of_nodes)
+{
+    int retCode = 0;
+    const char* key = "test";
+    char valid_flg[TEST_MAX_NODE_COUNT];
+    memset(valid_flg, 1, TEST_MAX_NODE_COUNT);
+    valid_flg[0] = 0;
+
+    retCode = calc_chdnode_tblval_size(key, &nodes, valid_flg);
+
+    EXPECT_EQ(322, retCode);
+}
+
+// Test for calc_chdnode_tblval_size: node.count-1 nodes valid
+TEST_F(format_utilTestF, calc_chdnode_tblval_size_valid_cnt_less_than_count_of_nodes2)
+{
+    int retCode = 0;
+    const char* key = "test";
+    char valid_flg[TEST_MAX_NODE_COUNT] = {0};
+    memset(valid_flg, 1, TEST_MAX_NODE_COUNT - 1);
+
+    retCode = calc_chdnode_tblval_size(key, &nodes, valid_flg);
+
+    EXPECT_EQ(321, retCode);
+}
+
+//Test for calc_chdnode_tblval_size: all nodes valid
+TEST_F(format_utilTestF, calc_chdnode_tblval_size_all_nodes_valid)
+{
+    int retCode = 0;
+    const char* key = "test";
+    char valid_flg[TEST_MAX_NODE_COUNT];
+    memset(valid_flg, 1, TEST_MAX_NODE_COUNT);
+
+    retCode = calc_chdnode_tblval_size(key, &nodes, valid_flg);
+
+    EXPECT_EQ(338, retCode);
+}
+/**
+  *End_Test_for function: int calc_chdnode_tblval_size(const char* key, String_vector_t *nodes, char* valid_flg)
+  *=============================================================================================================
+  */
+
+/**
+  *====================================================================================================================
+  *Begin_Test_for function: int calc_batchnode_tblval_size(const char* key, String_vector_t *nodes, char* valid_flg)
+  */
+
+//Test for calc_batchnode_tblval_size: key=NULL
+TEST_F(format_utilTestF, calc_batchnode_tblval_size_null_key)
+{
+    int retCode = 0;
+
+    retCode = calc_batchnode_tblval_size(NULL, &nodes);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for calc_batchnode_tblval_size: nodes=NULL
+TEST_F(format_utilTestF, calc_batchnode_tblval_size_null_nodes)
+{
+    int retCode = 0;
+    const char* key = "test";
+
+    retCode = calc_batchnode_tblval_size(key, NULL);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for calc_batchnode_tblval_size: nodes.count = 0
+TEST(format_utilTest, calc_batchnode_tblval_size_count_of_nodes_is_zero)
+{
+    int retCode = 0;
+    const char* key = "test";
+    String_vector_t nodes;
+    memset(&nodes, 0, sizeof(nodes));
+
+    retCode = calc_batchnode_tblval_size(key, &nodes);
+
+    EXPECT_EQ(7, retCode);
+}
+
+//Test for calc_batchnode_tblval_size: all nodes valid
+TEST_F(format_utilTestF, calc_batchnode_tblval_size_all_nodes_valid)
+{
+    int retCode = 0;
+    const char* key = "test";
+
+    retCode = calc_batchnode_tblval_size(key, &nodes);
+
+    EXPECT_EQ(338, retCode);
+}
+
+/**
+  *End_Test_for function: int calc_batchnode_tblval_size(const char* key, String_vector_t *nodes, char* valid_flg)
+  *=============================================================================================================
+  */
+
+//End Test for format_util.c

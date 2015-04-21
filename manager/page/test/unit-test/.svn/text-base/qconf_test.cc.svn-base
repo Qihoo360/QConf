@@ -1,0 +1,39 @@
+#include <string.h>
+#include "gtest/gtest.h"
+#include "const_def.h"
+#include "qconf_config.h"
+
+/**
+  *unit test case for qconf_config.c
+  */
+
+//Related test  environment set up:
+class qconf_configTestF : public ::testing::Test
+{
+protected:
+    virtual void SetUp()
+    {
+        idc_map = get_idc_map();
+        conf_map = get_conf_map();
+    }
+
+    virtual void TearDown()
+    {
+        destroy_conf_and_idc_map();
+    }
+    hashmap_map_t *idc_map;
+    hashmap_map_t *conf_map;
+};
+
+
+//Test for load_conf: configure file only has one valid conf value
+TEST_F(qconf_configTestF, load_conf_file_has_one_valid_conf_value)
+{
+    int retCode = 0;
+
+    retCode = load_conf("conf/has_one_valid_conf.conf");
+
+    EXPECT_EQ(QCONF_FAILED, retCode);
+    EXPECT_EQ(0, conf_map->size);
+    EXPECT_EQ(3, idc_map->size);
+}

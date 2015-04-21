@@ -1,0 +1,1322 @@
+#include <string.h>
+#include <sys/stat.h>
+#include "gtest/gtest.h"
+#include "const_def.h"
+#include "qconf_config.h"
+
+/**
+  *unit test case for qconf_config.c
+  */
+
+//Related test  environment set up:
+class qconf_configTestF : public ::testing::Test
+{
+protected:
+    virtual void SetUp()
+    {
+        idc_map = get_idc_map();
+        conf_map = get_conf_map();
+    }
+
+    virtual void TearDown()
+    {
+        destroy_conf_and_idc_map();
+    }
+
+    hashmap_map_t* conf_map;
+    hashmap_map_t* idc_map;
+};
+
+//Util function: get_idc
+int get_idc(const char* key, char **value, int *value_len)
+{
+    hashmap_map_t* idc_map = get_idc_map();
+    int ret =  hashmap_get(idc_map, key, (void**)value);
+
+    if (ret == HM_E_FAIL)
+        return QCONF_FAILED;
+    else if (ret == HM_E_NOTFOUND)
+        return QCONF_FAILED;
+
+    *value_len = strlen(*value);
+    return QCONF_OK;
+}
+
+//Util function: validate_conf
+int validate_conf_map(hashmap_map_t* conf_map)
+{
+    const char* keys[] = {"daemon_mode", "log_level", "zookeeper_recv_timeout", "zk_log",
+                          "qconf_dir", "register_node_prefix", "max_repeat_read_times",
+                          "shm_key", "msg_queue_key"
+                         };
+    const char* vals[] = {"1", "2", "3000", "logs/zkapi.log", "/home/liuzhongchao/code/qconf/driver/independent-agent/qconf-agent",
+                          "/qconf/__qconf_register_hosts", "100", "-1", "-1"
+                         };
+    int retCode = 0;
+
+    for(int i = 0; i < 9; i++)
+    {
+        char* data = NULL;
+        hashmap_get(conf_map, keys[i], (void**)&data);
+        retCode -= memcmp(vals[i], data, strlen(vals[i]) + 1);
+    }
+
+    return retCode;
+}
+
+//Util function: validata_idc_map
+int validate_idc_map(hashmap_map_t* idc_map)
+{
+    const char* keys[] = {"bjcc", "bjdt", "bjsc", "bjt", "ccc", "ccp", "cct", "fszt", "hyb", "lyct",
+                          "nbt", "njt", "njxt", "shct", "shgt", "shht", "shjc", "shm", "sjlc", "tjhc", "tyfc", "vjc",
+                          "vtc", "zwt", "zzbc"
+                         };
+    const char* vals[] = {"11.143.3.25:7181,11.143.3.24:7181,11.143.3.23:7181",
+                          "11.138.252.184:7181,11.138.252.185:7181,11.138.252.186:7181",
+                          "11.121.95.251:7181,11.121.95.252:7181,11.121.95.253:7181",
+                          "11.181.127.26:7181,11.181.141.124:7181,11.181.127.114:7181",
+                          "11.112.79.207:7181,11.112.79.208:7181,11.112.79.209:7181",
+                          "11.112.79.207:7181,11.112.79.208:7181,11.112.79.209:7181",
+                          "11.112.79.207:7181,11.112.79.208:7181,11.112.79.209:7181",
+                          "11.150.94.31:7181,11.150.94.32:7181,11.150.94.33:7181",
+                          "11.118.99.253:7181,11.118.99.252:7181,11.118.99.251:7181",
+                          "11.161.54.21:7181,11.161.54.22:7181,11.161.54.23:7181",
+                          "11.123.87.6:7181,11.123.87.7:7181,11.123.87.8:7181",
+                          "11.116.95.249:7181,11.116.95.250:7181,11.116.95.248:7181",
+                          "11.152.95.3:7181,11.152.95.5:7181,11.152.95.7:7181",
+                          "11.140.112.29:7181,11.140.112.31:7181,11.140.112.33:7181",
+                          "11.115.11.253:7181,11.115.11.254:7181,11.115.11.252:7181",
+                          "11.120.91.251:7181,11.120.91.252:7181,11.120.91.250:7181",
+                          "11.125.199.29:7181,11.125.199.30:7181,11.125.199.31:7181",
+                          "11.130.118.164:7181,11.130.118.165:7181,11.130.118.166:7181",
+                          "11.151.95.32:7181,11.151.95.33:7181,11.151.95.34:7181",
+                          "11.149.94.23:7181,11.149.94.24:7181,11.149.94.25:7181",
+                          "11.137.112.39:7181,11.137.112.40:7181,11.137.112.41:7181",
+                          "11.113.113.252:7181,11.113.113.253:7181,11.113.113.251:7181",
+                          "11.124.87.27:7181,11.124.87.28:7181,11.124.87.29:7181",
+                          "11.118.79.180:7181,11.118.79.181:7181,11.118.79.182:7181",
+                          "11.119.135.253:7181,11.119.135.254:7181,11.119.135.252:7181"
+                         };
+
+    int retCode = 0;
+
+    for(int i = 0; i < 25; i++)
+    {
+        char* data = NULL;
+        int ret = 0;
+        ret = hashmap_get(idc_map, keys[i], (void**)&data);
+        EXPECT_EQ(HM_S_OK, ret);
+//        printf("i: %d, keys[i]: %s\n", i, keys[i]);
+        retCode -= memcmp(vals[i], data, strlen(vals[i]) + 1);
+    }
+
+    return retCode;
+}
+
+/**
+  *===========================================================================
+  *Begin_Test_for function: int is_integer(const char* content, long *integer)
+  */
+
+//Test for is_integer: content=NULL
+TEST(qconf_configTest, is_integer_arg1_null)
+{
+    int retCode = 0;
+    long n;
+    retCode = is_integer(NULL, &n);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for is_integer: integer=NULL
+TEST(qconf_configTest, is_integer_arg2_null)
+{
+    int retCode = 0;
+    const char* content = "123hi";
+    retCode = is_integer(content, NULL);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for is_integer: strlen(content)=0
+TEST(qconf_configTest, is_integer_length_zero)
+{
+    int retCode = 0;
+    const char* content = "";
+    long n;
+
+    retCode = is_integer(content, &n);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for is_integer: not number, content: " "
+TEST(qconf_configTest, is_integer_with_space)
+{
+    int retCode = 0;
+    const char* content = " ";
+    long n = 1;
+
+    retCode = is_integer(content, &n);
+
+    EXPECT_EQ(QCONF_ERR_NOT_NUMBER, retCode);
+}
+
+//Test for is_integer: content: "123"
+TEST(qconf_configTest, is_integer_digit)
+{
+    int retCode = 0;
+    const char* val = "123";
+    long n;
+
+    retCode = is_integer(val, &n);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(123, n);
+}
+
+//Test for is_integer: content: "00123456"
+/*TEST(qconf_configTest,is_integer_zero_start)
+{
+	int retCode=0;
+	const char* val="00123456";
+	long n;
+
+	retCode=is_integer(val,&n);
+
+	EXPECT_EQ(QCONF_OK,retCode);
+	EXPECT_EQ(123456,n);
+}*/
+
+//Test for is_integer: content: "+12345"
+TEST(qconf_configTest, is_integer_not_digit_start)
+{
+    int retCode = 0;
+    const char* val = "+12345";
+    long n;
+
+    retCode = is_integer(val, &n);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(12345, n);
+}
+
+//Test for is_integer: content: "-0123"
+/*TEST(qconf_configTest,is_integer_not_digit_start2)
+{
+	int retCode=0;
+	const char* val="-0123";
+	long n;
+
+	retCode=is_integer(val,&n);
+
+	EXPECT_EQ(QCONF_OK,retCode);
+	EXPECT_EQ(-123,n);
+}*/
+
+//Test for is_integer: content: "s1234"
+TEST(qconf_configTest, is_integer_illegal_start)
+{
+    int retCode = 0;
+    const char* val = "s1234";
+    long n;
+
+    retCode = is_integer(val, &n);
+
+    EXPECT_EQ(QCONF_ERR_NOT_NUMBER, retCode);
+}
+
+//Test for is_integer: content: " 123"
+TEST(qconf_configTest, is_integer_starts_with_space)
+{
+    int retCode = 0;
+    const char* val = " 123";
+    long n;
+
+    retCode = is_integer(val, &n);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(123, n);
+}
+
+//Test for is_integer: content: "123a"
+TEST(qconf_configTest, is_integer_contains_alpha)
+{
+    int retCode = 0;
+    const char* val = "123a";
+    long n;
+
+    retCode = is_integer(val, &n);
+
+    EXPECT_EQ(QCONF_ERR_OTHRE_CHARACTER, retCode);
+}
+
+//Test for is_integer: content: "1a2"
+TEST(qconf_configTest, is_integer_contains_alpah2)
+{
+    int retCode = 0;
+    const char* val = "1a2";
+    long n;
+
+    retCode = is_integer(val, &n);
+
+    EXPECT_EQ(QCONF_ERR_OTHRE_CHARACTER, retCode);
+}
+
+//Test for is_integer: content: "1 2"
+TEST(qconf_configTest, is_integer_contais_other_character)
+{
+    int retCode = 0;
+    const char* val = "1 2";
+    long n;
+
+    retCode = is_integer(val, &n);
+
+    EXPECT_EQ(QCONF_ERR_OTHRE_CHARACTER, retCode);
+}
+/**
+  *End_Test_for function: int is_integer(const char* content, long *integer)
+  *============================================================================
+  */
+
+/**
+  *=============================================================================
+  *Begin_Test_for function: char* strtrim(char * content)
+  */
+
+//Test for strtrim: content=NULL
+TEST(qconf_configTest, strtrim_arg_null)
+{
+    char* val = NULL;
+
+    EXPECT_EQ(NULL, strtrim(val));
+}
+
+//Test for strtrim: strlen(val)=0
+TEST(qconf_configTest, strtrim_length_zero)
+{
+    char val[] = "";
+
+    EXPECT_STREQ("", strtrim(val));
+}
+
+//Test for strtrim: strlen(val)=1 & val=" "
+TEST(qconf_configTest, strtrim_length_one_with_space)
+{
+    char val[] = " ";
+
+    EXPECT_STREQ("", strtrim(val));
+}
+
+//Test for strtrim: strlen(val)=1 &  val="a"
+TEST(qconf_configTest, strtrim_length_one)
+{
+    char val[] = "a";
+
+    EXPECT_STREQ("a", strtrim(val));
+}
+
+//Test for strtrim: strlen(val)=2 & val="  "
+TEST(qconf_configTest, strtrim_length_two_with_space)
+{
+    char val[] = "  ";
+
+    EXPECT_STREQ("", strtrim(val));
+}
+
+//Test for strtrim: strlen(val)=2 & val=" a"
+TEST(qconf_configTest, strtrim_length_two_with_left_space)
+{
+    char val[] = " a";
+
+    EXPECT_STREQ("a", strtrim(val));
+}
+
+//Test for strtrim: strlen(val)=2 & val="a "
+TEST(qconf_configTest, strtrim_length_two_with_right_space)
+{
+    char val[] = "a ";
+
+    EXPECT_STREQ("a", strtrim(val));
+}
+
+//Test for strtrim: val: "  abc"
+TEST(qconf_configTest, strtrim_left_space)
+{
+    char val[] = "  abc";
+
+    EXPECT_STREQ("abc", strtrim(val));
+}
+
+//Test for strtrim:val: "abc  "
+TEST(qconf_configTest, strtrim_right_space)
+{
+    char val[] = "abc  ";
+
+    EXPECT_STREQ("abc", strtrim(val));
+}
+
+//Test for strtrim: val: "  abc  "
+TEST(qconf_configTest, strtrim_left_right_space)
+{
+    char val[] = "  abc  ";
+
+    EXPECT_STREQ("abc", strtrim(val));
+}
+
+//Test for strtrim: val: "a b c"
+TEST(qconf_configTest, strtrim_mid_space)
+{
+    char val[] = "a b c";
+
+    EXPECT_STREQ("a b c", strtrim(val));
+}
+
+//Test for strtrim: val: "  a b  c   "
+TEST(qconf_configTest, strtrim_mix_space)
+{
+    char val[] = " a b  c   ";
+
+    EXPECT_STREQ("a b  c", strtrim(val));
+}
+
+//Test for strtrim: val: " * aof ' :  ;;  "
+TEST(qconf_configTest, strtrim_mix_character)
+{
+    char val[] = " * aof ' aofmlafaofjafdjoafoafafaf  fajofaojfdaofjoafaodfaofjafoad jofd 93-29230824322                      owe  ";
+
+    EXPECT_STREQ("* aof ' aofmlafaofjafdjoafoafafaf  fajofaojfdaofjoafaodfaofjafoad jofd 93-29230824322                      owe", strtrim(val));
+}
+/**
+  *End_Test_for function: char* strtrim(char * content)
+  *===================================================================================
+  */
+
+/**
+  *===================================================================================
+  *Begin_Test_for function: int is_ip_port(const char * item)
+  */
+
+//Test for is_ip_port: item=NULL
+TEST(qconf_configTest, is_ip_port_arg_null)
+{
+    EXPECT_EQ(QCONF_ERR_PARAM, is_ip_port(NULL));
+}
+
+//Test for is_ip_port: strlen(item)=0 item=""
+TEST(qconf_configTest, is_ip_port_length0)
+{
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(""));
+}
+
+//Test for is_ip_port: without delimiter ":"
+TEST(qconf_configTest, is_ip_port_without_delimiter)
+{
+    const char* val = "10.15.16.17,3200";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: illegal ip length :6
+TEST(qconf_configTest, is_ip_port_illegal_ip_length6)
+{
+    const char* val = "123456:";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: illegal ip length :16
+TEST(qconf_configTest, is_ip_port_illegal_ip_length16)
+{
+    const char* val = "101.101.101.1010:12";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: illegal port length :0
+TEST(qconf_configTest, is_ip_port_illegal_port_length0)
+{
+    const char* val = "100.100.100.100:";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: illegal port length :6
+TEST(qconf_configTest, is_ip_port_illegal_port_length6)
+{
+    const char* val = "1.2.3.4:123456";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid ip length,but illegal contents
+TEST(qconf_configTest, is_ip_port_illegal_ip)
+{
+    const char* val = "10.15.16.:3100";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid ip length, but illegal contents
+TEST(qconf_configTest, is_ip_port_illegal_ip1)
+{
+    const char* val = "aabbccd:abcd";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid ip length,but illegal contents
+TEST(qconf_configTest, is_ip_port_illegal_ip2)
+{
+    const char* val = "10,10,15,16:21";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid ip length, but illegal contents
+/*
+TEST(qconf_configTest, is_ip_port_illegal_ip3)
+{
+    const char* val = "256.256.256.256:21";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+*/
+
+//Test for is_ip_port: valid ip length, but illegal contents
+TEST(qconf_configTest, is_ip_port_illegal_ip4)
+{
+    const char* val = "-1.-1.-1.-1:1234";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid ip length, but illegal contents
+/*
+TEST(qconf_configTest, is_ip_port_illegal_ip5)
+{
+    const char* val = "025.255.255.255:3100";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+*/
+
+//Test for is_ip_port: valid ip length, but illegal contents
+TEST(qconf_configTest, is_ip_port_illegal_ip6)
+{
+    const char* val = " . . .:22";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid port length, but overrange
+TEST(qconf_configTest, is_ip_port_illegal_port_oeverrange1)
+{
+    const char* val = "0.0.0.0:-1";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid port length, but overrange
+/*
+TEST(qconf_configTest, is_ip_port_illegal_port_overrange2)
+{
+    const char* val = "255.255.255.255:65536";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+*/
+
+//Test for is_ip_port: valid port length, but illegal contents
+TEST(qconf_configTest, is_ip_port_illegal_port1)
+{
+    const char* val = "10.10.100.100:abcd";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid port length, but illegal contents
+TEST(qconf_configTest, is_ip_port_illegal_port2)
+{
+    const char* val = "1.2.3.4:a123";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid port length, but illegal contents
+TEST(qconf_configTest, is_ip_port_illegal_port3)
+{
+    const char* val = "1.1.1.1:123ab";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid port length, but illegal contents
+TEST(qconf_configTest, is_ip_port_illegal_port4)
+{
+    const char* val = "1.1.1.1:+123";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid port length, but illegal contents
+TEST(qconf_configTest, is_ip_port_illegal_port5)
+{
+    const char* val = "1.1.1.1: 123";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid port length, but illegal contents
+TEST(qconf_configTest, is_ip_port_illegal_port6)
+{
+    const char* val = "1.1.1.1:12s3";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid port length, but illegal contents
+TEST(qconf_configTest, is_ip_port_illegal_port7)
+{
+    const char* val = "1.1.1i.1:1 2";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: invalid ip
+TEST(qconf_configTest, is_ip_port_invalid)
+{
+    const char* val = ":1.1.1.1:10";
+
+    EXPECT_EQ(QCONF_FAILED, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid ip and port
+TEST(qconf_configTest, is_ip_port_valid)
+{
+    const char* val = "0.0.0.0:0";
+
+    EXPECT_EQ(QCONF_OK, is_ip_port(val));
+}
+
+//Test for is_ip_port: valid ip and port
+TEST(qconf_configTest, is_ip_port_valid2)
+{
+    const char* val = "255.255.255.255:65535";
+
+    EXPECT_EQ(QCONF_OK, is_ip_port(val));
+}
+/**
+  *End_Test_for function: int is_ip_port(const char * content)
+  *=================================================================
+  */
+
+/**
+  *=================================================================
+  *Begin_Test_for function: int is_ip_ports(const char * content)
+  */
+
+//Test for is_ip_ports: content=NULL
+TEST(qconf_configTest, is_ip_ports_arg_null)
+{
+    EXPECT_EQ(QCONF_ERR_PARAM, is_ip_ports(NULL));
+}
+
+//Test for is_ip_ports: strlen(content)=0
+TEST(qconf_configTest, is_ip_ports_length0)
+{
+    EXPECT_EQ(QCONF_ERR_PARAM, is_ip_ports(""));
+}
+
+//Test for is_ip_ports: single ip_port
+TEST(qconf_configTest, is_ip_ports_single_ip_port)
+{
+    const char* item = "10.15.16.17:3200";
+    int retCode = 0;
+
+    retCode = is_ip_ports(item);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+}
+
+//Test for is_ip_ports: ip_port_list
+TEST(qconf_configTest, is_ip_ports_ip_port_list)
+{
+    const char* item = "0.0.0.0:0,1.1.1.1:1,255.255.255.255:255,10.15.16.17:22";
+    int retCode = 0;
+
+    retCode = is_ip_ports(item);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+}
+
+//Test for is_ip_ports: ip_port_list with wrong delimiter
+TEST(qconf_configTest, is_ip_ports_with_wrong_delimiter)
+{
+    const char* item = "0.0.0.0:0;1.1.1.1:1;255.255.255.255:255;10.15.16.17:22";
+    int retCode = 0;
+
+    retCode = is_ip_ports(item);
+
+    EXPECT_EQ(QCONF_FAILED, retCode);
+}
+
+//Test for is_ip_ports: illegal length of single ip_port: 8
+TEST(qconf_configTest, is_ip_ports_wrong_length_of_ip_port_8)
+{
+    const char* item = "1.1.1.1:,0.0.0.0:0";
+
+    int retCode = is_ip_ports(item);
+
+    EXPECT_EQ(QCONF_FAILED, retCode);
+}
+
+//Test for is_ip_ports: illegal length of single ip_port: 22
+TEST(qconf_configTest, is_ip_ports_wrong_length_of_ip_port_22)
+{
+    const char* item = "100.100.100.100:655350,1.1.1.1:1";
+
+    int retCode = is_ip_ports(item);
+
+    EXPECT_EQ(QCONF_FAILED, retCode);
+}
+
+//Test for is_ip_ports: legal length of single ip_port: 9,21
+TEST(qconf_configTest, is_ip_ports_correct_length_of_ip_port_9_21)
+{
+    const char* item = "1.1.1.1:1,255.255.255.255:65535";
+
+    int retCode = is_ip_ports(item);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+}
+
+/**
+  *End_Test_for function: int is_ip_ports(const char * content)
+  *================================================================================
+  */
+
+
+/**
+  *=================================================================================
+  *Begin_Test_for function: int load_conf(const char* path)
+  */
+
+//Test for load_conf: path=NULL, use the default path: "conf/qconf.conf"
+TEST_F(qconf_configTestF, load_conf_arg_null)
+{
+    int retCode = load_conf(NULL, TRUE);
+
+    EXPECT_EQ(0, retCode);
+}
+
+
+/**
+  *=================================================================================
+  *Begin_Test_for function: int get_conf(const char* key, char** value, int* value_len)
+  */
+
+//Test for get_conf: key=NULL
+TEST_F(qconf_configTestF, get_conf_key_null)
+{
+    int retCode = 0;
+    char* val = NULL;
+    int len = 0;
+    const char* path = "";
+
+    load_conf(path, TRUE);
+    retCode = get_conf(NULL, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_conf: value=NULL
+TEST_F(qconf_configTestF, get_conf_val_null)
+{
+    int retCode = 0;
+    const char* key = "test";
+    int len = 0;
+    const char* path = "";
+
+    load_conf(path, TRUE);
+    retCode = get_conf(key, NULL, &len);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_conf: value_len=NULL
+/*TEST_F(qconf_configTestF,get_conf_vallen_null)
+{
+	int retCode=0;
+	const char* key="daemon_mode";
+	char* val=NULL;
+	const char* path="";
+
+	load_conf(path);
+	retCode=get_conf(key,&val,NULL);
+
+	EXPECT_EQ(QCONF_FAILED,retCode);
+}*/
+
+//Test for get_conf: key=""
+TEST_F(qconf_configTestF, get_conf_key_length0)
+{
+    int retCode = 0;
+    const char* key = "";
+    char* val = NULL;
+    const char* path = "";
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = get_conf(key, &val, &len);
+
+    EXPECT_EQ(QCONF_FAILED, retCode);
+}
+
+//Test for get_conf: key not exists in conf_map
+TEST_F(qconf_configTestF, get_conf_key_not_exists_in_conf_map)
+{
+    int retCode = 0;
+    const char* key = "test";
+    char* val = NULL;
+    const char* path = "";
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = get_conf(key, &val, &len);
+
+    EXPECT_EQ(QCONF_FAILED, retCode);
+}
+
+//Test for get_conf: key="daemon_mode"
+TEST_F(qconf_configTestF, get_conf_key_is_daemon_mode)
+{
+    int retCode = 0;
+    const char* key = "daemon_mode";
+    char* val = NULL;
+    const char* path = "";
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = get_conf(key, &val, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(1, len);
+    EXPECT_STREQ(val, "1");
+}
+
+//Test for get_conf: key="log_level"
+TEST_F(qconf_configTestF, get_conf_key_is_log_level)
+{
+    int retCode = 0;
+    const char* key = "log_level";
+    char* val = NULL;
+    const char* path = "";
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = get_conf(key, &val, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(1, len);
+    EXPECT_STREQ(val, "2");
+}
+
+//Test for get_conf: key="zookeeper_recv_timeout"
+TEST_F(qconf_configTestF, get_conf_key_is_zookeeper_recv_timeout)
+{
+    int retCode = 0;
+    const char* key = "zookeeper_recv_timeout";
+    char* val = NULL;
+    const char* path = "";
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = get_conf(key, &val, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(4, len);
+    EXPECT_STREQ(val, "3000");
+}
+
+//Test for get_conf: key="zk_log"
+TEST_F(qconf_configTestF, get_conf_key_is_zk_log)
+{
+    int retCode = 0;
+    const char* key = "zk_log";
+    char* val = NULL;
+    const char* path = "";
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = get_conf(key, &val, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(14, len);
+    EXPECT_STREQ(val, "logs/zkapi.log");
+}
+
+//Test for get_conf: key="qconf_dir"
+TEST_F(qconf_configTestF, get_conf_key_is_qconf_dir)
+{
+    int retCode = 0;
+    const char* key = "qconf_dir";
+    char* val = NULL;
+    const char* path = "";
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = get_conf(key, &val, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(66, len);
+    EXPECT_STREQ(val, "/home/liuzhongchao/code/qconf/driver/independent-agent/qconf-agent");
+}
+
+//Test for get_conf: key="register_node_prefix"
+TEST_F(qconf_configTestF, get_conf_key_is_register_node_prefix)
+{
+    int retCode = 0;
+    const char* key = "register_node_prefix";
+    char* val = NULL;
+    const char* path = "";
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = get_conf(key, &val, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(29, len);
+    EXPECT_STREQ(val, "/qconf/__qconf_register_hosts");
+}
+
+//Test for get_conf: key="max_repeat_read_times"
+TEST_F(qconf_configTestF, get_conf_key_is_max_repeat_read_times)
+{
+    int retCode = 0;
+    const char* key = "max_repeat_read_times";
+    char* val = NULL;
+    const char* path = "";
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = get_conf(key, &val, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(3, len);
+    EXPECT_STREQ(val, "100");
+}
+
+//Test for get_conf: key="shm_key"
+TEST_F(qconf_configTestF, get_conf_key_is_shm_key)
+{
+    int retCode = 0;
+    const char* key = "shm_key";
+    char* val = NULL;
+    const char* path = "";
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = get_conf(key, &val, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(2, len);
+    EXPECT_STREQ(val, "-1");
+}
+
+//Test for get_conf: key="msg_queue_key"
+TEST_F(qconf_configTestF, get_conf_key_is_msg_queue_key)
+{
+    int retCode = 0;
+    const char* key = "shm_key";
+    char* val = NULL;
+    const char* path = "";
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = get_conf(key, &val, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(2, len);
+    EXPECT_STREQ(val, "-1");
+}
+/**
+ *End_Test_for function: int get_conf(const char* key, char **value, int *value_len)
+ *===================================================================================
+ */
+
+/**
+  *==================================================================================
+  *Begin_Test_for function: int set_conf(const char* key, const char* value)
+  */
+
+//Test for set_conf: key=NULL
+TEST_F(qconf_configTestF, set_conf_key_null)
+{
+    int retCode = 0;
+
+    load_conf("conf/qconf.conf.set", TRUE);
+    retCode = set_conf(NULL, "test");
+
+    EXPECT_EQ(-1, retCode);
+}
+
+//Test for set_conf: value=NULL
+TEST_F(qconf_configTestF, set_conf_val_null)
+{
+    int retCode = 0;
+
+    load_conf("conf/qconf.conf.set", TRUE);
+    retCode = set_conf("test", NULL);
+
+    EXPECT_EQ(-1, retCode);
+}
+
+//Test for set_conf: strlen(key)=0
+TEST_F(qconf_configTestF, set_conf_key_length0)
+{
+    int retCode = 0;
+    const char* key = "";
+    const char* val = "test";
+
+    load_conf("conf/qconf.conf.set", TRUE);
+    retCode = set_conf(key, val);
+
+    EXPECT_EQ(-1, retCode);
+}
+
+//Test for set_conf: strlen(val)=0
+TEST_F(qconf_configTestF, set_conf_val_length0)
+{
+    int retCode = 0;
+    const char* key = "test";
+    const char* val = "";
+
+    load_conf("conf/qconf.conf.set", TRUE);
+    retCode = set_conf(key, val);
+
+    EXPECT_EQ(-1, retCode);
+}
+
+//Test for set_conf: key already exists in conf_map
+TEST_F(qconf_configTestF, set_conf_key_already_exists_in_conf_map)
+{
+    int retCode = 0;
+    const char* key = "log_level";
+    const char* val = "4";
+    const char* path = "conf/qconf.conf.set";
+    char* newval = NULL;
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = set_conf(key, val);
+    get_conf(key, &newval, &len);
+
+    EXPECT_EQ(0, retCode);
+    EXPECT_EQ(1, len);
+    EXPECT_STREQ(val, newval);
+}
+
+//Test for set_conf: key not exists in conf_map
+TEST_F(qconf_configTestF, set_conf_key_not_exists_in_conf_map)
+{
+    int retCode = 0;
+    const char* key = "test";
+    const char* val = "hi";
+    const char* path = "conf/qconf.conf.set";
+    char* newval = NULL;
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = set_conf(key, val);
+    get_conf(key, &newval, &len);
+
+    EXPECT_EQ(0, retCode);
+    EXPECT_EQ(2, len);
+    EXPECT_STREQ(val, newval);
+}
+/**
+  *End_Test_for function: int set_conf(const char* key, const char* value)
+  *=============================================================================
+  */
+
+/**
+  *==============================================================================
+  *Begin_Test_for function: int set_idc(const char* idc, const char* host)
+  */
+
+//Test for set_idc: idc=NULL
+TEST_F(qconf_configTestF, set_idc_idc_null)
+{
+    int retCode = 0;
+    const char* host = "10.143.3.25:2181,10.143.3.24:2181,10.143.3.23:2181";
+    const char* path = "conf/qconf.conf.set";
+
+    load_conf(path, TRUE);
+    retCode = set_idc(NULL, host);
+
+    EXPECT_EQ(-1, retCode);
+}
+
+//Test for set_idc: host=NULL
+TEST_F(qconf_configTestF, set_idc_host_null)
+{
+    int retCode = 0;
+    const char* key = "bjcc";
+    const char* path = "conf/qconf.conf.set";
+
+    load_conf(path, TRUE);
+    retCode = set_idc(key, NULL);
+
+    EXPECT_EQ(-1, retCode);
+}
+
+//Test for set_idc: strlen(idc)=0
+TEST_F(qconf_configTestF, set_idc_idclength0)
+{
+    int retCode = 0;
+    const char* host = "10.143.3.25:2181,10.143.3.24:2181,10.143.3.23:2181";
+    const char* path = "conf/qconf.conf.set";
+
+    load_conf(path, TRUE);
+    retCode = set_idc("", host);
+
+    EXPECT_EQ(-1, retCode);
+}
+
+//Test for set_idc: strlen(host)=0
+TEST_F(qconf_configTestF, set_idc_hostlength0)
+{
+    int retCode = 0;
+    const char* key = "bjcc";
+    const char* path = "conf/qconf.conf.set";
+
+    load_conf(path, TRUE);
+    retCode = set_idc(key, "");
+
+    EXPECT_EQ(-1, retCode);
+}
+
+//Test for set_idc: key already exists in idc_map
+TEST_F(qconf_configTestF, set_idc_key_already_exists)
+{
+    int retCode = 0;
+    const char* key = "bjcc";
+    const char* host = "0.0.0.0:0,1.1.1.1:1";
+    const char* path = "conf/qconf.conf.set";
+    char* newhost = NULL;
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = set_idc(key, host);
+    get_idc(key, &newhost, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(19, len);
+    EXPECT_STREQ(host, newhost);
+}
+
+//Test for set_idc: key not exists in idc_map
+TEST_F(qconf_configTestF, set_idc_key_not_exists)
+{
+    int retCode = 0;
+    const char* key = "test";
+    const char* host = "1.1.1.1:0,255.255.255.255:65535";
+    const char* path = "conf/qconf.conf.set";
+    char* newhost = NULL;
+    int len;
+
+    load_conf(path, TRUE);
+    retCode = set_idc(key, host);
+    get_idc(key, &newhost, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(31, len);
+    EXPECT_STREQ(host, newhost);
+}
+/**
+  *End_Test_for function: int set_idc(const char* idc, const char* host)
+  *=========================================================================
+  */
+
+/**
+  *=========================================================================
+  *Begin_Test_for function: int load_conf(const char* path)
+  */
+
+//Test for load_conf: path=NULL
+TEST_F(qconf_configTestF, load_conf_null_path)
+{
+    int retCode = 0;
+
+    retCode = load_conf(NULL, TRUE);
+    retCode -= validate_conf_map(conf_map);
+    retCode -= validate_idc_map(idc_map);
+    EXPECT_EQ(0, retCode);
+    EXPECT_EQ(9ul, conf_map->size);
+    EXPECT_EQ(25ul, idc_map->size);
+}
+
+//Test for load_conf: path=""
+TEST_F(qconf_configTestF, load_conf_empty_path)
+{
+    int retCode = 0;
+
+    retCode = load_conf("", TRUE);
+    retCode -= validate_conf_map(conf_map);
+    retCode -= validate_idc_map(idc_map);
+    EXPECT_EQ(0, retCode);
+    EXPECT_EQ(9ul, conf_map->size);
+    EXPECT_EQ(25ul, idc_map->size);
+}
+
+//Test for load_conf: configure file not exists
+TEST_F(qconf_configTestF, load_conf_file_not_exists)
+{
+    int retCode = 0;
+
+    retCode = load_conf("aa", TRUE);
+
+    EXPECT_EQ(QCONF_FAILED, retCode);
+    EXPECT_EQ(0ul, conf_map->size);
+    EXPECT_EQ(0ul, idc_map->size);
+}
+
+//Test for load_conf: configure file can not be read
+TEST_F(qconf_configTestF, load_conf_file_no_read_permission)
+{
+    int retCode = 0;
+
+    mode_t mode = 0222;
+    chmod("conf/can_not_read.conf", mode);
+    retCode = load_conf("conf/can_not_read.conf", TRUE);
+
+    EXPECT_EQ(QCONF_FAILED, retCode);
+    EXPECT_EQ(0ul, conf_map->size);
+    EXPECT_EQ(0ul, idc_map->size);
+}
+
+//Test for load_conf: empty file contents
+TEST_F(qconf_configTestF, load_conf_file_empty_file_contents)
+{
+    int retCode = 0;
+
+    retCode = load_conf("conf/empty_contents.conf", TRUE);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(0ul, conf_map->size);
+    EXPECT_EQ(0ul, idc_map->size);
+}
+
+//Test for load_conf: configure file has idc but no conf
+TEST_F(qconf_configTestF, load_conf_file_has_idc_but_no_conf)
+{
+    int retCode = 0;
+
+    retCode = load_conf("conf/no_conf.conf", TRUE);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(0ul, conf_map->size);
+    EXPECT_NE(0ul, idc_map->size);
+}
+
+//Test for load_conf: configure file has conf but no idc
+TEST_F(qconf_configTestF, load_conf_file_has_conf_but_no_idc)
+{
+    int retCode = 0;
+
+    retCode = load_conf("conf/no_idc.conf", TRUE);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(0ul, idc_map->size);
+    EXPECT_NE(0ul, conf_map->size);
+}
+
+//Test for load_conf: configure file has no valid conf value
+// TEST_F(qconf_configTestF, load_conf_file_has_no_valid_conf_value)
+// {
+//     int retCode = 0;
+// 
+//     retCode = load_conf("conf/has_no_valid_conf.conf", TRUE);
+// 
+//     EXPECT_EQ(QCONF_FAILED, retCode);
+//     EXPECT_EQ(0ul, idc_map->size);
+//     EXPECT_EQ(0ul, conf_map->size);
+// }
+
+//Test for load_conf: configure file has no valid idc value
+TEST_F(qconf_configTestF, load_conf_file_has_no_valid_idc_value)
+{
+    int retCode = 0;
+
+    retCode = load_conf("conf/has_no_valid_idc.conf", TRUE);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(3ul, idc_map->size);
+    EXPECT_EQ(9ul, conf_map->size);
+}
+
+//Test for load_conf: configure file only has one valid conf value
+// TEST_F(qconf_configTestF, load_conf_file_has_one_valid_conf_value)
+// {
+//     int retCode = 0;
+// 
+//     retCode = load_conf("conf/has_one_valid_conf.conf", TRUE);
+// 
+//     EXPECT_EQ(QCONF_FAILED, retCode);
+//     EXPECT_EQ(0ul, idc_map->size);
+//     EXPECT_EQ(0ul, conf_map->size);
+// }
+
+//Test for load_conf: configure file has an invalid conf value
+TEST_F(qconf_configTestF, load_conf_file_has_one_invalid_conf_value)
+{
+    int retCode = 0;
+
+    retCode = load_conf("conf/has_one_invalid_conf.conf", TRUE);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_NE(0ul, idc_map->size);
+    EXPECT_NE(0ul, conf_map->size);
+}
+
+//Test for load_conf: configure file has duplicated conf key
+TEST_F(qconf_configTestF, load_conf_file_has_duplicated_conf_key)
+{
+    int retCode = 0;
+
+    retCode = load_conf("conf/has_duplicated_conf_key.conf", TRUE);
+//	retCode-=validate_conf_map(conf_map);
+    retCode -= validate_idc_map(idc_map);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(9ul, conf_map->size);
+    EXPECT_EQ(25ul, idc_map->size);
+}
+
+//Test for load_conf: configure file only has one valid idc value
+TEST_F(qconf_configTestF, load_conf_file_has_one_valid_idc_value)
+{
+    int retCode = 0;
+
+    retCode = load_conf("conf/has_one_valid_idc.conf", TRUE);
+
+    EXPECT_EQ(0, retCode);
+    EXPECT_EQ(3ul, idc_map->size);
+    EXPECT_EQ(9ul, conf_map->size);
+}
+
+
+//Test for load_conf: configure file has duplicated idc key
+TEST_F(qconf_configTestF, load_conf_file_has_duplicated_idc_key)
+{
+    int retCode = 0;
+
+    retCode = load_conf("conf/has_duplicated_idc_key.conf", TRUE);
+    retCode -= validate_conf_map(conf_map);
+    retCode -= validate_idc_map(idc_map);
+
+    EXPECT_EQ(0, retCode);
+    EXPECT_EQ(9ul, conf_map->size);
+    EXPECT_EQ(25ul, idc_map->size);
+}

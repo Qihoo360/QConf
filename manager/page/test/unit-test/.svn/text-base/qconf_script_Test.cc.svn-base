@@ -1,0 +1,141 @@
+#include "gtest/gtest.h"
+#include "agent_const_def.h"
+#include "agent_script.h"
+
+
+class qconf_scriptTestF : public ::testing::Test
+{
+protected:
+    static void SetUpTestCase()
+    {
+    }
+    virtual void SetUp()
+    {
+    }
+
+    virtual void TearDown()
+    {
+    }
+
+    static void TearDownTestCase()
+    {
+    }
+};
+//Test for find_script
+extern int find_script(const char* path, char* script, int script_len);
+TEST(qconf_scriptTest, find_script_normal)
+{
+    int retCode = -1;
+    char script[1024];
+    retCode = find_script("/qconf/demo/conf", script, 1024);
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("demo#conf\n", script);
+}
+
+TEST(qconf_scriptTest, find_script_normal_need_trim)
+{
+    int retCode = -1;
+    char script[1024];
+    char path[1024] = "/qconf/demo/conf////";
+    retCode = find_script(path, script, 1024);
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("demo#conf\n", script);
+    retCode = -1;
+    //retCode = find_script("qconf/demo/conf//", script, 1024);
+    //EXPECT_EQ(QCONF_OK, retCode);
+    //EXPECT_STREQ("demo#conf\n", script);
+}
+
+TEST(qconf_scriptTest, find_script_best)
+{
+    int retCode = -1;
+    char script[1024];
+    retCode = find_script("/qconf/demo/conf/conf1/conf2", script, 1024);
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("demo#conf#conf1\n", script);
+}
+
+TEST(qconf_scriptTest, find_script_null_param)
+{
+    int retCode = -1;
+    char script[1024];
+    retCode = find_script(NULL, script, 1024);
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+    retCode = -1;
+    retCode = find_script("/qconf/demo/conf", NULL, 1024);
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+TEST(qconf_scriptTest, find_script_err_path)
+{
+    int retCode = -1;
+    char script[1024];
+    retCode = find_script("/qcon/demo/conf", script, 1024);
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+    retCode = -1;
+    retCode = find_script("qq/qconf/demo/conf", script, 1024);
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+TEST(qconf_scriptTest, find_script_long_path)
+{
+    int retCode = -1;
+    char script[1024];
+    char path[2049] = "/qconf/demo/conf/conf1/conf2/";
+    size_t path_len = strlen(path);
+    memset(path + path_len, 'q', 2048 - path_len);
+    path[2047] = '\0';
+    EXPECT_EQ(2047, strlen(path));
+    retCode = find_script(path, script, 1024);
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_STREQ("demo#conf#conf1\n", script);
+
+    retCode = -1;
+    path[2047] = 'q';
+    path[2048] = '\0';
+    retCode = find_script(path, script, 1024);
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+TEST(qconf_scriptTest, find_script_buf_not_enough)
+{
+    int retCode = -1;
+    char script[1024];
+    retCode = find_script("/qconf/demo/conf", script, 2);
+    EXPECT_EQ(QCONF_ERR_BUF_NOT_ENOUGH, retCode);
+}
+
+TEST(qconf_scriptTest, find_script_not_exist)
+{
+    int retCode = -1;
+    char script[1024];
+    retCode = find_script("/qconf/demo1/conf", script, 1024);
+    EXPECT_EQ(QCONF_ERR_SCRIPT_NOT_EXIST, retCode);
+}
+
+//Test for execute_script
+extern int execute_script(const char *script, long mtimeout);
+TEST(qconf_scriptTest, execute_null_param)
+{
+    int retCode = -1;
+    retCode = execute_script(NULL, 10);
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+TEST(qconf_scriptTest, execute_normal)
+{
+    int retCode = -1;
+    retCode = execute_script("sleep 1; exit 0;", 2000);
+    EXPECT_EQ(QCONF_OK, retCode);
+}
+
+TEST(qconf_scriptTest, execute_timeout)
+{
+    int retCode = -1;
+    retCode = execute_script("sleep 2; exit 0;", 1000);
+    EXPECT_EQ(QCONF_ERR_SCRIPT_TIMEOUT, retCode);
+}
+
+
+
+

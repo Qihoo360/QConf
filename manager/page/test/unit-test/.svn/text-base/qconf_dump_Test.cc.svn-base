@@ -1,0 +1,946 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#include "gtest/gtest.h"
+#include "agent_const_def.h"
+#include "qconf_map.h"
+#include "agent_dump.h"
+#include "format_util.h"
+
+
+#define MAX_SLOT_NUM 11
+
+//unit test case for qconf_dump.c
+
+//Related test environment set up and tear down
+static qhasharr_t* tbl = NULL;
+
+class qconf_dumpTestF : public ::testing::Test
+{
+protected:
+    static void SetUpTestCase()
+    {
+        int memsize = 0;
+        char* memory = NULL;
+        memsize = qhasharr_calculate_memsize(MAX_SLOT_NUM);
+        memory = (char*)malloc(sizeof(char) * memsize);
+        memset(memory, 0, memsize);
+        tbl = qhasharr(memory, memsize);
+    }
+    virtual void SetUp()
+    {
+    }
+
+    virtual void TearDown()
+    {
+        qhasharr_clear(tbl);
+    }
+
+    static void TearDownTestCase()
+    {
+        tbl = NULL;
+    }
+};
+
+/**
+  *============================================================================================================
+  *Begin_Test_for function: int get_val_from_dump(const char* dump_file, const char *key, char **val, int *len)
+  */
+
+//Test for get_val_from_dump: dump_file=NULL
+TEST(qconf_dumpTest, get_val_from_dump_null_file)
+{
+    int retCode = 0;
+    const char* key = "test";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_val_from_dump(NULL, key, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_val_from_dump: key=NULL
+TEST(qconf_dumpTest, get_val_from_dump_null_key)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_val_from_dump(dump_file, NULL, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_val_from_dump: val=NULL
+TEST(qconf_dumpTest, get_val_from_dump_null_val)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* key = "test";
+    int len = 0;
+
+    retCode = get_val_from_dump(dump_file, key, NULL, &len);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_Val_from_dump: len=NULL
+TEST(qconf_dumpTest, get_val_from_dump_null_len)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* key = "test";
+    char* val = NULL;
+
+    retCode = get_val_from_dump(dump_file, key, &val, NULL);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_val_from_dump: dump_file not exists
+TEST(qconf_dumpTest, get_val_from_dump_but_file_not_exists)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/aaaa";
+    const char* key = "test";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_val_from_dump(dump_file, key, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_OPEN_DUMP, retCode);
+}
+
+//Test for get_val_from_dump: dump_file_can_not_read
+TEST(qconf_dumpTest, get_val_from_dump_but_has_no_read_access_to_dump_file)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/dump_can_not_read";
+    const char* key = "test";
+    char* val = NULL;
+    int len = 0;
+
+    open(dump_file, O_CREAT | O_RDWR, 0222);
+//    chmod(dump_file, 222);
+    retCode = get_val_from_dump(dump_file, key, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_OPEN_DUMP, retCode);
+}
+
+//Test for get_val_from_dump: empty file
+TEST(qconf_dumpTest, get_val_from_dump_empty_file)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/dump_empty_file";
+    const char* key = "test";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_val_from_dump(dump_file, key, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_NOT_IN_DUMP, retCode);
+}
+
+//Test for get_val_from_dump: not empty file,but key not exists in dump_file
+TEST(qconf_dumpTest, get_val_from_dump_key_not_exists_in_dump_file)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* key = "test";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_val_from_dump(dump_file, key, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_NOT_IN_DUMP, retCode);
+}
+
+//Test for get_val_from_dump: invalid format of dump_file contents
+TEST(qconf_dumpTest, get_val_from_dump_invalid_format)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/dump_invalid_format";
+    const char* key = "3,4,corp";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_val_from_dump(dump_file, key, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_NOT_IN_DUMP, retCode);
+}
+
+//Test for get_val_from_dump: length of param key not equals actual tbl_key_len
+TEST(qconf_dumpTest, get_val_from_dump_length_not_equals)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/dump_key_length_not_equals_with_actual_length";
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_val_from_dump(dump_file, key, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_NOT_IN_DUMP, retCode);
+}
+
+//Test for get_val_from_dump: the same length,but param key not equals with actual tbl_key
+TEST(qconf_dumpTest, get_val_from_dump_key_not_equals)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* key = "abcdefghijklmnopq12345";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_val_from_dump(dump_file, key, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_NOT_IN_DUMP, retCode);
+}
+
+//Test for get_val_from_dump:
+
+
+//Test for get_val_from_dump: key exists and value not empty
+TEST(qconf_dumpTest, get_val_from_dump_key_exists_and_value_not_empty)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_val_from_dump(dump_file, key, &val, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(69, len);
+    EXPECT_STREQ("3:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80", val);
+    free(val);
+    val = NULL;
+}
+
+//Test for get_val_from_dump: key exists and value not empty
+TEST(qconf_dumpTest, get_val_from_dump_key_exists_and_value_not_empty2)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump_long_val";
+    const char* key = "3:4:corp39:/qconf/dba/mdb/md_9008_6e800f9171baaaad";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_val_from_dump(dump_file, key, &val, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(227, len);
+    EXPECT_STREQ("3:4:corp39:/qconf/dba/mdb/md_9008_6e800f9171baaaad1:16:10.16.57.64:9008abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz", val);
+    free(val);
+    val = NULL;
+}
+/**
+  *End_Test_for function: int get_val_from_dump(const char* dump_file, const char *key, char **val, int *len)
+  *===============================================================================================================================
+  */
+
+/**===============================================================================================================================
+  *Begin_Test_for function: int get_node_from_dump(const char* dump_file, const char *path, const char* idc, char **val, int *len)
+  */
+
+//Test for get_node_from_dump: dump_file=NULL
+TEST(qconf_dumpTest, get_node_from_dump_null_dump_file)
+{
+    int retCode = 0;
+    const char* path = "/qconf/demo";
+    const char* idc = "corp";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_node_from_dump(NULL, path, idc, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_node_from_dump: path=NULL
+TEST(qconf_dumpTest, get_node_from_dump_null_path)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* idc = "corp";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_node_from_dump(dump_file, NULL, idc, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_node_from_dump: idc=NULL
+TEST(qconf_dumpTest, get_node_from_dump_null_idc)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* path = "/qconf/demo";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_node_from_dump(dump_file, path, NULL, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_node_from_dump: val=NULL
+TEST(qconf_dumpTest, get_node_from_dump_null_val)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* path = "/qconf/demo";
+    const char* idc = "corp";
+    int len = 0;
+
+    retCode = get_node_from_dump(dump_file, path, idc, NULL, &len);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_node_from_dump: len=NULL
+TEST(qconf_dumpTest, get_node_from_dump_null_len)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* path = "/qconf/demo";
+    const char* idc = "corp";
+    char* val = NULL;
+
+    retCode = get_node_from_dump(dump_file, path, idc, &val, NULL);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_node_from_dump: dump_file not exist
+TEST(qconf_dumpTest, get_node_from_dump_dump_file_not_exists)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/test";
+    const char* path = "/qconf/demo";
+    const char* idc = "corp";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_node_from_dump(dump_file, path, idc, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_OPEN_DUMP, retCode);
+}
+
+//Test for get_node_from_dump: dump_file can not read
+TEST(qconf_dumpTest, get_node_from_dump_but_has_no_access_to_read_dump_file)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/dump_can_not_read";
+    const char* path = "/qconf/demo";
+    const char* idc = "corp";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_node_from_dump(dump_file, path, idc, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_OPEN_DUMP, retCode);
+}
+
+//Test for get_node_from_dump: empty dump_file
+TEST(qconf_dumpTest, get_node_from_dump_empty_file)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/dump_empty_file";
+    const char* path = "/qconf/demo";
+    const char* idc = "corp";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_node_from_dump(dump_file, path, idc, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_NOT_IN_DUMP, retCode);
+}
+
+//Test for get_node_from_dump: tblkey not exists int dump_dile
+TEST(qconf_dumpTest, get_node_from_dump_tblkey_not_exists_in_dump_file)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* path = "/qconf/demo";
+    const char* idc = "corptest";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_node_from_dump(dump_file, path, idc, &val, &len);
+
+    EXPECT_EQ(QCONF_ERR_NOT_IN_DUMP, retCode);
+}
+
+//Test for get_node_from_dump: valid params
+TEST(qconf_dumpTest, get_node_from_dump_succeed)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* path = "/qconf/demo";
+    const char* idc = "corp";
+    char* val = NULL;
+    int len = 0;
+
+    retCode = get_node_from_dump(dump_file, path, idc, &val, &len);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(9, len);
+    EXPECT_STREQ("demo-test", val);
+    free(val);
+    val = NULL;
+}
+/**
+  *End_Test_for function: int get_node_from_dump(const char* dump_file, const char *path, const char* idc, char **val, int *len)
+  *=============================================================================================================================
+  */
+
+/**
+  *=============================================================================================================================
+  *Begin_Test_for function: int get_chd_from_dump(const char* dump_file, const char *path, const char* idc, String_vector_t *chd)
+  */
+
+//Test for get_chd_from_dump: dump_file=NULL
+TEST(qconf_dumpTest, get_chd_from_dump_null_dump_file)
+{
+    int retCode = 0;
+    const char* path = "/qconf/demo";
+    const char* idc = "corp";
+    String_vector_t nodes;
+    memset(&nodes, 0, sizeof(nodes));
+
+    retCode = get_chd_from_dump(NULL, path, idc, &nodes);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_chd_from_dump: path=NULL
+TEST(qconf_dumpTest, get_chd_from_dump_null_path)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* idc = "corp";
+    String_vector_t nodes;
+    memset(&nodes, 0, sizeof(nodes));
+
+    retCode = get_chd_from_dump(dump_file, NULL, idc, &nodes);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_chd_from_dump: idc=NULL
+TEST(qconf_dumpTest, get_chd_from_dump_null_idc)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* path = "/qconf/demo";
+    String_vector_t nodes;
+    memset(&nodes, 0, sizeof(nodes));
+
+    retCode = get_chd_from_dump(dump_file, path, NULL, &nodes);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_chd_from_dump: chd=NULL
+TEST(qconf_dumpTest, get_chd_from_dump_null_chd)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* path = "/qconf/demo";
+    const char* idc = "corp";
+
+    retCode = get_chd_from_dump(dump_file, path, idc, NULL);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for get_chd_from_dump: dump file not exists
+TEST(qconf_dumpTest, get_chd_from_dump_dump_file_not_exists)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump_";
+    const char* path = "/qconf/demo";
+    const char* idc = "corp";
+    String_vector_t nodes;
+    memset(&nodes, 0, sizeof(nodes));
+
+    retCode = get_chd_from_dump(dump_file, path, idc, &nodes);
+
+    EXPECT_EQ(QCONF_ERR_OPEN_DUMP, retCode);
+}
+
+//Test for get_chd_from_dump: dump file can not read
+TEST(qconf_dumpTest, get_chd_from_dump_file_but_has_no_access_to_read)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/dump_cam_not_read";
+    const char* path = "/qconf/demo";
+    const char* idc = "corp";
+    String_vector_t nodes;
+    memset(&nodes, 0, sizeof(nodes));
+
+    retCode = get_chd_from_dump(dump_file, path, idc, &nodes);
+
+    EXPECT_EQ(QCONF_ERR_OPEN_DUMP, retCode);
+}
+
+//Test for get_chd_from_dump: empty dump file
+TEST(qconf_dumpTest, get_chd_from_dump_empty_file)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/dump_empty_file";
+    const char* path = "/qconf/demo";
+    const char* idc = "corp";
+    String_vector_t nodes;
+    memset(&nodes, 0, sizeof(nodes));
+
+    retCode = get_chd_from_dump(dump_file, path, idc, &nodes);
+
+    EXPECT_EQ(QCONF_ERR_NOT_IN_DUMP, retCode);
+}
+
+//Test for get_chd_from_dump: key not in dump_file
+TEST(qconf_dumpTest, get_chd_from_dump_key_not_exists_in_dump_file)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* path = "/qconf/demo";
+    const char* idc = "corp";
+    String_vector_t nodes;
+    memset(&nodes, 0, sizeof(nodes));
+
+    retCode = get_chd_from_dump(dump_file, path, idc, &nodes);
+
+    EXPECT_EQ(QCONF_ERR_NOT_IN_DUMP, retCode);
+}
+
+//Test for get_chd_from_dump: get chdval successfully
+TEST(qconf_dumpTest, get_chd_from_dump_succeed)
+{
+    int retCode = 0;
+    const char* dump_file = "dump/_dump";
+    const char* path = "/qconf/dba/mdb/md_9008_6e800f9171baaaad";
+    const char* idc = "corp";
+    int i = 0;
+    String_vector_t nodes;
+    memset(&nodes, 0, sizeof(nodes));
+
+    retCode = get_chd_from_dump(dump_file, path, idc, &nodes);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(1, nodes.count);
+    EXPECT_STREQ("10.16.57.64:9008", nodes.data[0]);
+    free_String_vector((&nodes), i, 1);
+}
+
+//Test for get_chd_from_dump: get chdval successfully and nodes.count>1
+TEST(qconf_dumpTest, get_chd_from_dump_succeed_and_count_of_nodes_more_than_one)
+{
+    int retCode = 0;
+    int i = 0;
+    const char* dump_file = "dump/_dump";
+    const char* path = "/qconf/demo";
+    const char* idc = "test";
+    String_vector_t nodes;
+    memset(&nodes, 0, sizeof(nodes));
+    const char* datas[15] = {"test_2000service", "test_eight", "test_expension", "test_expension1", "test_expension3",
+                             "test_expension4", "test_five", "test_four", "test_my", "test_nine", "test_one", "test_serv",
+                             "test_six", "test_three", "test_two"
+                            };
+
+    retCode = get_chd_from_dump(dump_file, path, idc, &nodes);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(15, nodes.count);
+
+    for(int i = 0; i < nodes.count; i++)
+    {
+        EXPECT_STREQ(datas[i], nodes.data[i]);
+    }
+
+    free_String_vector((&nodes), i, nodes.count);
+}
+/**
+  *End_Test_for function: int get_chd_from_dump(const char* dump_file, const char *path, const char* idc, String_vector_t *chd)
+  *==============================================================================================================================
+ */
+
+/**
+  *===============================================================================================================================
+  *Begin_Test_for function: int dump_tbl(qhasharr_t* tbl, const char* tmp_file, const char* dump_file)
+  */
+
+//Test for dump_tbl: tbl=NULL
+TEST(qconf_dumpTest, dump_tbl_null_tbl)
+{
+    int retCode = 0;
+    qhasharr_t* tbl = NULL;
+    const char* tmp_file = "./dump/dump_tbl/tmp_file";
+    const char* dump_file = "./dump/dump_tbl/_dump_file";
+
+    retCode = dump_tbl(tbl, tmp_file, dump_file);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+}
+
+//Test for dump_tbl: tmp_file=NULL
+TEST_F(qconf_dumpTestF, dump_tbl_null_tmp_file)
+{
+    int retCode = 0;
+    const char* dump_file = "./dump/dump_tbl/dump_null_tmp_file";
+
+    retCode = dump_tbl(tbl, NULL, dump_file);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for dump_tbl: dump_file=NULL
+TEST_F(qconf_dumpTestF, dump_tbl_null_dump_file)
+{
+    int retCode = 0;
+    const char* tmp_file = "./dump/dump_tbl/tmp_null_dump_file";
+
+    retCode = dump_tbl(tbl, tmp_file, NULL);
+
+    EXPECT_EQ(QCONF_ERR_PARAM, retCode);
+}
+
+//Test for dump_tbl: tmp file not exists
+TEST_F(qconf_dumpTestF, dump_tbl_tmp_file_not_exists)
+{
+    int retCode = 0;
+    const char* tmp_file = "./dump/dump_tbl/test.tmp";
+    const char* dump_file = "./dump/dump_tbl/test_dump";
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    const char* val = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    FILE* fp = NULL;
+    char line[1024] = {0};
+    int lineno = 0;
+
+    hash_tbl_set_with_md5(tbl, key, val);
+    retCode = dump_tbl(tbl, tmp_file, dump_file);
+    fp = fopen(dump_file, "r");
+
+    if(fp == NULL)
+        ADD_FAILURE() << "can not open dump_file!";
+
+    while(fgets(line, sizeof(line), fp))
+    {
+        lineno++;
+    }
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(1, lineno);
+    EXPECT_STREQ("37:2:4:corp26:/qconf/__qconf_anchor_node51:2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor\n", line);
+}
+
+//Test for dump_tbl: open tmp_file failed,has no access to read file
+TEST_F(qconf_dumpTestF, dump_tbl_has_no_access_to_read_tmp_file)
+{
+    int retCode = 0;
+    const char* tmp_file = "./dump/dump_tbl/tmp_can_not_read";
+    const char* dump_file = "./dump/dump_tbl/dump_can_not_read_tmp";
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    const char* val = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    int fd = 0;
+
+    fd = open(tmp_file, O_WRONLY | O_CREAT | O_APPEND, 222);
+    close(fd);
+
+    hash_tbl_set_with_md5(tbl, key, val);
+    retCode = dump_tbl(tbl, tmp_file, dump_file);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+}
+
+//Test for dump_tbl: write file failed,has no access to write file
+TEST_F(qconf_dumpTestF, dump_tbl_has_no_access_to_write_tmp_file)
+{
+    int retCode = 0;
+    const char* tmp_file = "./dump/dump_tbl/tmp_can_not_write";
+    const char* dump_file = "./dump/dump_tbl/dump_can_not_write_tmp";
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    const char* val = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    int fd = 0;
+
+    fd = open(tmp_file, O_RDONLY | O_CREAT | O_APPEND, 111);
+    close(fd);
+
+    hash_tbl_set_with_md5(tbl, key, val);
+    retCode = dump_tbl(tbl, tmp_file, dump_file);
+
+    EXPECT_EQ(QCONF_ERR_OPEN_TMP_DUMP, retCode);
+}
+
+//Test for dump_tbl: tmp file has the same file name with dump_file
+TEST_F(qconf_dumpTestF, dump_tbl_the_same_name_of_tmp_file_and_dump_file)
+{
+    int retCode = 0;
+    const char* tmp_file = "./dump/dump_tbl/tmp_same_name_with_dump";
+    const char* dump_file = "./dump/dump_tbl/tmp_same_name_with_dump";
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    const char* val = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    FILE* fp = NULL;
+    char line[1024] = {0};
+    int lineno = 0;
+
+    hash_tbl_set_with_md5(tbl, key, val);
+    retCode = dump_tbl(tbl, tmp_file, dump_file);
+    fp = fopen(dump_file, "r");
+
+    if(fp == NULL)
+        ADD_FAILURE() << "can not open dump_file!";
+
+    while(fgets(line, sizeof(line), fp))
+    {
+        lineno++;
+    }
+
+    EXPECT_EQ(QCONF_OK, retCode);
+//    EXPECT_EQ(1, lineno);
+    EXPECT_STREQ("37:2:4:corp26:/qconf/__qconf_anchor_node51:2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor\n", line);
+}
+
+//Test for dump_tbl: dump file already exists
+TEST_F(qconf_dumpTestF, dump_tbl_dump_file_already_exists)
+{
+    int retCode = 0;
+    const char* tmp_file = "./dump/dump_tbl/tmp_dump_already_exists";
+    const char* dump_file = "./dump/dump_tbl/_dump_already_exists";
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    const char* val = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    FILE* fp = NULL;
+    char line[1024] = {0};
+    int lineno = 0;
+
+    hash_tbl_set_with_md5(tbl, key, val);
+    retCode = dump_tbl(tbl, tmp_file, dump_file);
+    fp = fopen(dump_file, "r");
+
+    if(fp == NULL)
+        ADD_FAILURE() << "can not open dump_file!";
+
+    while(fgets(line, sizeof(line), fp))
+    {
+        lineno++;
+    }
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(1, lineno);
+    EXPECT_STREQ("37:2:4:corp26:/qconf/__qconf_anchor_node51:2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor\n", line);
+}
+
+//Test for dump_tbl: tbl->maxslots=0
+TEST(qconf_dumpTest, dump_tbl_zero_maxslots)
+{
+    int retCode = 0;
+    qhasharr_t* tbl = NULL;
+    const char* tmp_file = "./dump/dump_tbl/tmp_zero_maxslots";
+    const char* dump_file = "./dump/dump_tbl/dump_zero_maxslots";
+    int memsize = 0;
+    char* memory = NULL;
+
+    memsize = qhasharr_calculate_memsize(0);
+    memory = (char*)malloc(sizeof(char) * memsize);
+    tbl = (qhasharr_t*)memory;
+    memset(tbl, 0, memsize);
+
+    retCode = dump_tbl(tbl, tmp_file, dump_file);
+
+    EXPECT_EQ(QCONF_OK, retCode);
+}
+
+//Test for dump_tbl: tbl->num=0
+TEST_F(qconf_dumpTestF, dump_tbl_zero_tbl_num)
+{
+    int retCode = 0;
+    const char* tmp_file = "./dump/dump_tbl/tmp_zero_tbl_num";
+    const char* dump_file = "./dump/dump_tbl/_dump_zero_tbl_num";
+    //const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    //const char* val = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    FILE* fp = NULL;
+    char line[1024] = {0};
+    int lineno = 0;
+
+    retCode = dump_tbl(tbl, tmp_file, dump_file);
+    fp = fopen(dump_file, "r");
+
+    if(fp == NULL)
+        ADD_FAILURE() << "can not open dump_file!";
+
+    while(fgets(line, sizeof(line), fp))
+    {
+        lineno++;
+    }
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(0, lineno);
+}
+
+
+//Test for dump_tbl: tbl has no valid data type
+TEST_F(qconf_dumpTestF, dump_tbl_has_no_valid_data_type)
+{
+    int retCode = 0;
+    const char* tmp_file = "./dump/dump_tbl/tmp_invalid_data_type";
+    const char* dump_file = "./dump/dump_tbl/_dump_invalid_data_type";
+    const char* key = "test";
+    const char* val = "test1234";
+    FILE* fp = NULL;
+    char line[1024] = {0};
+    int lineno = 0;
+
+    hash_tbl_set_with_md5(tbl, key, val);
+    retCode = dump_tbl(tbl, tmp_file, dump_file);
+    fp = fopen(dump_file, "r");
+
+    if(fp == NULL)
+        ADD_FAILURE() << "can not open dump_file!";
+
+    while(fgets(line, sizeof(line), fp))
+    {
+        lineno++;
+    }
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(0, lineno);
+}
+
+//Test for dump_tbl: tbl only has QCONF_DATA_TYPE_NODE
+TEST_F(qconf_dumpTestF, dump_tbl_data_type_of_node)
+{
+    int retCode = 0;
+    const char* tmp_file = "./dump/dump_tbl/tmp_data_type_node";
+    const char* dump_file = "./dump/dump_tbl/_dump_data_type_node";
+    const char* key = "2:4:corp26:/qconf/__qconf_anchor_node";
+    const char* val = "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor";
+    FILE* fp = NULL;
+    char line[1024] = {0};
+    int lineno = 0;
+
+    hash_tbl_set_with_md5(tbl, key, val);
+    retCode = dump_tbl(tbl, tmp_file, dump_file);
+    fp = fopen(dump_file, "r");
+
+    if(fp == NULL)
+        ADD_FAILURE() << "can not open dump_file!";
+
+    while(fgets(line, sizeof(line), fp))
+    {
+        lineno++;
+    }
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(1, lineno);
+    EXPECT_STREQ("37:2:4:corp26:/qconf/__qconf_anchor_node51:2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor\n", line);
+}
+
+//Test for dump_tbl: tbl only has QCONF_DATA_TYPE_SERVICE
+TEST_F(qconf_dumpTestF, dump_tbl_data_type_of_service)
+{
+    int retCode = 0;
+    const char* tmp_file = "./dump/dump_tbl/tmp_data_type_service";
+    const char* dump_file = "./dump/dump_tbl/_dump_data_type_service";
+    const char* key = "3:4:corp26:/qconf/__qconf_anchor_node";
+    const char* val = "3:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80";
+    FILE* fp = NULL;
+    char line[1024] = {0};
+    int lineno = 0;
+
+    hash_tbl_set_with_md5(tbl, key, val);
+    retCode = dump_tbl(tbl, tmp_file, dump_file);
+    fp = fopen(dump_file, "r");
+
+    if(fp == NULL)
+        ADD_FAILURE() << "can not open dump_file!";
+
+    while(fgets(line, sizeof(line), fp))
+    {
+        lineno++;
+    }
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(1, lineno);
+    EXPECT_STREQ("37:3:4:corp26:/qconf/__qconf_anchor_node69:3:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80\n", line);
+}
+
+//Test for dump_tbl: tbl only has QCONF_DATA_TYPE_ZK_HOST
+TEST_F(qconf_dumpTestF, dump_tbl_data_type_of_zk_host)
+{
+    int retCode = 0;
+    const char* tmp_file = "./dump/dump_tbl/tmp_data_type_zk_host";
+    const char* dump_file = "./dump/dump_tbl/_dump_data_type_zk_host";
+    const char* key = "1:4:corp11:/qconf/demo";
+    const char* val = "1:4:corp11:/qconf/demo14:10.15.16.17:22";
+    FILE* fp = NULL;
+    char line[1024] = {0};
+    int lineno = 0;
+
+    hash_tbl_set_with_md5(tbl, key, val);
+    retCode = dump_tbl(tbl, tmp_file, dump_file);
+    fp = fopen(dump_file, "r");
+
+    if(fp == NULL)
+        ADD_FAILURE() << "can not open dump_file!";
+
+    while(fgets(line, sizeof(line), fp))
+    {
+        lineno++;
+    }
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(0, lineno);
+    EXPECT_STREQ("", line);
+
+}
+//Test for dump_tbl: tbl has all data type
+TEST_F(qconf_dumpTestF, dump_tbl_all_data_type)
+{
+    int retCode = 0;
+    const char* tmp_file = "./dump/dump_tbl/tmp_all_data_type";
+    const char* dump_file = "./dump/dump_tbl/_dump_all_data_type";
+    const char* keys[] = {"1:4:corp11:/qconf/demo", "2:4:corp26:/qconf/__qconf_anchor_node", "3:4:corp26:/qconf/__qconf_anchr_nodes"};
+    const char* vals[] = {"1:4:corp11:/qconf/demo14:10.15.16.17:22", "2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor", "3:4:corp26:/qconf/__qconf_anchr_nodes2:12:127.0.0.1:8012:127.0.0.2:80"};
+    FILE* fp = NULL;
+    char line[1024] = {0};
+    int lineno = 0;
+
+    for(int i = 0; i < 3; i++)
+    {
+        hash_tbl_set_with_md5(tbl, keys[i], vals[i]);
+    }
+
+    retCode = dump_tbl(tbl, tmp_file, dump_file);
+    fp = fopen(dump_file, "r");
+
+    if(fp == NULL)
+        ADD_FAILURE() << "can not open dump_file!";
+
+    while(fgets(line, sizeof(line), fp))
+    {
+        lineno++;
+    }
+
+    EXPECT_EQ(QCONF_OK, retCode);
+    EXPECT_EQ(2, lineno);
+    //EXPECT_STREQ("37:2:4:corp26:/qconf/__qconf_anchor_node51:2:4:corp26:/qconf/__qconf_anchor_node11:qconfAnchor",(const char*)line[0]);
+    //EXPECT_STREQ("37:3:4:corp26:/qconf/__qconf_anchr_nodes69:3:4:corp26:/qconf/__qconf_anchor_node2:12:127.0.0.1:8012:127.0.0.2:80",(const char*)line[1]);
+}
+
+
+/**
+  *End_Test_for function: int dump_tbl(qhasharr_t* tbl, const char* tmp_file, const char* dump_file)
+  *====================================================================================================
+  */
+
+//End_Test_for qconf_dump.c
+
+
+
+//End Test for qconf_dump.c

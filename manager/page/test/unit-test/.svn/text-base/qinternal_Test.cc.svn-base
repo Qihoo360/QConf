@@ -1,0 +1,293 @@
+#include "gtest/gtest.h"
+#include "qinternal.h"
+
+//unit test case for qinternal.c
+
+//Related test environment set up
+class qinternalTestF : public ::testing::Test
+{
+protected:
+    virtual void SetUp()
+    {
+        fp = fopen("test.output", "w");
+    }
+
+    virtual void TearDown()
+    {
+        fclose(fp);
+    }
+
+    FILE* fp;
+};
+
+/**
+  *============================================================================
+  *Begin_Test_for function: char _q_x2c(char hex_up, char hex_low)
+  */
+
+//Test for _q_x2c: 'A' 'F'
+TEST(qinternalTest, _q_x2c_1)
+{
+    char hex_up = 'A';
+    char hex_low = 'F';
+    char res;
+    res = _q_x2c(hex_up, hex_low);
+
+    EXPECT_EQ(0xAF, (unsigned char)res);
+}
+
+//Test for _q_x2c: '0' '9'
+TEST(qinternalTest, _q_x2c_2)
+{
+    char hex_up = '0';
+    char hex_low = '9';
+    char res;
+
+    res = _q_x2c(hex_up, hex_low);
+
+    EXPECT_EQ(0x09, (unsigned char)res);
+}
+
+//Test for _q_x2c: '0,'0'
+TEST(qinternalTest, _q_x2c_3)
+{
+    char hex_up = '0';
+    char hex_low = '0';
+    char res;
+
+    res = _q_x2c(hex_up, hex_low);
+
+    EXPECT_EQ(0x00, (unsigned char)res);
+}
+
+//Test for _q_x2c: 'F' 'F'
+TEST(qinternalTest, _q_x2c_4)
+{
+    char hex_up = 'F';
+    char hex_low = 'F';
+    char res;
+
+    res = _q_x2c(hex_up, hex_low);
+
+    EXPECT_EQ(0xFF, (unsigned char)res);
+}
+
+//Test for _q_x2c: 'a' 'f'
+TEST(qinternalTest, _q_x2c_5)
+{
+    char hex_up = 'a';
+    char hex_low = 'f';
+    char res;
+
+    res = _q_x2c(hex_up, hex_low);
+
+    EXPECT_EQ(0xAF, (unsigned char)res);
+}
+/**
+  *End_Test_for function: char _q_x2c(char hex_up, char hex_low)
+  *===================================================================================================
+  */
+
+/**
+  *===================================================================================================
+  *Begin_Test_for function: char *_q_makeword(char *str, char stop)
+  */
+
+//Test for _q_makeword: str contains stop "10.15.16.17:2234"
+TEST(qinternalTest, _q_makeword_constains_stop)
+{
+    char str[] = "10.15.16.17:2234";
+    char stop = ':';
+    char *res = NULL;
+
+    res = _q_makeword(str, stop);
+
+    EXPECT_STREQ("2234", str);
+    EXPECT_STREQ("10.15.16.17", res);
+}
+
+//Test for _q_makeword: str ends with stop
+TEST(qinternalTest, _q_makeword_ends_with_stop)
+{
+    char str[] = "10.15.16.17.2234:";
+    char stop = ':';
+    char *res = NULL;
+
+    res = _q_makeword(str, stop);
+
+    EXPECT_STREQ("", str);
+    EXPECT_STREQ("10.15.16.17.2234", res);
+}
+
+//Test for _q_makeword: str starts with stop
+TEST(qinternalTest, _q_makeword_starts_with_stop)
+{
+    char str[] = ":abcdefghijk";
+    char stop = ':';
+    char *res = NULL;
+
+    res = _q_makeword(str, stop);
+
+    EXPECT_STREQ("abcdefghijk", str);
+    EXPECT_STREQ("", res);
+}
+
+//Test for _q_makeword: str doesn't contain stop
+TEST(qinternalTest, _q_makeword_not_contains_stop)
+{
+    char str[] = "abcdefghijklmn";
+    char stop = ':';
+    char *res = NULL;
+
+    res = _q_makeword(str, stop);
+
+    EXPECT_STREQ("", str);
+    EXPECT_STREQ("abcdefghijklmn", res);
+}
+
+//Test for _q_makeword: str contains several stop and the first index of stop in str =0
+TEST(qinternalTest, _q_makeword_contains_several1)
+{
+    char str[] = ":abc:def:ghi";
+    char stop = ':';
+    char *res = NULL;
+
+    res = _q_makeword(str, stop);
+
+    EXPECT_STREQ("abc:def:ghi", str);
+    EXPECT_STREQ("", res);
+}
+
+//Test for _q_makeword: str contains several stop
+TEST(qinternalTest, _q_makeword_contains_several2)
+{
+    char str[] = "abcdefghi:::";
+    char stop = ':';
+    char *res = NULL;
+
+    res = _q_makeword(str, stop);
+
+    EXPECT_STREQ("::", str);
+    EXPECT_STREQ("abcdefghi", res);
+}
+
+//Test for _q_makeword: str contains several stop
+TEST(qinternalTest, _q_makeword_contains_several3)
+{
+    char str[] = "abcd:::efg:h:::";
+    char stop = ':';
+    char *res = NULL;
+
+    res = _q_makeword(str, stop);
+
+    EXPECT_STREQ("::efg:h:::", str);
+    EXPECT_STREQ("abcd", res);
+}
+/**
+  *End_Test_for function: char *_q_makeword(char *str, char stop)
+  *===================================================================================================
+  */
+
+/**
+  *====================================================================================================
+  *Begin_Test_for function: void _q_humanOut(FILE *fp, void *data, size_t size, size_t max)
+  */
+
+//Test for _q_humanout: size=0
+TEST_F(qinternalTestF, _q_humanOut_size_zero)
+{
+    void* data = (void*)"";
+    char line[1024] = {0};
+
+    _q_humanOut(fp, data, 0, 1);
+
+    fp = fopen("test.output", "r");
+    fgets(line, sizeof(line), fp);
+
+    EXPECT_EQ(0, strlen(line));
+}
+
+//Test for _q_humanout: size=1 and character can be printed
+TEST_F(qinternalTestF, _q_humanOut_size_one)
+{
+    void* data = (void*)"a";
+    char line[1024] = {0};
+
+    _q_humanOut(fp, data, 1, 1);
+    fclose(fp);
+    fp = fopen("test.output", "r");
+    fgets(line, sizeof(line), fp);
+
+    EXPECT_EQ(1, strlen(line));
+    EXPECT_STREQ("a", line);
+}
+
+//Test for _q_humanOut: size=1 and character can not be printed
+TEST_F(qinternalTestF, _q_humanOut_size_one_can_not_be_printed)
+{
+    void* data = (void*)"\n";
+    char line[1024] = {0};
+
+    _q_humanOut(fp, data, 1, 1);
+    fclose(fp);
+    fp = fopen("test.output", "r");
+    fgets(line, sizeof(line), fp);
+
+    EXPECT_EQ(1, strlen(line));
+    EXPECT_STREQ("?", line);
+}
+
+//Test for _q_humanout: size>1 and all characters can be printed
+TEST_F(qinternalTestF, _q_humanOut_size_more_than_one_and_all_printed)
+{
+    void* data = (void*)"abcd123456*&^#@ocogjafad a";
+    char line[1024] = {0};
+
+    _q_humanOut(fp, data, 26, 1);
+    fclose(fp);
+    fp = fopen("test.output", "r");
+    fgets(line, sizeof(line), fp);
+
+    EXPECT_EQ(26, strlen(line));
+    EXPECT_STREQ("abcd123456*&^#@ocogjafad a", line);
+}
+
+//Test for _q_humanout: size>1 and has some characters that can not be printed
+TEST_F(qinternalTestF, _q_humanOut_size_more_than_one_and_has_characters_can_not_be_printed)
+{
+    void* data = (void*)"abc d123456*&^#@oc""ogja\nfa\tda";
+    char line[1024] = {0};
+
+    _q_humanOut(fp, data, 28, 1);
+    fclose(fp);
+    fp = fopen("test.output", "r");
+    fgets(line, sizeof(line), fp);
+
+    EXPECT_EQ(28, strlen(line));
+    EXPECT_STREQ("abc d123456*&^#@ocogja?fa?da", line);
+}
+
+//Test for _q_humanout: size>1 and all characters can not be printed
+TEST_F(qinternalTestF, _q_humanOut_size_more_than_one_and_all_characters_can_be_printed)
+{
+    void* data = (void*)"\n\t\r\0\v\f\n\n\n\n";
+    char line[1024] = {0};
+
+    _q_humanOut(fp, data, 10, 1);
+    fclose(fp);
+    fp = fopen("test.output", "r");
+    fgets(line, sizeof(line), fp);
+
+    EXPECT_EQ(10, strlen(line));
+    EXPECT_STREQ("??????????", line);
+}
+/**
+  *End_Test_for function: void _q_humanOut(FILE *fp, void *data, size_t size, size_t max)
+  *===============================================================================================
+  */
+
+//End Test for qinternal.c
+
+
+
+

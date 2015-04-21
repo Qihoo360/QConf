@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<!--[if lt IE 7 ]><html lang="en" class="ie6 ielt7 ielt8 ielt9"><![endif]--><!--[if IE 7 ]><html lang="en" class="ie7 ielt8 ielt9"><![endif]--><!--[if IE 8 ]><html lang="en" class="ie8 ielt9"><![endif]--><!--[if IE 9 ]><html lang="en" class="ie9"> <![endif]--><!--[if (gt IE 9)|!(IE)]><!--> 
+<html lang="en"><!--<![endif]--> 
+	<head>
+		<meta charset="utf-8">
+		<title>QConf - Master</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link href="css/bootstrap-responsive.min.css" rel="stylesheet">
+		<link href="css/site.css" rel="stylesheet">
+        <!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	</head>
+	<body>
+		<div class="container">
+			<div class="row">
+				<div class="span9">
+					<div class="hero-unit">
+						<h1>
+							QConf Manager
+						</h1>
+						<p>
+							QConf Management Interface.
+						</p>
+					</div>
+                    <h2>
+                        QConf Node Infomation
+                    </h2>
+                    <hr/>
+                    <form id="edit-profile" class="form-horizontal" method="POST">
+                        <fieldset>
+                            <div class="control-group">
+                                <label class="control-label" for="input01">Path</label>
+                                <div class="controls">
+                                    <input type="text" class="input-xlarge" name="path" value="<#path.c_str()#>" />&nbsp;&nbsp;&nbsp;&nbsp;
+                                    <button type="submit" name="check_node" class="btn btn-primary"  >Check</button> 
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label" for="">Idc</label>
+                                <div class="controls">
+                                    <select name="idc" class="input-xlarge" >
+                                        <%  
+                                        vector<string>::iterator it = idcs.begin();
+                                        for(; it != idcs.end(); ++it)
+                                        {
+                                        %>
+                                        <option value="<#(*it).c_str()#>"
+                                        <%
+                                        if ((*it) == idc)
+                                        {
+                                        %>
+                                        selected
+                                        <%
+                                        }
+                                        %>
+                                        ><#(*it).c_str()#></option>
+                                        <%
+                                        }
+                                        %>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label" for="textarea">Value</label>
+                                <div class="controls">
+                                    <textarea name="value" class="input-xlarge" id="textarea" rows="15" style="width:80%" ><#value.c_str()#></textarea>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" name="modify_node" class="btn btn-primary" onclick='var r=confirm("Are you sure you want to modify or add this node?"); return r;' >Add Or Modify</button>&nbsp;&nbsp;&nbsp;
+                                <button type="submit" name="delete_node" class="btn" onclick='var r=confirm("Are you sure you want to delete this node?"); return r;'>Delete</button>
+                            </div>
+                        </fieldset>
+                    </form>
+                    <h2>
+                        Children Nodes
+                    </h2>
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Path
+                                </th>
+                                <th>
+                                    Idc
+                                </th>
+                                <th>
+                                    View
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <%  
+                            vector<string>::iterator cit = children.begin();
+                            for(; cit != children.end(); ++cit)
+                            {
+                            %>
+                            <tr>
+                                <td>
+                                    <#(*cit).c_str()#>
+                                </td>
+                                <td>
+                                    <#idc.c_str()#>
+                                </td>
+                                <td>
+                                    <a href="<#target.c_str()#>
+                                        ?path=<#(*cit).c_str()#>
+                                        &idc=<#idc.c_str()#>" class="view-link">View</a>
+                                </td>
+                            </tr>
+                            <%
+                            }
+                            %>
+                        </tbody>
+                    </table>
+                    <h2>
+                        Parent Node
+                    </h2>
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Path
+                                </th>
+                                <th>
+                                    Idc
+                                </th>
+                                <th>
+                                    View
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <%
+                            string parent = (path.substr(0, path.find_last_of("/")));
+                            if (!parent.empty())
+                            {
+                            %>
+                            <tr>
+                                <td>
+                                    <#parent.c_str()#>
+                                </td>
+                                <td>
+                                    <#idc.c_str()#>
+                                </td>
+                                <td>
+                                    <a href="<#target.c_str()#>
+                                        ?path=<#parent.c_str()#>
+                                        &idc=<#idc.c_str()#>" class="view-link">View</a>
+                                </td>
+                            </tr>
+                            <%
+                            }
+                            %>
+                        </tbody>
+                    </table>
+                    <ul class="pager">
+                        <li class="next">
+                        More Infomation <a href="https://github.com/Qihoo360/QConf" target="_blank" title="github">Github</a>  <a href="https://github.com/Qihoo360/QConf/wiki" title="wiki" target="_blank">wiki</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <script src="js/jquery.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/site.js"></script>
+    </body>
+</html>

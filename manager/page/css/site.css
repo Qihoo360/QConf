@@ -1,0 +1,54 @@
+/* Akira CSS by Shawn Drew */
+
+/* general */
+body {padding-top:20px; padding-bottom:20px;}
+
+h1 {padding-bottom:0.2em;}
+
+.meta {color:#999; font-size:.9em; display:block;}
+.meta em {font-style:normal; font-weight:bold;}
+
+/* login */
+#login-page.container {width:320px;}
+
+/* dashboard */
+.summary {display:table; width:100%; padding:0; margin:0 0 20px 0;}
+.summary ul {margin:0; padding:0; overflow:hidden; display:table-row;}
+.summary li {margin:0; padding:19px; display:table-cell; border-right:1px solid #eee;}
+.summary li:last-child {border:none;}
+.summary a {display:block; font-size:1.2em; line-height:1.4em; text-transform:uppercase; color:#000;}
+.summary .count {display:block; font-size:1.75em; font-weight:bold;}
+
+	/* dashboard - ie fixes */
+	.ie7 .summary {display:block;}
+	.ie7 .summary ul {margin:0; padding:0; overflow:hidden; display:block;}
+	.ie7 .summary li {float:left;}
+	
+	.ielt9 .summary .last {border:none;}
+
+/* tasks */
+.tasks {margin:0; padding:0;}
+.tasks li {list-style-type:none; padding-bottom:0.3em;}
+.tasks input {vertical-align:baseline;}
+.tasks .meta {padding-left:18px;}
+.tasks.done {opacity:0.8;}
+
+/* messages */
+.messages {margin:0; padding:0;}
+.messages .messages {padding-top:19px;}
+.messages li {list-style-type:none; padding-bottom:0.3em;}
+.messages .well {padding:19px;}
+.messages .messages .well {border:none; -webkit-box-shadow:none;-moz-box-shadow:none; box-shadow:none; border-left:3px solid #eee;border-left:3px solid rgba(0, 0, 0, 0.05);}
+
+/* blank slate */
+.blank-slate {text-align:center;}
+
+/* files */
+.files li {list-style-type:none;}
+.files .meta {padding-left:18px;}
+
+.zebra-list {margin:0 0 18px 0; padding:0;}
+.zebra-list li {border:1px solid #DDD; padding:8px; border-bottom:none;}
+.zebra-list li:nth-child(odd) {background-color:#F9F9F9;}
+.zebra-list li:first-child {-webkit-border-radius:4px 4px 0 0; -moz-border-radius:4px 4px 0 0; border-radius:4px 4px 0 0;}
+.zebra-list li:last-child {border-bottom:1px solid #DDD; -webkit-border-radius:0 0 4px 4px; -moz-border-radius:0 0 4px 4px; border-radius:0 0 4px 4px;}
