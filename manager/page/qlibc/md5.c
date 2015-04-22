@@ -27,9 +27,10 @@
  */
 #include <string.h>
 #include <sys/types.h>
+
 #include "md5.h"
 
-static void MD5Transform(u_int32_t [4], const unsigned char [64]);
+static void QMD5Transform(u_int32_t [4], const unsigned char [64]);
 
 #if (BYTE_ORDER == LITTLE_ENDIAN)
 #define Encode memcpy
@@ -108,10 +109,10 @@ static unsigned char PADDING[64] =
 	(a) += (b); \
 	}
 
-/* MD5 initialization. Begins an MD5 operation, writing a new context. */
+/* QMD5 initialization. Begins an QMD5 operation, writing a new context. */
 
 void
-MD5Init (MD5_CTX *context)
+QMD5Init (QMD5_CTX *context)
 {
     if (NULL == context)
         return;
@@ -125,13 +126,13 @@ MD5Init (MD5_CTX *context)
 }
 
 /*
- * MD5 block update operation. Continues an MD5 message-digest
+ * QMD5 block update operation. Continues an QMD5 message-digest
  * operation, processing another message block, and updating the
  * context.
  */
 
 void
-MD5Update (	MD5_CTX *context,
+QMD5Update (	QMD5_CTX *context,
             const unsigned char *input,
             unsigned int inputLen)
 {
@@ -155,10 +156,10 @@ MD5Update (	MD5_CTX *context,
     {
         memcpy((void *)&context->buffer[idx], (const void *)input,
                partLen);
-        MD5Transform (context->state, context->buffer);
+        QMD5Transform (context->state, context->buffer);
 
         for (i = partLen; i + 63 < inputLen; i += 64)
-            MD5Transform (context->state, &input[i]);
+            QMD5Transform (context->state, &input[i]);
 
         idx = 0;
     }
@@ -171,11 +172,11 @@ MD5Update (	MD5_CTX *context,
 }
 
 /*
- * MD5 padding. Adds padding followed by original length.
+ * QMD5 padding. Adds padding followed by original length.
  */
 
 void
-MD5Pad (MD5_CTX *context)
+QMD5Pad (QMD5_CTX *context)
 {
     if (NULL == context)
         return;
@@ -188,25 +189,25 @@ MD5Pad (MD5_CTX *context)
     /* Pad out to 56 mod 64. */
     idx = (unsigned int)((context->count[0] >> 3) & 0x3f);
     padLen = (idx < 56) ? (56 - idx) : (120 - idx);
-    MD5Update (context, PADDING, padLen);
+    QMD5Update (context, PADDING, padLen);
 
     /* Append length (before padding) */
-    MD5Update (context, bits, 8);
+    QMD5Update (context, bits, 8);
 }
 
 /*
- * MD5 finalization. Ends an MD5 message-digest operation, writing the
+ * QMD5 finalization. Ends an QMD5 message-digest operation, writing the
  * the message digest and zeroizing the context.
  */
 
 void
-MD5Final (unsigned char digest[16],
-          MD5_CTX *context)
+QMD5Final (unsigned char digest[16],
+          QMD5_CTX *context)
 {
     if (NULL == context)
         return;
     /* Do padding. */
-    MD5Pad (context);
+    QMD5Pad (context);
 
     /* Store state in digest */
     Encode (digest, context->state, 16);
@@ -215,10 +216,10 @@ MD5Final (unsigned char digest[16],
     memset ((void *)context, 0, sizeof (*context));
 }
 
-/* MD5 basic transformation. Transforms state based on block. */
+/* QMD5 basic transformation. Transforms state based on block. */
 
 static void
-MD5Transform (u_int32_t state[4],
+QMD5Transform (u_int32_t state[4],
               const unsigned char block[64])
 {
     u_int32_t a = state[0], b = state[1], c = state[2], d = state[3], x[16];

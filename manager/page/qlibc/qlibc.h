@@ -45,6 +45,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <pthread.h>
 
 /******************************************************************************
  * COMMON DATA STRUCTURES
