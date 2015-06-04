@@ -11,6 +11,7 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 aux_source_directory(. SERVER_DIR_SRCS)
 add_executable(web_server ${SERVER_DIR_SRCS})
 
+add_subdirectory(qconf_zk)
 add_subdirectory(page)
 
 install(TARGETS web_server DESTINATION .)
