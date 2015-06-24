@@ -116,7 +116,7 @@ int feedback_generate_content(const string &ip, char data_type, const string &id
 
     stringstream ss;
     ss << "hostname=" << hostname << "&ip=" << ip << "&node_whole=" << path;
-    ss << "value_md5=" << value_md5_str << "&idc=" << idc;
+    ss << "&value_md5=" << value_md5_str << "&idc=" << idc;
     ss << "&update_time=" << time(NULL) << "&data_type=" << data_type;
     ss >> content;
 
