@@ -9,7 +9,7 @@ extern "C"{
 }
 #endif
 #include "ppport.h"
-#include "qconf.h"
+#include "../c++/include/qconf.h"
 #include <string.h>
 
 
