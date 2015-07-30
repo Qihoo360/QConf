@@ -1,0 +1,8 @@
+Changes
+Makefile.PL
+MANIFEST
+ppport.h
+QConf.xs
+README
+t/QConf.t
+lib/QConf.pm
