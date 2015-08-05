@@ -18,8 +18,8 @@ To install this module type the following:
 
    perl Makefile.PL
    make
-   make test
    make install
+   perl ./test.pl
 
 DEPENDENCIES
 
@@ -52,7 +52,7 @@ at your option, any later version of Perl 5 you may have available.
         perl Makefile.PL
         make
         make install
-        make test
+        perl test.pl
 
 使用方式
 -------------

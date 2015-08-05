@@ -1,6 +1,6 @@
 package QConf;
 
-use 5.022000;
+use 5.008007;
 use strict;
 use warnings;
 
