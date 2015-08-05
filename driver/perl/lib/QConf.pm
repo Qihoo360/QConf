@@ -25,7 +25,7 @@ our @EXPORT = qw(
 	
 );
 
-our $VERSION = '0.01';
+our $VERSION = '1.0.1';
 
 require XSLoader;
 XSLoader::load('QConf', $VERSION);
