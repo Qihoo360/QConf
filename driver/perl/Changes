@@ -1,0 +1,6 @@
+Revision history for Perl extension QConf.
+
+1.0.1  Thu Jul 30 13:00:52 2015
+	- original version; created by h2xs 1.23 with options
+		-A -n QConf
+

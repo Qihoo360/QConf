@@ -1,0 +1,105 @@
+# "perlobject.map"  Dean Roehrich, version 19960302
+#
+# TYPEMAPs
+#
+# HV *		-> unblessed Perl HV object.
+# AV *		-> unblessed Perl AV object.
+#
+# INPUT/OUTPUT maps
+#
+# O_*		-> opaque blessed objects
+# T_*		-> opaque blessed or unblessed objects
+#
+# O_OBJECT	-> link an opaque C or C++ object to a blessed Perl object.
+# T_OBJECT	-> link an opaque C or C++ object to an unblessed Perl object.
+# O_HvRV	-> a blessed Perl HV object.
+# T_HvRV	-> an unblessed Perl HV object.
+# O_AvRV	-> a blessed Perl AV object.
+# T_AvRV	-> an unblessed Perl AV object.
+
+TYPEMAP
+
+HV *		T_HvRV
+AV *		T_AvRV
+
+
+######################################################################
+OUTPUT
+
+# The Perl object is blessed into 'CLASS', which should be a
+# char* having the name of the package for the blessing.
+O_OBJECT
+	sv_setref_pv( $arg, CLASS, (void*)$var );
+
+T_OBJECT
+	sv_setref_pv( $arg, Nullch, (void*)$var );
+
+# Cannot use sv_setref_pv() because that will destroy
+# the HV-ness of the object.  Remember that newRV() will increment
+# the refcount.
+O_HvRV
+	$arg = sv_bless( newRV((SV*)$var), gv_stashpv(CLASS,1) );
+
+T_HvRV
+	$arg = newRV((SV*)$var);
+
+# Cannot use sv_setref_pv() because that will destroy
+# the AV-ness of the object.  Remember that newRV() will increment
+# the refcount.
+O_AvRV
+	$arg = sv_bless( newRV((SV*)$var), gv_stashpv(CLASS,1) );
+
+T_AvRV
+	$arg = newRV((SV*)$var);
+
+
+######################################################################
+INPUT
+
+O_OBJECT
+	if( sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVMG) )
+		$var = ($type)SvIV((SV*)SvRV( $arg ));
+	else{
+		warn( \"${Package}::$func_name() -- $var is not a blessed SV reference\" );
+		XSRETURN_UNDEF;
+	}
+
+T_OBJECT
+	if( SvROK($arg) )
+		$var = ($type)SvIV((SV*)SvRV( $arg ));
+	else{
+		warn( \"${Package}::$func_name() -- $var is not an SV reference\" );
+		XSRETURN_UNDEF;
+	}
+
+O_HvRV
+	if( sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVHV) )
+		$var = (HV*)SvRV( $arg );
+	else {
+		warn( \"${Package}::$func_name() -- $var is not a blessed HV reference\" );
+		XSRETURN_UNDEF;
+	}
+
+T_HvRV
+	if( SvROK($arg) && (SvTYPE(SvRV($arg)) == SVt_PVHV) )
+		$var = (HV*)SvRV( $arg );
+	else {
+		warn( \"${Package}::$func_name() -- $var is not an HV reference\" );
+		XSRETURN_UNDEF;
+	}
+
+O_AvRV
+	if( sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVAV) )
+		$var = (AV*)SvRV( $arg );
+	else {
+		warn( \"${Package}::$func_name() -- $var is not a blessed AV reference\" );
+		XSRETURN_UNDEF;
+	}
+
+T_AvRV
+	if( SvROK($arg) && (SvTYPE(SvRV($arg)) == SVt_PVAV) )
+		$var = (AV*)SvRV( $arg );
+	else {
+		warn( \"${Package}::$func_name() -- $var is not an AV reference\" );
+		XSRETURN_UNDEF;
+	}
