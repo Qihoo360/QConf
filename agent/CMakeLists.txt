@@ -27,13 +27,8 @@ set_source_files_properties(../base/qlibc/md5.c PROPERTIES LANGUAGE CXX )
 set_source_files_properties(../base/qlibc/qhash.c PROPERTIES LANGUAGE CXX )
 set_source_files_properties(../base/qlibc/qhasharr.c PROPERTIES LANGUAGE CXX )
 
-#set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${AGENT_COMPILE_FLAGS}" )
-#set( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${LINK_FLAGS}" )
-
 add_definitions(${AGENT_COMPILE_FLAGS})
 add_executable(qconf_agent ${DIR_SRCS})
-
-#execute_process(COMMAND echo "cmake install prefix : "${CMAKE_INSTALL_PREFIX})
 
 # link libpthread
 find_package (Threads)
