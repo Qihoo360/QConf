@@ -4,7 +4,7 @@
 #include <string>
 
 #include "gtest/gtest.h"
-#include "qconf_zk.h"
+#include "qconf_zoo.h"
 #include "qconf_const.h"
 #include "qconf_format.h"
 
@@ -479,7 +479,7 @@ TEST_F(Test_qconf_zk, zk_get_node_not_exists)
     string path = "/qconf/__unit_test/untest";
     string buf;
 
-    ret = zk_get_node(zh, path, buf);
+    ret = zk_get_node(zh, path, buf, 0);
 
     EXPECT_EQ(QCONF_NODE_NOT_EXIST, ret);
 }
@@ -491,7 +491,7 @@ TEST_F(Test_qconf_zk, zk_get_node_bad_arguments)
     string path = "test/bad/args";
     string buf;
 
-    ret = zk_get_node(zh, path, buf);
+    ret = zk_get_node(zh, path, buf, 0);
 
     EXPECT_EQ(QCONF_ERR_ZOO_FAILED, ret);
 }
@@ -506,7 +506,7 @@ TEST_F(Test_qconf_zk, zk_get_node_exists)
 
     zoo_create(zh, path.c_str(), value.c_str(), value.size(), &ZOO_OPEN_ACL_UNSAFE, 0, NULL, 0);
 
-    ret = zk_get_node(zh, path, buf);
+    ret = zk_get_node(zh, path, buf, 0);
 
     EXPECT_EQ(QCONF_OK, ret);
     EXPECT_STREQ(value.c_str(), buf.c_str());
@@ -520,7 +520,7 @@ TEST_F(Test_qconf_zk, zk_get_node_with_empty_val)
     string buf;
 
     zoo_create(zh, path.c_str(), NULL, 0, &ZOO_OPEN_ACL_UNSAFE, 0, NULL, 0);
-    ret = zk_get_node(zh, path, buf);
+    ret = zk_get_node(zh, path, buf, 0);
 
     EXPECT_EQ(QCONF_OK, ret);
     EXPECT_STREQ("", buf.c_str());
@@ -535,7 +535,7 @@ TEST_F(Test_qconf_zk, zk_get_node_with_1k_val)
     string value(1024, 'a');
 
     zoo_create(zh, path.c_str(), value.c_str(), value.size(), &ZOO_OPEN_ACL_UNSAFE, 0, NULL, 0);
-    ret = zk_get_node(zh, path, buf);
+    ret = zk_get_node(zh, path, buf, 0);
 
     EXPECT_EQ(QCONF_OK, ret);
     EXPECT_STREQ(value.c_str(), buf.c_str());
@@ -550,7 +550,7 @@ TEST_F(Test_qconf_zk, zk_get_node_with_10k_val)
     string value(10240, 'a');
 
     zoo_create(zh, path.c_str(), value.c_str(), value.size(), &ZOO_OPEN_ACL_UNSAFE, 0, NULL, 0);
-    ret = zk_get_node(zh, path, buf);
+    ret = zk_get_node(zh, path, buf, 0);
 
     EXPECT_EQ(QCONF_OK, ret);
     EXPECT_STREQ(value.c_str(), buf.c_str());
@@ -565,7 +565,7 @@ TEST_F(Test_qconf_zk, zk_get_node_with_100k_val)
     string value(10240, 'a');
 
     zoo_create(zh, path.c_str(), value.c_str(), value.size(), &ZOO_OPEN_ACL_UNSAFE, 0, NULL, 0);
-    ret = zk_get_node(zh, path, buf);
+    ret = zk_get_node(zh, path, buf, 0);
 
     EXPECT_EQ(QCONF_OK, ret);
     EXPECT_STREQ(value.c_str(), buf.c_str());
@@ -580,7 +580,7 @@ TEST_F(Test_qconf_zk, zk_get_node_with_1m_val)
     string value(1000000, 'a');
 
     zoo_create(zh, path.c_str(), value.c_str(), value.size(), &ZOO_OPEN_ACL_UNSAFE, 0, NULL, 0);
-    ret = zk_get_node(zh, path, buf);
+    ret = zk_get_node(zh, path, buf, 0);
 
     EXPECT_EQ(QCONF_OK, ret);
     EXPECT_STREQ(value.c_str(), buf.c_str());
@@ -659,7 +659,7 @@ TEST_F(Test_qconf_zk, zk_register_ephemeral_path_with_one_delim)
     path_buf = path + "/" + hostname + "-" + hostname;
 
     ret = zk_register_ephemeral(zh, path_buf, val);
-    zk_get_node(zh, path_buf, buf);
+    zk_get_node(zh, path_buf, buf, 0);
 
     EXPECT_EQ(QCONF_OK, ret);
     EXPECT_EQ(5, buf.size());
