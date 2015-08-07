@@ -29,4 +29,9 @@ void qconf_set_log_level(int level);
 void qconf_close_log_stream();
 void qconf_print_log(const char* file_path, int line_no, int log_level, const char* format, ...);
 
+/**
+ * print tblkey information
+ */
+void qconf_print_key_info(const char* file_path, int line_no, const std::string &tblkey, const char *format, ...);
+
 #endif

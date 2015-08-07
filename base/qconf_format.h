@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <set>
 
 #include "qconf_common.h"
 
@@ -120,8 +121,13 @@ int deserialize_from_idc_host(const std::string &idc_host, std::string &idc, std
 #define LOG_ERR_KEY_INFO(format, ...)  qconf_print_key_info(__FILE__, __LINE__, format, ## __VA_ARGS__)
 
 /**
- * print tblkey information
+ * Get gray nodes from serialized string
  */
-void qconf_print_key_info(const char* file_path, int line_no, const std::string &tblkey, const char *format, ...);
+int tblval_to_graynodeval(const std::string &tblval, std::set<std::string> &nodes);
+
+/**
+ * Serialize the gray nodes into string
+ */
+int graynodeval_to_tblval(const std::set<std::string> &nodes, std::string &tblval);
 
 #endif

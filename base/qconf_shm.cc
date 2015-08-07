@@ -121,21 +121,14 @@ int init_hash_tbl(qhasharr_t *&tbl, key_t shmkey, mode_t mode, int flags)
     int shmid = -1;
 
     shmid = shmget(shmkey, 0, mode);
-    if (-1 == shmid)
-    {
-        LOG_FATAL_ERR("Failed to get shmid of key:%#x! errno:%d",
-                shmkey, errno);
-        return QCONF_ERR_SHMGET;
-    }
+    if (-1 == shmid) return QCONF_ERR_SHMGET;
 
     tbl = (qhasharr_t*)shmat(shmid, NULL, flags);
     if ((void*)-1 == (void*)tbl)
     {
-        LOG_FATAL_ERR("Failed to shmat shmid:%d, errno:%d", shmid, errno);
         tbl = NULL;
         return QCONF_ERR_SHMAT;
     }
-
     return QCONF_OK;
 }
 
@@ -170,14 +163,7 @@ int hash_tbl_get(qhasharr_t *tbl, const string &key, string &val)
     if (QCONF_OK != ret)
         return ret;
 
-    ret = qconf_check_md5(val);
-    if (QCONF_OK != ret)
-    {
-        LOG_ERR_KEY_INFO(key, "Data has been messed! ret:%d", ret);
-        return ret;
-    }
-
-    return ret;
+    return qconf_check_md5(val);
 }
 
 int qconf_check_md5(string &val)

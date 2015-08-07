@@ -12,6 +12,7 @@
 
 #include "qconf_log.h"
 #include "qconf_common.h"
+#include "qconf_format.h"
 
 using namespace std;
 
@@ -162,4 +163,24 @@ static const char *qconf_get_log_level(int level)
     default:
         return "UNKNOWN";
     }
+}
+
+void qconf_print_key_info(const char* file_path, int line_no, const string &tblkey, const char *format, ...)
+{
+    string idc;
+    string path;
+    char data_type;
+    char buf[QCONF_MAX_BUF_LEN] = {0};
+
+    va_list arg_ptr;
+    va_start(arg_ptr, format);
+    int n = vsnprintf(buf, sizeof(buf), format, arg_ptr);
+    va_end(arg_ptr);
+
+    if (n >= (int)sizeof(buf)) return;
+
+    deserialize_from_tblkey(tblkey, data_type, idc, path);
+    snprintf(buf + n, sizeof(buf) - n, "; data type:%c, idc:%s, path:%s",
+            data_type, idc.c_str(), path.c_str());
+    qconf_print_log(file_path, line_no, QCONF_LOG_ERR, "%s", buf);
 }

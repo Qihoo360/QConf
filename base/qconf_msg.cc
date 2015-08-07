@@ -17,7 +17,6 @@ int init_msg_queue(key_t key, int &msqid)
     msqid = msgget(key, PERMS);
     if (-1 == msqid)
     {
-        LOG_FATAL_ERR("Failed to get msqid of key:%#x! errno:%d", key, errno);
         return QCONF_ERR_MSGGET;
     }
 
@@ -45,7 +44,6 @@ int send_msg(int msqid, const string &msg)
 
     if (msg.size() >= QCONF_MAX_MSG_LEN)
     {
-        LOG_ERR("Size of msg is larger than %d, msg:%s", QCONF_MAX_MSG_LEN, msg.c_str());
         return QCONF_ERR_E2BIG;
     }
 
@@ -66,12 +64,8 @@ int send_msg(int msqid, const string &msg)
                 try_send_times++;
                 continue;
             }
-
-            LOG_ERR("Msg queue is full! Times of sending msg are:%d", try_send_times);
-            return QCONF_ERR_MSGSND;
+            return QCONF_ERR_MSGFULL;
         }
-
-        LOG_ERR("Failed to send msg! errno:%d", errno);
         return QCONF_ERR_MSGSND;
     }
 

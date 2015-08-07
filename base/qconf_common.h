@@ -48,6 +48,7 @@ typedef struct String_vector string_vector_t;
 #define QCONF_ERR_MSGSND                    43
 #define QCONF_ERR_MSGRCV                    44
 #define QCONF_ERR_MSGIDRM                   45
+#define QCONF_ERR_MSGFULL                   46
 
 // error of file
 #define QCONF_ERR_OPEN                      51
@@ -104,6 +105,7 @@ typedef struct String_vector string_vector_t;
 #define QCONF_DATA_TYPE_NODE                '2'
 #define QCONF_DATA_TYPE_SERVICE             '3'
 #define QCONF_DATA_TYPE_BATCH_NODE          '4'
+
 #define QCONF_DATA_TYPE_LOCAL_IDC           'a'
 
 // zookeeper default recv timeout(unit:millisecond)
