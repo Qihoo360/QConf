@@ -1,4 +1,7 @@
+#CMakelist src
 cmake_minimum_required(VERSION 2.6)
+
+set(MANAGER_COMPILE_FLAGS "-c -fPIC -g -pthread -Wall")
 
 #build libzookeeper
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/zookeeper COMMAND
@@ -30,7 +33,7 @@ file(GLOB ZK_OBJ_FILE
     )
 message(${ZK_OBJ_FILE})
 
-add_definitions(${DRIVER_COMPILE_FLAGS})
+add_definitions(${MANAGER_COMPILE_FLAGS})
 add_library(qconf_zk_static STATIC ${DIR_SRCS}
     ${ZK_OBJ_FILE})
 add_library(qconf_zk SHARED ${DIR_SRCS})
@@ -47,3 +50,5 @@ target_link_libraries(qconf_zk
 set_target_properties(qconf_zk_static PROPERTIES OUTPUT_NAME qconf_zk)
 install(TARGETS qconf_zk DESTINATION lib)
 install(TARGETS qconf_zk_static DESTINATION lib)
+install(FILES qconf_zk.h DESTINATION include)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/deps/zookeeper/_install/include/zookeeper DESTINATION include)

@@ -1,5 +1,5 @@
 #CMakelist root
-project(qconf-manage)
+project(qconf-manager)
 cmake_minimum_required(VERSION 2.6)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -8,10 +8,5 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         )
 endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
-aux_source_directory(. SERVER_DIR_SRCS)
-add_executable(web_server ${SERVER_DIR_SRCS})
-
-add_subdirectory(qconf_zk)
-add_subdirectory(page)
-
-install(TARGETS web_server DESTINATION .)
+add_subdirectory(src/c)
+add_subdirectory(demo)
