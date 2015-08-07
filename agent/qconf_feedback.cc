@@ -12,7 +12,6 @@
 #include "qconf_log.h"
 #include "qconf_feedback.h"
 #include "qconf_format.h"
-#include "qconf_zk.h"
 #include "qlibc.h"
 
 using namespace std;

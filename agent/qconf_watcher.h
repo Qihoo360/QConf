@@ -37,16 +37,6 @@ void qconf_clear_shm_tbl();
 int qconf_init_msg_key();
 
 /**
- * Initialize the mutex lock
- */
-int qconf_init_mutex_lock();
-
-/**
- * Destroy the mutex lock
- */
-void qconf_destroy_mutex_lock();
-
-/**
  * Close zookeeper handler and destory the watcher tables
  */
 void qconf_destroy_zk();
@@ -72,8 +62,18 @@ int qconf_init_local_idc(const std::string &idc);
 void qconf_init_fb_flg(bool enable_flags);
 
 /**
+ * Initialize the script execute timeout
+ */
+void qconf_init_scexec_timeout(int timeout);
+
+/**
  * The wachter process thread
  */
 int watcher_setting_start();
+
+/**
+ * exit all thread
+ */
+void qconf_thread_exit();
 
 #endif

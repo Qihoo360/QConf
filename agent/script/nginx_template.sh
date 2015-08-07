@@ -18,6 +18,6 @@ if [ "$qconf_event" != "$NODE_DEL" ]; then
         mv ${nginx_conf_path}.tmp $nginx_conf_path
 
 # TODO: Restart nginx, You may change this to your own command of nginx starting
-        service nginx restart
+        sudo /sbin/service nginx restart
     fi
 fi

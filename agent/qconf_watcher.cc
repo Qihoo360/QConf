@@ -5,8 +5,9 @@
 #include <map>
 #include <set>
 #include <deque>
+#include <vector>
 
-#include "qconf_zk.h"
+#include "qconf_zoo.h"
 #include "qconf_log.h"
 #include "qconf_msg.h"
 #include "qconf_shm.h"
@@ -17,6 +18,9 @@
 #include "qconf_config.h"
 #include "qconf_watcher.h"
 #include "qconf_feedback.h"
+#include "qconf_feedback.h"
+#include "qconf_gray.h"
+#include "qconf_lock.h"
 
 using namespace std;
 
@@ -27,28 +31,35 @@ static qhasharr_t *_shm_tbl = NULL; //share memory table
 static int _msg_queue_id = -1;  // message queue id for sending or receiving message
 static string _register_node_path;
 static int _recv_timeout = 3000; //zookeeper timeout
+static int _scexec_timeout = 3000; //script execute timeout
 static bool _stop_watcher_setting = false;  //stop flag
 static bool _fb_enable = false;             //whether enable feedback
 static bool _finish_process_tbl_sleep_setting = true; //process tbl thread finish sleep
 static string _local_idc; //local idc
 
 // key: zkhost => value: pointer to zhandle_t
-pthread_mutex_t _ht_ih_mutex;
+static Mutex _ht_ih_mutex;
 static std::map<string, zhandle_t*> _ht_idchost_handle;
 
 // Key : zhandle_t address str =>  value: zkhost
-pthread_mutex_t _ht_hi_mutex;
+static Mutex _ht_hi_mutex;
 static std::map<unsigned long, string> _ht_handle_idchost;
 
 // Nodes need to be get from zk and set into share memory
-pthread_mutex_t _watch_nodes_mutex;
-pthread_cond_t _watch_nodes_cond;
+static Mutex _watch_nodes_mutex;
+static CondVar _watch_nodes_cond(&_watch_nodes_mutex);
 static deque<string> _need_watch_nodes;
 static set<string> _exist_watch_nodes;
 
+// Idcs need to be do gray process
+static Mutex _gray_idcs_mutex;
+static CondVar _gray_idcs_cond(&_gray_idcs_mutex);
+static deque<string> _need_gray_idcs;
+static set<string> _exist_gray_idcs;
+
 // Nodes need to trigger dump, script or feedback
-pthread_mutex_t _change_trigger_mutex;
-pthread_cond_t _change_trigger_cond;
+static Mutex _change_trigger_mutex;
+static CondVar _change_trigger_cond(&_change_trigger_mutex);
 static std::deque<std::string> _need_trigger_nodes;
 static std::map<std::string, fb_val> _exist_trigger_nodes;
 
@@ -58,6 +69,7 @@ static std::map<std::string, fb_val> _exist_trigger_nodes;
 static void *msg_process(void *p);
 static void *assist_watcher_process(void *p);
 static void *change_trigger_process(void *p);
+static void *do_gray_process(void *p);
 static void deque_process();
 
 /**
@@ -73,10 +85,11 @@ static bool diff_with_zk(const string &tblkey, const string &tblval);
 static int set_watcher_and_update_tbl(const string &tblkey);
 static void global_watcher(zhandle_t *zh, int type, int state, const char *path, void *context);
 static int watcher_reconnect_to_zookeeper(zhandle_t *zh);
-static void process_deleted_event(zhandle_t *zh, const string &path);
-static void process_created_event(const zhandle_t *zh, const string &path);
-static void process_changed_event(const zhandle_t *zh, const string &path);
-static void process_child_event(const zhandle_t *zh, const string &path);
+static void process_deleted_event(const string &idc, const string &path);
+static void process_created_event(const string &idc, const string &path);
+static void process_changed_event(const string &idc, const string &path);
+static void process_child_event(const string &idc, const string &path);
+static void init_env_for_zk(zhandle_t *zh, const string &idc_host, const string &idc);
 
 /**
  * Send node which need to update or remove to the thread who do that
@@ -91,7 +104,7 @@ static int get_idc_by_zhandle(const zhandle_t *zh, string &idc, string &host);
 
 /**
  * Send node which need to feedback, script execute or dump to thread who do that
- * trigger_type : QCONF_TRIGGER_TYPE_ADD, QCONF_TRIGGER_TYPE_CHANGE, QCONF_TRIGGER_TYPE_REMOVE or QCONF_TRIGGER_TYPE_ADD
+ a trigger_type : QCONF_TRIGGER_TYPE_ADD_OR_MODIFY, QCONF_TRIGGER_TYPE_REMOVE or QCONF_TRIGGER_TYPE_RESET
  * fb_chds: string contains child nodes together with its status
  */
 static int add_change_trigger_node(const string &tblkey, const string &tblval, char trigger_type, const string &fb_chds="");
@@ -101,36 +114,55 @@ static void trigger_script(char data_type, const string &idc, const string &path
 static void trigger_feedback(char data_type, const string &idc, const string &path, const string &tblkey, const fb_val &mval, char trigger_type);
 #endif
 
+/**
+ * Gray related function
+ */
+static void add_gray_idc(const string &key);
+
 template<typename K, typename V>
-static int lock_ht_find(const map<K, V> &ht, pthread_mutex_t &mu, const K &key, V &val)
+static int lock_ht_find(const map<K, V> &ht, Mutex &mu, const K &key, V &val)
 {
     int ret = QCONF_ERR_OTHER;
     typename map<K, V>::const_iterator it; 
-    pthread_mutex_lock(&mu);
+    mu.Lock();
     it = ht.find(key);
     if (it != ht.end())
     {
         val = it->second;
         ret = QCONF_OK;
     }
-    pthread_mutex_unlock(&mu);
+    mu.Unlock();
     return ret;
 }
 
 template<typename K, typename V>
-static void lock_ht_update(map<K, V> &ht, pthread_mutex_t &mu, const K &key, const V &val)
+static void lock_ht_update(map<K, V> &ht, Mutex &mu, const K &key, const V &val)
 {
-    pthread_mutex_lock(&mu);
+    mu.Lock();
     ht[key] = val;
-    pthread_mutex_unlock(&mu);
+    mu.Unlock();
 }
 
 template<typename K, typename V>
-static void lock_ht_delete(map<K, V> &ht, pthread_mutex_t &mu, const K &key)
+static void lock_ht_delete(map<K, V> &ht, Mutex &mu, const K &key)
 {
-    pthread_mutex_lock(&mu);
+    mu.Lock();
     ht.erase(key);
-    pthread_mutex_unlock(&mu);
+    mu.Unlock();
+}
+
+template<typename K, typename V>
+static void lock_ht_keys(const map<K, V> &ht, Mutex &mu, vector<K> &idcs)
+{
+    typename map<K, V>::const_iterator it;
+    idcs.clear();
+
+    mu.Lock();
+    for (it = ht.begin(); it != ht.end(); ++it)
+    {
+        idcs.push_back(it->first);
+    }
+    mu.Unlock();
 }
 
 int qconf_init_shm_tbl()
@@ -149,47 +181,28 @@ int qconf_init_msg_key()
 }
 
 /**
- * Initialize mutex lock
+ * signal all conditions
  */
-int qconf_init_mutex_lock()
+void qconf_thread_exit()
 {
-    pthread_mutex_init(&_ht_ih_mutex, NULL);
-    pthread_mutex_init(&_ht_hi_mutex, NULL);
-    pthread_mutex_init(&_watch_nodes_mutex, NULL);
-    pthread_cond_init(&_watch_nodes_cond, NULL);
-    pthread_mutex_init(&_change_trigger_mutex, NULL);
-    pthread_cond_init(&_change_trigger_cond, NULL);
-    return QCONF_OK;
+    _stop_watcher_setting = true;
+    _watch_nodes_cond.SignalAll();
+    _change_trigger_cond.SignalAll();
+    _gray_idcs_cond.SignalAll();
 }
 
 /**
- * Destroy the mutex lock
- */
-void qconf_destroy_mutex_lock()
-{
-    pthread_mutex_destroy(&_ht_ih_mutex);
-    pthread_mutex_destroy(&_ht_hi_mutex);
-    pthread_mutex_destroy(&_watch_nodes_mutex);
-    pthread_cond_destroy(&_watch_nodes_cond);
-    pthread_mutex_destroy(&_change_trigger_mutex);
-    pthread_cond_destroy(&_change_trigger_cond);
-}
-
-/**
- * Close zookeeper handler and destory the watcher tables
+ * Close zookeeper handler and destroy the watcher tables
  */
 void qconf_destroy_zk()
 {
-    _stop_watcher_setting = true;
-    sleep(1); // sleep one second for thread to exit
-
-    pthread_mutex_lock(&_ht_ih_mutex);
+    _ht_ih_mutex.Lock();
     for (map<string, zhandle_t*>::iterator it = _ht_idchost_handle.begin(); it != _ht_idchost_handle.end(); ++it)
     {
         zookeeper_close(it->second);
         it->second = NULL;
     }
-    pthread_mutex_unlock(&_ht_ih_mutex);
+    _ht_ih_mutex.Unlock();
 }
 
 /**
@@ -197,16 +210,17 @@ void qconf_destroy_zk()
  */
 void qconf_init_rgs_node_pfx(const string &node_prefix)
 {
-    _register_node_path = node_prefix;
-
     char hostname[256] = {0};
     gethostname(hostname, sizeof(hostname));
+    _register_node_path = node_prefix;
     _register_node_path += string("/") + hostname;
 }
 
 void qconf_init_recv_timeout(int timeout)
 {
-    _recv_timeout = timeout < 1000 ? _recv_timeout : timeout;
+    _recv_timeout = timeout < 1000 ? 1000 : timeout;
+    if (_recv_timeout != timeout)
+        LOG_ERR("Error zookeeper receive timeout! timeout:%d, use default:%d", timeout, _recv_timeout);
 }
 
 void qconf_init_fb_flg(bool enable_flags)
@@ -221,10 +235,18 @@ int qconf_init_local_idc(const string &idc)
     return ret;
 }
 
+void qconf_init_scexec_timeout(int timeout)
+{
+    _scexec_timeout = (timeout < 500) ? 500 : timeout;
+    _scexec_timeout = (_scexec_timeout > 30000) ? 30000 : _scexec_timeout;
+    if (_scexec_timeout != timeout)
+        LOG_ERR("Error script execute timeout! timeout:%d, use default:%d", timeout, _scexec_timeout);
+}
+
 int watcher_setting_start()
 {
     int ret = 0;
-    pthread_t assist_watcher_thread, msg_thread, change_trigger_thread;
+    pthread_t assist_watcher_thread, msg_thread, change_trigger_thread, gray_thread;
 
     // Assist watcher thread, scan share tbl regularly
     ret = pthread_create(&assist_watcher_thread, NULL, assist_watcher_process, NULL);
@@ -239,7 +261,7 @@ int watcher_setting_start()
     if (0 != ret)
     {
         LOG_FATAL_ERR("Failed to create msg_thread! errno:%d", ret);
-        _stop_watcher_setting = true;
+        qconf_thread_exit();
         pthread_join(assist_watcher_thread, NULL);
         return QCONF_ERR_OTHER;
     }
@@ -249,7 +271,19 @@ int watcher_setting_start()
     if (0 != ret)
     {
         LOG_FATAL_ERR("Failed create change_trigger_thread! errno: %d", ret);
-        _stop_watcher_setting = true;
+        qconf_thread_exit();
+        pthread_join(msg_thread, NULL);
+        pthread_join(assist_watcher_thread, NULL);
+        return QCONF_ERR_OTHER;
+    }
+
+    // Change trigger thread, trigger process like feedback, execute script and dump
+    ret = pthread_create(&gray_thread, NULL, do_gray_process, NULL);
+    if (0 != ret)
+    {
+        LOG_FATAL_ERR("Failed create gray_thread! errno: %d", ret);
+        qconf_thread_exit();
+        pthread_join(change_trigger_thread, NULL);
         pthread_join(msg_thread, NULL);
         pthread_join(assist_watcher_thread, NULL);
         return QCONF_ERR_OTHER;
@@ -258,7 +292,8 @@ int watcher_setting_start()
     // Main thread, set wather on zookeeper and write share table
     deque_process();
 
-    _stop_watcher_setting = true;
+    qconf_thread_exit();
+    pthread_join(gray_thread, NULL);
     pthread_join(change_trigger_thread, NULL);
     pthread_join(msg_thread, NULL);
     pthread_join(assist_watcher_thread, NULL);
@@ -317,16 +352,13 @@ static void *msg_process(void *p)
 
 static void deque_process()
 {
-    string tblkey;
-    bool exist_flag;
-
     while (!_stop_watcher_setting)
     {
-        exist_flag = false;
-        pthread_mutex_lock(&_watch_nodes_mutex);
+        string tblkey;
+        _watch_nodes_mutex.Lock();
         while (!_stop_watcher_setting && _need_watch_nodes.size() == 0)
         {
-            pthread_cond_wait(&_watch_nodes_cond, &_watch_nodes_mutex);
+            _watch_nodes_cond.Wait();
         }
 
         if (!_need_watch_nodes.empty())
@@ -334,11 +366,10 @@ static void deque_process()
             tblkey = _need_watch_nodes.front();
             _need_watch_nodes.pop_front();
             _exist_watch_nodes.erase(tblkey);
-            exist_flag = true;
         }
-        pthread_mutex_unlock(&_watch_nodes_mutex);
+        _watch_nodes_mutex.Unlock();
 
-        if (exist_flag && QCONF_OK != set_watcher_and_update_tbl(tblkey))
+        if (!tblkey.empty() && QCONF_OK != set_watcher_and_update_tbl(tblkey))
         {
             LOG_ERR_KEY_INFO(tblkey, "Failed to set watcher and update tbl!");
         }
@@ -347,9 +378,9 @@ static void deque_process()
 
 static int process_tbl()
 {
+    // Check share memory
     int count = 0;
     int max_slots = 0, used_slots = 0;
-
     count = hash_tbl_get_count(_shm_tbl, max_slots, used_slots);
 
     string tblkey, tblval;
@@ -367,6 +398,7 @@ static int process_tbl()
             // send to deque process thread only when value changed
             if (diff_with_zk(tblkey, tblval)) 
             {
+                LOG_ERR_KEY_INFO(tblkey, "Checked inconformity with zookeeper!");
                 add_watcher_node(tblkey);
             }
         }
@@ -375,6 +407,30 @@ static int process_tbl()
         else
         {
             LOG_ERR_KEY_INFO(tblkey, "Failed to get next item in shmtbl");
+        }
+    }
+
+    // Watch notify node for current machine
+    zhandle_t *zh = NULL;
+    vector<string> idcs;
+    vector<string>::iterator it;
+    lock_ht_keys(_ht_idchost_handle, _ht_ih_mutex, idcs);
+    
+    for (it = idcs.begin(); it != idcs.end(); ++it)
+    {
+        string cidc = *it;
+        if (QCONF_OK == lock_ht_find(_ht_idchost_handle, _ht_ih_mutex, cidc, zh) && NULL != zh)
+        {
+            switch (watch_notify_node(zh))
+            {
+                case QCONF_OK:
+                    add_gray_idc(cidc);
+                    break;
+                case QCONF_NODE_NOT_EXIST:
+                    break;
+                default:
+                    LOG_FATAL_ERR("Failed to set watcher for notify node on idc:%s!", cidc.c_str());
+            }
         }
     }
     return QCONF_OK;
@@ -402,7 +458,7 @@ static bool diff_with_zk(const string &tblkey, const string &tblval)
         switch (data_type)
         {
         case QCONF_DATA_TYPE_NODE:
-            ret = zk_get_node(zh, path, zkval);
+            ret = zk_get_node(zh, path, zkval, 1);
             if (QCONF_NODE_NOT_EXIST == ret) return true;
             if (QCONF_OK == ret)
             {
@@ -442,9 +498,26 @@ static bool diff_with_zk(const string &tblkey, const string &tblval)
 
 static int set_watcher_and_update_tbl(const string &tblkey)
 {
-    string idc, path;
+    string idc, path, gray_value;
     int ret = QCONF_ERR_OTHER;
     char data_type = QCONF_DATA_TYPE_UNKNOWN;
+
+    // If the node is gray nodes
+    if (is_gray_node(tblkey, gray_value))
+    {
+        ret = hash_tbl_set(_shm_tbl, tblkey, gray_value);
+        if (QCONF_OK == ret)
+        {
+            add_change_trigger_node(tblkey, gray_value, QCONF_TRIGGER_TYPE_ADD_OR_MODIFY);
+        }
+        if (QCONF_OK != ret && QCONF_ERR_SAME_VALUE != ret)
+        {
+            LOG_ERR("Failed to set share memory for gray node. ret:%d", ret);
+            return QCONF_ERR_GRAY_FAKE_SHM_FAILED;
+        }
+        return QCONF_OK;
+    }
+
     deserialize_from_tblkey(tblkey, data_type, idc, path);
 
     zhandle_t *zh = get_zhandle_by_idc(idc);
@@ -486,7 +559,7 @@ static int set_watcher_and_update_tbl(const string &tblkey)
 static int process_node(zhandle_t *zh, const string &tblkey, const string &path)
 {
     string val, tblval;
-    int ret = zk_get_node(zh, path, val);
+    int ret = zk_get_node(zh, path, val, 1);
     
     switch (ret)
     {
@@ -495,7 +568,7 @@ static int process_node(zhandle_t *zh, const string &tblkey, const string &path)
         ret = hash_tbl_set(_shm_tbl, tblkey, tblval);
         if (QCONF_OK == ret)
         {
-            add_change_trigger_node(tblkey, tblval, QCONF_TRIGGER_TYPE_ADD);
+            add_change_trigger_node(tblkey, tblval, QCONF_TRIGGER_TYPE_ADD_OR_MODIFY);
         }
         ret = (QCONF_ERR_SAME_VALUE == ret) ? QCONF_OK : ret;
         return ret;
@@ -527,7 +600,7 @@ static int process_service(zhandle_t *zh, const string &tblkey, const string &pa
 #ifdef QCONF_CURL_ENABLE
             if (_fb_enable) feedback_generate_chdval(chdnodes, status, fb_val);
 #endif
-            add_change_trigger_node(tblkey, tblval, QCONF_TRIGGER_TYPE_CHANGE, fb_val);
+            add_change_trigger_node(tblkey, tblval, QCONF_TRIGGER_TYPE_ADD_OR_MODIFY, fb_val);
         }
         deallocate_String_vector(&chdnodes);
         ret = (QCONF_ERR_SAME_VALUE == ret) ? QCONF_OK : ret;
@@ -557,7 +630,7 @@ static int process_batch(zhandle_t *zh, const string &tblkey, const string &path
 #ifdef QCONF_CURL_ENABLE
             if (_fb_enable) feedback_generate_batchval(nodes, fb_val);
 #endif
-            add_change_trigger_node(tblkey, tblval, QCONF_TRIGGER_TYPE_CHANGE, fb_val);
+            add_change_trigger_node(tblkey, tblval, QCONF_TRIGGER_TYPE_ADD_OR_MODIFY, fb_val);
         }
         deallocate_String_vector(&nodes);
         ret = (QCONF_ERR_SAME_VALUE == ret) ? QCONF_OK : ret;
@@ -594,10 +667,7 @@ static zhandle_t *get_zhandle_by_idc(const string &idc)
                     host.c_str(), _recv_timeout);
             return NULL;
         }
-        lock_ht_update(_ht_idchost_handle, _ht_ih_mutex, idc_host, zh);
-        unsigned long htkey = reinterpret_cast<unsigned long>(zh);
-        lock_ht_update(_ht_handle_idchost, _ht_hi_mutex, htkey, idc_host);
-        zk_register_ephemeral(zh, _register_node_path, QCONF_AGENT_VERSION);
+        init_env_for_zk(zh, idc_host, idc);
     }
     return zh;
 }
@@ -614,6 +684,16 @@ static int get_idc_by_zhandle(const zhandle_t *zh, string &idc, string &host)
 static void global_watcher(zhandle_t *zh, int type, int state, const char *path, void *context)
 {
     LOG_TRACE("Global_watcher received event. type:%d state:%d path:%s", type, state, path);
+    
+    string idc, host;
+    if (QCONF_OK != get_idc_by_zhandle(zh, idc, host)) return;
+    
+    // do gray process when the event is happened on notify node
+    if ((CREATED_EVENT_DEF == type || DELETED_EVENT_DEF == type) && is_notify_node(path))
+    {
+        add_gray_idc(idc);
+    }
+
     switch (type)
     {
     case SESSION_EVENT_DEF:
@@ -633,16 +713,16 @@ static void global_watcher(zhandle_t *zh, int type, int state, const char *path,
         }
         break;
     case CHILD_EVENT_DEF:
-        process_child_event(zh, path);
+        process_child_event(idc, path);
         break;
     case CREATED_EVENT_DEF:
-        process_created_event(zh, path);
+        process_created_event(idc, path);
         break;
     case DELETED_EVENT_DEF:
-        process_deleted_event(zh, path);
+        process_deleted_event(idc, path);
         break;
     case CHANGED_EVENT_DEF:
-        process_changed_event(zh, path);
+        process_changed_event(idc, path);
         break;
     }
 }
@@ -667,14 +747,9 @@ static int watcher_reconnect_to_zookeeper(zhandle_t *zh)
         hthandle = zookeeper_init(host.c_str(), global_watcher, _recv_timeout, NULL, NULL, 0);
         if (NULL != hthandle)
         {
-            // update table
-            unsigned long htkey_new = reinterpret_cast<unsigned long>(hthandle);
-            lock_ht_update(_ht_handle_idchost, _ht_hi_mutex, htkey_new, idc_host);
-            lock_ht_update(_ht_idchost_handle, _ht_ih_mutex, idc_host, hthandle);
+            // init env zk related
+            init_env_for_zk(zh, idc_host, idc);
 
-            // Reregister Current Host on Zookeeper host
-            zk_register_ephemeral(hthandle, _register_node_path, QCONF_AGENT_VERSION);
-            
             // reset the table watcher
             _finish_process_tbl_sleep_setting = true;
             ret = QCONF_OK;
@@ -691,16 +766,37 @@ static int watcher_reconnect_to_zookeeper(zhandle_t *zh)
     return ret;
 }
 
+static void init_env_for_zk(zhandle_t *zh, const string &idc_host, const string &idc)
+{
+    // Update table
+    unsigned long htkey_new = reinterpret_cast<unsigned long>(zh);
+    lock_ht_update(_ht_handle_idchost, _ht_hi_mutex, htkey_new, idc_host);
+    lock_ht_update(_ht_idchost_handle, _ht_ih_mutex, idc_host, zh);
+
+    // Reregister Current Host on Zookeeper host
+    zk_register_ephemeral(zh, _register_node_path, QCONF_AGENT_VERSION);
+
+    // Watch notify node for current machine
+    switch (watch_notify_node(zh))
+    {
+        case QCONF_OK:
+            add_gray_idc(idc);
+            break;
+        case QCONF_NODE_NOT_EXIST:
+            break;
+        default:
+            LOG_FATAL_ERR("Failed to set watcher for notify node on idc: %s!", idc.c_str());
+    }
+}
+
 /**
  * After receive delete event, then set node watcher off, and delete the node
  */
-static void process_deleted_event(zhandle_t *zh, const string &path)
+static void process_deleted_event(const string &idc, const string &path)
 {
-    if (ZNONODE != zoo_exists(zh, path.c_str(), 1, NULL)) return;
+    //if (QCONF_NODE_NOT_EXIST != zk_exists(zh, path)) return;
     
-    string idc, host, tblkey;
-    if (QCONF_OK != get_idc_by_zhandle(zh, idc, host)) return;
-   
+    string tblkey;
     serialize_to_tblkey(QCONF_DATA_TYPE_NODE, idc, path, tblkey); 
     if (hash_tbl_exist(_shm_tbl, tblkey))
     {
@@ -723,7 +819,7 @@ static void process_deleted_event(zhandle_t *zh, const string &path)
 /**
  * After receive the created event, then set node watcher off
  */
-static void process_created_event(const zhandle_t *zh, const string &path)
+static void process_created_event(const string &idc, const string &path)
 {
     // There is no need operation for created event
     // For it is user's duty to decide to get the nodes
@@ -732,11 +828,9 @@ static void process_created_event(const zhandle_t *zh, const string &path)
 /**
  * After received children event, then set the node watcher off
  */
-static void process_changed_event(const zhandle_t *zh, const string &path)
+static void process_changed_event(const string &idc, const string &path)
 {
-    string idc, host, tblkey;
-    if (QCONF_OK != get_idc_by_zhandle(zh, idc, host)) return;
-
+    string tblkey;
     serialize_to_tblkey(QCONF_DATA_TYPE_NODE, idc, path, tblkey);
     if (hash_tbl_exist(_shm_tbl, tblkey))
     {
@@ -759,10 +853,9 @@ static void process_changed_event(const zhandle_t *zh, const string &path)
 /**
  * After received children event, Set current path watcher off
  */
-static void process_child_event(const zhandle_t *zh, const string &path)
+static void process_child_event(const string &idc, const string &path)
 {
-    string idc, host, tblkey;
-    if (QCONF_OK != get_idc_by_zhandle(zh, idc, host)) return;
+    string tblkey;
 
     serialize_to_tblkey(QCONF_DATA_TYPE_SERVICE, idc, path, tblkey);
     if (hash_tbl_exist(_shm_tbl, tblkey))
@@ -780,14 +873,27 @@ static void process_child_event(const zhandle_t *zh, const string &path)
 static void add_watcher_node(const string &key)
 {
     if (key.empty()) return;
-    pthread_mutex_lock(&_watch_nodes_mutex);
+    _watch_nodes_mutex.Lock();
     if (_exist_watch_nodes.find(key) == _exist_watch_nodes.end())
     {
         _need_watch_nodes.push_back(key);
         _exist_watch_nodes.insert(key);
-        pthread_cond_broadcast(&_watch_nodes_cond);
+        _watch_nodes_cond.SignalAll();
     }
-    pthread_mutex_unlock(&_watch_nodes_mutex);
+    _watch_nodes_mutex.Unlock();
+}
+
+static void add_gray_idc(const string &key)
+{
+    if (key.empty()) return;
+    _gray_idcs_mutex.Lock();
+    if (_exist_gray_idcs.find(key) == _exist_gray_idcs.end())
+    {
+        _need_gray_idcs.push_back(key);
+        _exist_gray_idcs.insert(key);
+        _gray_idcs_cond.SignalAll();
+    }
+    _gray_idcs_mutex.Unlock();
 }
 
 static int add_change_trigger_node(const string &tblkey, const string &tblval, char trigger_type, const string &fb_chds)
@@ -796,14 +902,14 @@ static int add_change_trigger_node(const string &tblkey, const string &tblval, c
     string mkey = trigger_type + tblkey;  //append trigger type before tblkey
     fb_val mval = {tblval, fb_chds};
 
-    pthread_mutex_lock(&_change_trigger_mutex);
+    _change_trigger_mutex.Lock();
     if (_exist_trigger_nodes.find(mkey) == _exist_trigger_nodes.end())
     {
         _need_trigger_nodes.push_back(mkey);
         _exist_trigger_nodes.insert(pair<string, fb_val>(mkey, mval));
-        pthread_cond_broadcast(&_change_trigger_cond);
+        _change_trigger_cond.SignalAll();
     }
-    pthread_mutex_unlock(&_change_trigger_mutex);
+    _change_trigger_mutex.Unlock();
     return QCONF_OK;
 }
 
@@ -813,12 +919,11 @@ static void* change_trigger_process(void *p)
     {
         string mkey;
         fb_val mval;
-        bool has_content_flags = false;
 
-        pthread_mutex_lock(&_change_trigger_mutex);
+        _change_trigger_mutex.Lock();
         while (!_stop_watcher_setting && _need_trigger_nodes.size() == 0)
         {
-            pthread_cond_wait(&_change_trigger_cond, &_change_trigger_mutex);   // awake when the change trigger queue not empty
+            _change_trigger_cond.Wait();   // awake when the change trigger queue not empty
         }
         // get key need process
         if (_need_trigger_nodes.size() > 0)
@@ -827,12 +932,11 @@ static void* change_trigger_process(void *p)
             _need_trigger_nodes.pop_front();
             mval = _exist_trigger_nodes.find(mkey)->second;
             _exist_trigger_nodes.erase(mkey);
-            has_content_flags = true;
         }
-        pthread_mutex_unlock(&_change_trigger_mutex);
+        _change_trigger_mutex.Unlock();
 
         // begin process
-        if (has_content_flags)
+        if (!mkey.empty())
         {
             char data_type = 0;
             char trigger_type = mkey[0];
@@ -845,8 +949,7 @@ static void* change_trigger_process(void *p)
             {
                 case QCONF_TRIGGER_TYPE_RESET:
                     break;
-                case QCONF_TRIGGER_TYPE_ADD:
-                case QCONF_TRIGGER_TYPE_CHANGE:
+                case QCONF_TRIGGER_TYPE_ADD_OR_MODIFY:
                 case QCONF_TRIGGER_TYPE_REMOVE:
                     trigger_script(data_type, idc, path, trigger_type);
                     trigger_dump(tblkey, tblval, trigger_type);
@@ -863,7 +966,7 @@ static void* change_trigger_process(void *p)
         }
         else
         {
-            LOG_ERR("Change trigger thread awaked, but no message found!");
+            LOG_INFO("Change trigger thread awaked, but no message found, maybe exit!");
             continue;
         }
     }
@@ -875,8 +978,7 @@ static void trigger_dump(const string &tblkey, const string &tblval, char trigge
     if (tblkey.empty()) return;
     switch (trigger_type)
     {
-        case QCONF_TRIGGER_TYPE_ADD:
-        case QCONF_TRIGGER_TYPE_CHANGE:
+        case QCONF_TRIGGER_TYPE_ADD_OR_MODIFY:
             if (QCONF_OK != qconf_dump_set(tblkey, tblval))
             {
                 LOG_ERR_KEY_INFO(tblkey, "Failed to set dump!");
@@ -912,7 +1014,7 @@ static void trigger_script(char data_type, const string &idc, const string &path
     if (QCONF_OK != find_script(path_no_prefix, content)) return; 
 
     //execute script
-    if (QCONF_OK != execute_script(head + content, QCONF_SCRIPT_TIMEOUT_SECOND * 1000))
+    if (QCONF_OK != execute_script(head + content, _scexec_timeout))
     {
         LOG_ERR("Failed to execute script, script:(%s) of path:%s", content.c_str(), path.c_str());
     }
@@ -958,3 +1060,46 @@ static void trigger_feedback(char data_type, const string &idc, const string &pa
     }
 }
 #endif
+
+static void *do_gray_process(void *p)
+{
+    while (!_stop_watcher_setting)
+    {
+        string gray_idc;
+        _gray_idcs_mutex.Lock();
+        while (!_stop_watcher_setting && _need_gray_idcs.size() == 0)
+        {
+            _gray_idcs_cond.Wait();
+        }
+
+        if (!_need_gray_idcs.empty())
+        {
+            gray_idc = _need_gray_idcs.front();
+            _need_gray_idcs.pop_front();
+            _exist_gray_idcs.erase(gray_idc);
+        }
+        _gray_idcs_mutex.Unlock();
+
+        if (!gray_idc.empty()) 
+        {
+            zhandle_t *zh = get_zhandle_by_idc(gray_idc);
+            if (NULL == zh) 
+            {
+                LOG_FATAL_ERR("Failed to get zk handle for gray idc!");
+            }
+
+            vector< pair<string, string> > gray_nodes;
+            if (QCONF_OK != gray_process(zh, gray_idc, gray_nodes))
+            {
+                LOG_FATAL_ERR("Failed to do the gray release process!");
+            }
+            // send to the main thread to modify the share memory
+            for (vector< pair<string, string> >::const_iterator it = gray_nodes.begin(); it != gray_nodes.end(); ++it)
+            {
+                add_watcher_node((*it).first);
+            }
+        }
+        // eles maybe signaled by _stop_watcher_setting
+    }
+    pthread_exit(NULL);
+}

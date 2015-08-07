@@ -2,7 +2,17 @@
 
 agent=qconf_agent                                     
 
-agentdir=..
+# get agent dir
+cd `dirname $0`
+TARGET_FILE=`basename $0`
+# Iterate down a (possible) chain of symlinks
+while [ -L "$TARGET_FILE" ]
+do
+    TARGET_FILE=`readlink $TARGET_FILE`
+    cd `dirname $TARGET_FILE`
+    TARGET_FILE=`basename $TARGET_FILE`
+done
+agentdir=`pwd -P | xargs dirname`
 cmdfile=${agentdir}/cmd/cmd$$            	#file used to send command for agent
 pidfile=${agentdir}/pid                  	#file restroe the current agent deamon thread
 resultfile=${agentdir}/result/result$$   	#result file end with pid of this shell
@@ -244,7 +254,8 @@ start () {
 
 stop () {
     chk_agent_exist
-    kill $chdpid
+    #kill $chdpid
+    killall -9 $agentpath
     echo "$agent stop."
 }
 

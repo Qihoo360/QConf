@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include "qconf_zk.h"
+#include "qconf_zoo.h"
 #include "qconf_log.h"
 #include "qconf_shm.h"
 #include "qconf_cmd.h"
@@ -27,8 +27,6 @@ const string QCONF_LOG_FMT("/logs/qconf.log.%Y-%m-%d-%H");
 static void sig_handler(int sig);
 static int qconf_agent_init(const string &agent_dir, const string &log_dir);
 static void qconf_agent_destroy();
-
-static int g_stop = 0;
 
 #define STRING_(str) #str
 #define STRING(str) STRING_(str)
@@ -142,9 +140,6 @@ static int qconf_agent_init(const string &agent_dir, const string &log_dir)
         return ret;
     }
 
-    // init mutex lock
-    qconf_init_mutex_lock();
-
     // init share memory table
     ret = qconf_init_shm_tbl();
     if (QCONF_OK != ret)
@@ -189,6 +184,12 @@ static int qconf_agent_init(const string &agent_dir, const string &log_dir)
 
     // init script dir
     qconf_init_script_dir(agent_dir);
+    
+    // init script execute timeout
+    long sc_timeout = 3000;
+    ret = get_agent_conf(QCONF_KEY_SCEXECTIMEOUT, value);
+    if (QCONF_OK == ret) get_integer(value, sc_timeout);
+    qconf_init_scexec_timeout(static_cast<int>(sc_timeout));
 
 #ifdef QCONF_CURL_ENABLE
     long fd_enable = 0;
@@ -223,7 +224,6 @@ static void qconf_agent_destroy()
     qconf_destroy_feedback();
 #endif
     qconf_destroy_zk();
-    qconf_destroy_mutex_lock();
     qconf_destroy_conf_map();
     qconf_destroy_dbf();
     qconf_destroy_dump_lock();
@@ -237,17 +237,13 @@ static void sig_handler(int sig)
     switch(sig)
     {
     case SIGINT:
-        g_stop = 1;
         break;
     case SIGTERM:
-        g_stop = 1;
-        exit(0);
     case SIGUSR2:
-        g_stop = 1;
-        exit(-1);
-        break;
+        qconf_thread_exit();
+        qconf_agent_destroy();
+        exit(0);
     case SIGHUP:
-        g_stop = 1;
         break;
     case SIGUSR1:
         qconf_cmd_proc();

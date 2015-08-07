@@ -9,7 +9,7 @@
 #define QCONF_AGENT_NAME                    "qconf_agent"
 
 // status of process exit
-#define QCONF_EXIT_NORMAL                   51
+#define QCONF_EXIT_NORMAL                   50
 
 // error: zookeeper operation failed
 #define QCONF_ERR_ZOO_FAILED                61
@@ -32,6 +32,11 @@
 #define QCONF_ERR_SCRIPT_NOT_EXIST          116
 #define QCONF_ERR_SCRIPT_DIR_NOT_INIT       117
 
+// error: gray level submission
+#define QCONF_ERR_GRAY_WATCH_FAILED         118
+#define QCONF_ERR_GRAY_GET_NOTIFY_NODE      119
+#define QCONF_ERR_GRAY_GET_NOTIFY_CONTENT   120
+#define QCONF_ERR_GRAY_FAKE_SHM_FAILED      121
 
 // status for getting data from zookeeper
 #define QCONF_INVALID_LEN                   -1
@@ -55,9 +60,14 @@
 #define QCONF_KEY_ZKLOG_PATH                "zk_log"
 #define QCONF_KEY_FEEDBACK_ENABLE           "feedback_enable"
 #define QCONF_KEY_FEEDBACK_URL              "feedback_url"
+#define	QCONF_KEY_SCEXECTIMEOUT             "script_execute_timeout"
 
 // no need feedbcak nodes
 #define QCONF_ANCHOR_NODE                   "/qconf/__qconf_anchor_node"
+
+//aware nofication from zookeeper
+#define QCONF_NOTIFY_CLIENT_PREFIX          "/qconf/__qconf_notify/client"
+#define QCONF_NOTIFY_CONTENT_PREFIX         "/qconf/__qconf_notify/content"
 
 #define QCONF_GET_VALUE_RETRY_TIMES         3
 
@@ -73,8 +83,7 @@
 #define QCONF_KEY_LOCAL_IDC                 "local_idc"
 
 /* trigger type */
-#define QCONF_TRIGGER_TYPE_ADD              '0'
-#define QCONF_TRIGGER_TYPE_CHANGE           '1'
+#define QCONF_TRIGGER_TYPE_ADD_OR_MODIFY    '0'
 #define QCONF_TRIGGER_TYPE_REMOVE           '2'
 #define QCONF_TRIGGER_TYPE_RESET            '3'
 
@@ -87,7 +96,6 @@
 /* script callback constants */
 #define QCONF_SCRIPT_SEPARATOR              '#'
 #define QCONF_SCRIPT_SUFFIX                 ".sh"
-#define QCONF_SCRIPT_TIMEOUT_SECOND         30
 
 /* feedback constants */
 #define QCONF_FB_RETRIES                    3
