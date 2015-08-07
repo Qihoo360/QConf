@@ -4,7 +4,6 @@
 #include <string>
 
 #include "gtest/gtest.h"
-#include "qconf_zk.h"
 #include "qconf_const.h"
 #include "qconf_format.h"
 #include "qconf_dump.h"

@@ -1,0 +1,2 @@
+/Users/hellodawn/software/gtest-1.7.0/build/CMakeFiles/gtest.dir
+/Users/hellodawn/software/gtest-1.7.0/build/CMakeFiles/gtest_main.dir

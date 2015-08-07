@@ -123,7 +123,7 @@ TEST_F(Test_qconf_format, deserialize_from_tblkey_invalid_data_type)
 
     retCode = deserialize_from_tblkey(tblkey, data_type, out_idc, out_path);
 
-    EXPECT_EQ(QCONF_ERR_DATA_FORMAT, retCode);
+    EXPECT_EQ(QCONF_ERR_DATA_TYPE, retCode);
 }
 
 // Test for deserialize_from_tblkey: invalid tblkey format

@@ -1,0 +1,7 @@
+1, 将script中的脚本拷贝到agent的script目录下。（script中的是集成测试时供agent调用的脚本）
+2, 修改function_test.php 内容为实际信息
+$zoo_host: zookeeper 地址
+$hostname: 测试机器hostname
+$idc：所在机房
+
+3, 执行function_test.php 开始集成测试

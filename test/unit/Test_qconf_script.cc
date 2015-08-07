@@ -4,7 +4,6 @@
 #include <string>
 
 #include "gtest/gtest.h"
-#include "qconf_zk.h"
 #include "qconf_const.h"
 #include "qconf_format.h"
 #include "qconf_script.h"
@@ -107,23 +106,18 @@ TEST_F(Test_qconf_script, find_script_exist_script_root_node)
     qconf_init_script_dir(agent_dir);
 
     mode = 0644;
-    string root_file(path + "#demo.sh");
-    string script_cnt("echo $qconf_path > a");
+    string root_file(path + "demo#mytest#confs#conf1#conf11.sh");
+    string script_cnt("sub node file");
     int fd = open(root_file.c_str(), O_RDWR | O_CREAT, mode);
     assert(fd > 0);
     ssize_t ret = write(fd, script_cnt.c_str(), script_cnt.size());
     EXPECT_EQ(ret, script_cnt.size());
-    close(fd);
-    {
-        string node_file(path + "#demo#mytest#confs.sh");
-        string leaf_file(path + "#demo#mytest#confs#conf1#conf11.sh");
-        unlink(node_file.c_str());
-        unlink(leaf_file.c_str());
-    }
 
     ret = find_script(node, script);
     EXPECT_EQ(QCONF_OK, ret);
     EXPECT_STREQ(script_cnt.c_str(), script.c_str());
+    close(fd);
+    unlink(root_file.c_str());
 }
 
 // Test for find_script : exist script for sub node
@@ -139,8 +133,8 @@ TEST_F(Test_qconf_script, find_script_exist_script_sub_node)
     qconf_init_script_dir(agent_dir);
 
     mode = 0644;
-    string node_file(path + "#demo#mytest#confs.sh");
-    string script_cnt("echo $qconf_path > b; echo $qconf_idc > b");
+    string node_file(path + "demo#mytest#confs.sh");
+    string script_cnt("parent node file");
     int fd = open(node_file.c_str(), O_RDWR | O_CREAT, mode);
     assert(fd > 0);
     ssize_t ret = write(fd, script_cnt.c_str(), script_cnt.size());
@@ -150,6 +144,7 @@ TEST_F(Test_qconf_script, find_script_exist_script_sub_node)
     ret = find_script(node, script);
     EXPECT_EQ(QCONF_OK, ret);
     EXPECT_STREQ(script_cnt.c_str(), script.c_str());
+    unlink(node_file.c_str());
 }
 
 // Test for find_script : exist script for leaf node
@@ -165,7 +160,7 @@ TEST_F(Test_qconf_script, find_script_exist_script_leaf_node)
     qconf_init_script_dir(agent_dir);
 
     mode = 0644;
-    string node_file(path + "#demo#mytest#confs#conf1#conf11.sh");
+    string node_file(path + "demo#mytest#confs#conf1#conf11.sh");
     string script_cnt("echo $qconf_path > c; echo $qconf_idc > c; echo $qconf_type > c");
     int fd = open(node_file.c_str(), O_RDWR | O_CREAT, mode);
     assert(fd > 0);
@@ -176,6 +171,7 @@ TEST_F(Test_qconf_script, find_script_exist_script_leaf_node)
     ret = find_script(node, script);
     EXPECT_EQ(QCONF_OK, ret);
     EXPECT_STREQ(script_cnt.c_str(), script.c_str());
+    unlink(node_file.c_str());
 }
 
 /**
