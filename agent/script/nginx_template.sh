@@ -14,7 +14,7 @@ if [ "$qconf_event" != "$NODE_DEL" ]; then
     #if value is modified, then change the file
     if [ "$value" != "$old_conf_value" ]; then
         cp $nginx_conf_path ${nginx_conf_path}.bak
-        echo $value > ${nginx_conf_path}.tmp
+        echo "$value" > ${nginx_conf_path}.tmp
         mv ${nginx_conf_path}.tmp $nginx_conf_path
 
 # TODO: Restart nginx, You may change this to your own command of nginx starting
