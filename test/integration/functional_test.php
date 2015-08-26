@@ -1,20 +1,16 @@
 <?php
-require_once dirname(__FILE__) . '/Qconf.php';
 require_once (dirname(__FILE__)) . "/php_color.php";
 
 // User Configuration
 $zoo_host = "127.0.0.1:2181";
-$hostname = "HelloDawndeMacBook-Pro.local";
+$hostname = "";
 $idc = "test";
 $waiting_time = 5;
 $internal = true;
 
-
-
-
 $qzk = new QConfZK($zoo_host);
 
-$prefix = ($internal) ? "/qconf/" : "";
+$prefix = ($internal) ? "/qconf" : "/";
 
 // Operation type
 define ('OP_SERV_UP', 0);
