@@ -1,3 +1,4 @@
+0, 安装qconf php driver以及manager的php扩展
 1, 将script中的脚本拷贝到agent的script目录下。（script中的是集成测试时供agent调用的脚本）
 2, 修改function_test.php 内容为实际信息
 $zoo_host: zookeeper 地址
