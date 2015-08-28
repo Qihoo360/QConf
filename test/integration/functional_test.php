@@ -6,7 +6,7 @@ $zoo_host = "127.0.0.1:2181";
 $hostname = "";
 $idc = "test";
 $waiting_time = 5;
-$internal = true;
+$internal = false;
 
 $qzk = new QConfZK($zoo_host);
 
