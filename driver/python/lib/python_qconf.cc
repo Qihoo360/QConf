@@ -181,9 +181,14 @@ static PyObject* convert_to_pydict(const qconf_batch_nodes *bnodes)
         return NULL;
     }
     PyObject *pval = NULL;
-    for (i = 0; i < count; i++){
+    for (i = 0; i < count; i++)
+    {
         pval =  PyString_FromString((*bnodes).nodes[i].value);
-        PyDict_SetItemString(pyDict, (*bnodes).nodes[i].key, pval);
+        if (NULL != pval)
+        {
+            PyDict_SetItemString(pyDict, (*bnodes).nodes[i].key, pval);
+            Py_DECREF(pval);
+        }
     }
     return pyDict;
 }
