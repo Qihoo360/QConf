@@ -429,7 +429,7 @@ static int process_tbl()
                 case QCONF_NODE_NOT_EXIST:
                     break;
                 default:
-                    LOG_FATAL_ERR("Failed to set watcher for notify node on idc:%s!", cidc.c_str());
+                    LOG_FATAL_ERR("Failed to set watcher for notify node on idc: %s!", cidc.c_str());
             }
         }
     }
@@ -748,7 +748,7 @@ static int watcher_reconnect_to_zookeeper(zhandle_t *zh)
         if (NULL != hthandle)
         {
             // init env zk related
-            init_env_for_zk(zh, idc_host, idc);
+            init_env_for_zk(hthandle, idc_host, idc);
 
             // reset the table watcher
             _finish_process_tbl_sleep_setting = true;

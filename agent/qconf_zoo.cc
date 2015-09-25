@@ -213,7 +213,7 @@ int zk_register_ephemeral(zhandle_t *zh, const string &path, const string &value
         int ret = zoo_create(zh, cur_path.c_str(), NULL, 0, &ZOO_OPEN_ACL_UNSAFE, 0, NULL, 0);
         if (ZOK != ret && ZNODEEXISTS != ret)
         {
-            LOG_ERR("Failed register ephemeral node:%s!", cur_path.c_str());
+            LOG_ERR("Failed register ephemeral node:%s, ret:%d!", cur_path.c_str(), ret);
             return QCONF_ERR_ZOO_FAILED;
         }
         pos = path.find_first_of('/', pos + 1);
