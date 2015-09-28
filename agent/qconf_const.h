@@ -41,6 +41,7 @@
 // status for getting data from zookeeper
 #define QCONF_INVALID_LEN                   -1
 #define QCONF_NODE_NOT_EXIST                -2
+#define QCONF_NODE_EXIST                    -3
 
 #define QCONF_SEND_BUF_MAX_LEN              4096
 #define QCONF_IP_MAX_LEN                    256
