@@ -111,6 +111,37 @@ int zk_get_node(zhandle_t *zh, const string &path, string &buf, int watcher)
 }
 
 /**
+ * Create znode on zookeeper
+ */
+int zk_create_node(zhandle_t *zh, const string &path, const string &value, int flags)
+{
+    int ret = 0;
+    for (int i = 0; i < QCONF_GET_RETRIES; ++i)
+    {
+        ret = zoo_create(zh, path.c_str(), value.c_str(), value.length(), &ZOO_OPEN_ACL_UNSAFE, flags, NULL, 0);
+        switch (ret)
+        {
+            case ZOK:
+                return QCONF_OK;
+            case ZNODEEXISTS:
+                return QCONF_NODE_EXIST;
+            case ZNONODE:
+            case ZNOCHILDRENFOREPHEMERALS:
+            case ZBADARGUMENTS:
+                LOG_ERR("Failed to call zoo_create. err:%s. path:%s", 
+                        zerror(ret), path.c_str());
+                return QCONF_ERR_ZOO_FAILED;
+            default:
+                continue;
+        }
+    }
+
+    LOG_ERR("Failed to call zoo_create after retry. err:%s. path:%s", 
+            zerror(ret), path.c_str());
+    return QCONF_ERR_ZOO_FAILED;
+}
+
+/**
  * Get children nodes from zookeeper and set a watcher
  */
 int zk_get_chdnodes(zhandle_t *zh, const string &path, string_vector_t &nodes)
@@ -206,29 +237,32 @@ int zk_register_ephemeral(zhandle_t *zh, const string &path, const string &value
     if (NULL == zh || path.empty() || value.empty()) return QCONF_ERR_PARAM;
 
     string cur_path;
+    int ret = QCONF_ERR_OTHER;
     size_t pos  = path.find_first_of('/', 1);
     while (string::npos != pos)
     {
         cur_path = path.substr(0, pos);
-        int ret = zoo_create(zh, cur_path.c_str(), NULL, 0, &ZOO_OPEN_ACL_UNSAFE, 0, NULL, 0);
-        if (ZOK != ret && ZNODEEXISTS != ret)
+        ret = zk_create_node(zh, cur_path, "", 0);
+        if (QCONF_OK != ret && QCONF_NODE_EXIST != ret)
         {
-            LOG_ERR("Failed register ephemeral node:%s, ret:%d!", cur_path.c_str(), ret);
+            LOG_ERR("Failed register ephemeral node:%s!", cur_path.c_str());
             return QCONF_ERR_ZOO_FAILED;
         }
         pos = path.find_first_of('/', pos + 1);
     }
 
-    switch (zoo_create(zh, path.c_str(), value.c_str(), value.size(), &ZOO_OPEN_ACL_UNSAFE, ZOO_EPHEMERAL, NULL, 0))
+    ret = zk_create_node(zh, path, value, ZOO_EPHEMERAL);
+    if (QCONF_NODE_EXIST == ret)
     {
-        case ZNODEEXISTS:
-            LOG_INFO("Ephemeral node:%s alread EXIST!", path.c_str());
-        case ZOK:
-            return QCONF_OK;
-        default:
-            LOG_ERR("Failed to register ephemeral node:%s!", path.c_str());
-            return QCONF_ERR_ZOO_FAILED;
+        LOG_INFO("Ephemeral node:%s already EXIST!", path.c_str());
+        ret = QCONF_OK;
     }
+
+    if (QCONF_OK != ret)
+    {
+        LOG_ERR("Failed to register ephemeral node:%s!", path.c_str());
+    }
+    return ret;
 }
 
 int qconf_init_zoo_log(const string &log_dir, const string &zoo_log)

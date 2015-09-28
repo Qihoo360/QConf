@@ -11,6 +11,11 @@
 int zk_get_node(zhandle_t *zh, const std::string &path, std::string &buf, int watcher);
 
 /**
+ * Create znode on zookeeper
+ */
+int zk_create_node(zhandle_t *zh, const std::string &path, const std::string &value, int flags);
+
+    /**
  *  Get child nodes from zookeeper
  */
 int zk_get_chdnodes(zhandle_t *zh, const std::string &path, string_vector_t &nodes);

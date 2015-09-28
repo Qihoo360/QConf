@@ -592,6 +592,100 @@ TEST_F(Test_qconf_zk, zk_get_node_with_1m_val)
  */
 
 /**
+ * ========================================================================================================
+ * Begin_Test_for function:
+ * int zk_create_node(zhandle_t *zh, const string &path, const string &value, int flags)
+ */
+
+// Test for zk_create_node: parent not exists
+TEST_F(Test_qconf_zk, zk_create_node_parent_not_exists)
+{
+    int ret = 0;
+    string path = "/qconf/111/tst_create_no";
+    string value("hello");
+
+    ret = zk_create_node(zh, path, value, 0);
+    EXPECT_EQ(QCONF_ERR_ZOO_FAILED, ret);
+}
+
+// Test for zk_create_node: node not exists
+TEST_F(Test_qconf_zk, zk_create_node_not_exists)
+{
+    int ret = 0;
+    string path = "/qconf/__unit_test/tst_create_no";
+    string buf;
+    string value("hello");
+
+    ret = zk_create_node(zh, path, value, 0);
+    EXPECT_EQ(QCONF_OK, ret);
+
+    ret = zk_get_node(zh, path, buf, 0);
+
+    EXPECT_EQ(QCONF_OK, ret);
+    EXPECT_STREQ(value.c_str(), buf.c_str());
+
+    ret = zoo_delete(zh, path.c_str(), -1);
+    EXPECT_EQ(ret, ZOK);
+
+}
+
+// Test for zk_create_node: node exists
+TEST_F(Test_qconf_zk, zk_create_node_exists)
+{
+    int ret = 0;
+    string path = "/qconf/__unit_test/tst_create";
+    string value = "hello good";
+
+    ret = zk_create_node(zh, path, value, 0);
+
+    EXPECT_EQ(QCONF_NODE_EXIST, ret);
+}
+
+// Test for zk_create_node: node val = empty
+TEST_F(Test_qconf_zk, zk_create_node_with_empty_val)
+{
+    int ret = 0;
+    string path("/qconf/__unit_test/tst_create_nullval");
+    string buf;
+
+    ret = zk_create_node(zh, path, "", 0);
+    EXPECT_EQ(QCONF_OK, ret);
+
+    ret = zk_get_node(zh, path, buf, 0);
+    EXPECT_EQ(QCONF_OK, ret);
+    EXPECT_STREQ("", buf.c_str());
+
+    ret = zoo_delete(zh, path.c_str(), -1);
+    EXPECT_EQ(ret, ZOK);
+}
+
+// Test for zk_create_node: length of node : 1K
+TEST_F(Test_qconf_zk, zk_create_node_with_1k_val)
+{
+    string buf;
+    int ret = 0;
+    string path("/qconf/__unit_test/test_create_1k");
+    string value(1024, 'a');
+
+    ret = zk_create_node(zh, path, value, 0);
+    EXPECT_EQ(QCONF_OK, ret);
+    
+    ret = zk_get_node(zh, path, buf, 0);
+    EXPECT_EQ(QCONF_OK, ret);
+    EXPECT_STREQ(value.c_str(), buf.c_str());
+
+    ret = zoo_delete(zh, path.c_str(), -1);
+    EXPECT_EQ(ret, ZOK);
+
+}
+
+/**
+ * End_Test_for function:
+ * int zk_create_node(zhandle_t *zh, const string &path, string &buf)
+ * =========================================================================================================
+ */
+
+/**
  * ===============================================================================================
  * Begin_Test_for function:
  * int zk_register_ephemeral(zhandle_t *zh, const string &path, const string &value)
