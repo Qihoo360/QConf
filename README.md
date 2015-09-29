@@ -2,7 +2,7 @@ QConf
 =====
 
 ## Introduction [中文](https://github.com/Qihoo360/QConf/blob/master/README_ZH.md)
-QConf is a Distrubuted Configuration Management System!
+QConf is a Distributed Configuration Management System!
 A better replacement of the traditional configuration file. As designed, configuration items which is constantly accessed and modified should be completely separated with application code, and QConf is where it should be.
 
 ## Features
