@@ -36,7 +36,7 @@ execute_process(WORKING_DIRECTORY ${ZK_SOURCE_DIR_PRE} COMMAND
 #build libcurl
 execute_process(WORKING_DIRECTORY ${CURL_SOURCE_DIR_PRE} COMMAND ./configure
     --prefix=${CURL_SOURCE_DIR}  --disable-ldap
-    --disable-ldaps --without-ssl --without-zlib --without-libidn)
+    --disable-ldaps --without-ssl --without-zlib --without-libidn --without-librtmp)
 execute_process(WORKING_DIRECTORY ${CURL_SOURCE_DIR_PRE} COMMAND
     make)
 execute_process(WORKING_DIRECTORY ${CURL_SOURCE_DIR_PRE} COMMAND
