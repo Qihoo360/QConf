@@ -46,7 +46,7 @@ ENDIF(WIN32)
 #build libcurl
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../deps/curl COMMAND ./configure
     --prefix=${PROJECT_SOURCE_DIR}/../deps/curl/_install   --disable-ldap
-    --disable-ldaps --without-ssl --without-zlib --without-libidn)
+    --disable-ldaps --without-ssl --without-zlib --without-libidn --without-librtmp)
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../deps/curl COMMAND
     make)
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../deps/curl COMMAND
