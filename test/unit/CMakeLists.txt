@@ -59,6 +59,8 @@ include_directories(
     ${AGENT_SOURCE_DIR}
     ${MANAGER_SOURCE_DIR}
     ${ZK_SOURCE_DIR}/include/zookeeper
+    ${CURL_SOURCE_DIR}/include
+    ${GDBM_SOURCE_DIR}/include
     ${GTEST_SOURCE_DIR}/include
     )
 
