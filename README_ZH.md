@@ -57,6 +57,8 @@ cd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start
 ```
  - 编写代码访问QConf
  
+## 相关
+* [zkdash](https://github.com/ireaderlab/zkdash) - 由掌阅团队开发的dashboad平台，可以作为QConf或ZooKeeper的管理端
  
 ## 性能
 1. 测试策略

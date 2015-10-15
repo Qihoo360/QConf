@@ -58,6 +58,10 @@ cd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start
  - **Code** to access QConf
 
 
+## Related
+* [zkdash](https://github.com/ireaderlab/zkdash) - An excellent dashboard for QConf or ZooKeeper provided by IReader Team
+
+
 ## Performance
 1.   statergy
  * **running times** :  ten million times altogether
