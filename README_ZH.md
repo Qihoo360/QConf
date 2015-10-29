@@ -10,7 +10,7 @@ QConf 是一个分布式配置管理工具。
 * 高效读取配置
 * 安装部署方便，使用简单
 * 服务器宕机、网络中断、集群迁移等异常情况对用户透明
-* 支持c/c++、shell、php、python、lua、java、go 等语言
+* 支持c/c++、shell、php、python、lua、java、go、node 等语言
 
 
 ## 编译安装
