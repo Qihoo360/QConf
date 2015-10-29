@@ -10,7 +10,7 @@ A better replacement of the traditional configuration file. As designed, configu
 * High query efficiency.
 * Convenient deployment and simple interface.
 * High robustness and  fault-tolerance.
-* support c/c++, shell, php, python, lua, java, go and etc.
+* support c/c++, shell, php, python, lua, java, go, node and etc.
 
 ## Install
 The QConf is built using CMake (version 2.6 or newer).
