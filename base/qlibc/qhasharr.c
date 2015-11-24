@@ -297,7 +297,8 @@ bool qhasharr_put(qhasharr_t *tbl, const char *key, size_t key_size, const void 
         if (idx >= 0)   // same key
         {
             // remove and recall
-            qhasharr_remove(tbl, key, key_size);
+            if (!qhasharr_remove(tbl, key, key_size))
+                return false;
             return qhasharr_put(tbl, key, key_size, value, val_size);
         }
         else     // no same key, just hash collision
@@ -664,9 +665,22 @@ bool qhasharr_remove(qhasharr_t *tbl, const char *key, size_t key_size)
             _tbl_slots[_tbl_slots[idx].link].hash = idx;
         }
     }
-    else     // in case of -1. used for collision resolution
+    else if (_tbl_slots[idx].count == -1)   // in case of -1. used for collision resolution
     {
-        errno = EFAULT;
+          // decrease counter from leading slot
+          if (_tbl_slots[ _tbl_slots[idx].hash ].count <= 1)
+          {
+              errno = EFAULT;
+              return false;
+          }
+          _tbl_slots[ _tbl_slots[idx].hash ].count--;
+
+          // remove data
+          _remove_data(tbl, idx);
+    }
+    else 
+    {
+        errno = ENOENT;
         return false;
     }
 
@@ -839,7 +853,8 @@ static void *_get_data(qhasharr_t *tbl, int idx, size_t *size)
     loop_count = 0;
     for (newidx = idx, vp = value; (size_t)(vp - value) < valsize; newidx = _tbl_slots[newidx].link)
     {
-        if ((size_t)(vp - value + _tbl_slots[newidx].size) > valsize)
+        uint8_t vsize = _tbl_slots[newidx].size;
+        if ((size_t)(vp - value + vsize) > valsize)
         {
             // if the size is larger than valsize, then the value is wrong, but this may not enough
             free(value);
@@ -851,16 +866,16 @@ static void *_get_data(qhasharr_t *tbl, int idx, size_t *size)
         {
             // extended data block
             memcpy(vp, (void *)_tbl_slots[newidx].data.ext.value,
-                   _tbl_slots[newidx].size);
+                   vsize);
         }
         else
         {
             // key/value pair data block
             memcpy(vp, (void *)_tbl_slots[newidx].data.pair.value,
-                   _tbl_slots[newidx].size);
+                   vsize);
         }
 
-        vp += _tbl_slots[newidx].size;
+        vp += vsize;
         if (_tbl_slots[newidx].link == -1) break;
 
         // check the dead lock
