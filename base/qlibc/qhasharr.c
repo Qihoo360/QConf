@@ -828,7 +828,7 @@ static void *_get_data(qhasharr_t *tbl, int idx, size_t *size)
     qhasharr_init(tbl, &_tbl_slots);
     int loop_count = 0;
 
-    for (newidx = idx, valsize = 0; ; newidx = _tbl_slots[newidx].link)
+    for (newidx = idx, valsize = 0; newidx != -1 ; newidx = _tbl_slots[newidx].link)
     {
         valsize += _tbl_slots[newidx].size;
         if (_tbl_slots[newidx].link == -1) break;
@@ -851,7 +851,7 @@ static void *_get_data(qhasharr_t *tbl, int idx, size_t *size)
     }
     memset(value, 0, valsize);
     loop_count = 0;
-    for (newidx = idx, vp = value; (size_t)(vp - value) < valsize; newidx = _tbl_slots[newidx].link)
+    for (newidx = idx, vp = value; (size_t)(vp - value) < valsize && newidx != -1; newidx = _tbl_slots[newidx].link)
     {
         uint8_t vsize = _tbl_slots[newidx].size;
         if ((size_t)(vp - value + vsize) > valsize)
