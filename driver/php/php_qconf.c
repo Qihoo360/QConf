@@ -19,7 +19,11 @@
 #include <SAPI.h>
 #include <ext/standard/info.h>
 #include <zend_extensions.h>
+#if PHP_VERSION_ID >= 70000
+#include <ext/standard/php_smart_string.h>
+#else
 #include <ext/standard/php_smart_str.h>
+#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -91,7 +95,11 @@ static PHP_METHOD(Qconf, getConf)
 
 	if (QCONF_OK == ret)
 	{
+#if PHP_VERSION_ID >= 70000
+		RETVAL_STRINGL(buf, buf_len);
+#else
 		RETVAL_STRINGL(buf, buf_len, 1);
+#endif
 	}
 	else
 	{
@@ -132,7 +140,11 @@ static PHP_METHOD(Qconf, getHost)
 
 	if (QCONF_OK == ret)
 	{
+#if PHP_VERSION_ID >= 70000
+		RETVAL_STRINGL(buf, buf_len);
+#else
 		RETVAL_STRINGL(buf, buf_len, 1);
+#endif
 	}
 	else
 	{
@@ -180,7 +192,11 @@ static PHP_METHOD(Qconf, getAllHost)
 		array_init(return_value);
 		for (i = 0; i < nodes.count; i++) 
 		{
+#if PHP_VERSION_ID >= 70000
+			add_next_index_string(return_value, nodes.data[i]);
+#else
 			add_next_index_string(return_value, nodes.data[i], 1);
+#endif
 		}
 
 		destroy_string_vector(&nodes);
@@ -232,7 +248,11 @@ static PHP_METHOD(Qconf, getBatchConf)
 		array_init(return_value);
 		for (i = 0; i < bnodes.count; i++) 
 		{
+#if PHP_VERSION_ID >= 70000
+			add_assoc_string(return_value, bnodes.nodes[i].key, bnodes.nodes[i].value);
+#else
 			add_assoc_string(return_value, bnodes.nodes[i].key, bnodes.nodes[i].value, 1);
+#endif
 		}
 
 		destroy_qconf_batch_nodes(&bnodes);
@@ -284,7 +304,11 @@ static PHP_METHOD(Qconf, getBatchKeys)
 		array_init(return_value);
 		for (i = 0; i < nodes.count; i++) 
 		{
+#if PHP_VERSION_ID >= 70000
+			add_next_index_string(return_value, nodes.data[i]);
+#else
 			add_next_index_string(return_value, nodes.data[i], 1);
+#endif
 		}
 
 		destroy_string_vector(&nodes);
@@ -449,7 +473,11 @@ static PHP_METHOD(QConfig, Get)
 
 	if (QCONF_OK == ret)
 	{
+#if PHP_VERSION_ID >= 70000
+		RETVAL_STRINGL(buf, buf_len);
+#else
 		RETVAL_STRINGL(buf, buf_len, 1);
+#endif
 	}
 	else
 	{
@@ -497,7 +525,11 @@ static PHP_METHOD(QConfig, GetChild)
 		array_init(return_value);
 		for (i = 0; i < nodes.count; i++) 
 		{
+#if PHP_VERSION_ID >= 70000
+			add_next_index_string(return_value, nodes.data[i]);
+#else
 			add_next_index_string(return_value, nodes.data[i], 1);
+#endif
 		}
 
 		destroy_string_vector(&nodes);
@@ -549,7 +581,11 @@ static PHP_METHOD(QConfig, GetBatchConf)
 		array_init(return_value);
 		for (i = 0; i < bnodes.count; i++) 
 		{
+#if PHP_VERSION_ID >= 70000
+			add_assoc_string(return_value, bnodes.nodes[i].key, bnodes.nodes[i].value);
+#else
 			add_assoc_string(return_value, bnodes.nodes[i].key, bnodes.nodes[i].value, 1);
+#endif
 		}
 
 		destroy_qconf_batch_nodes(&bnodes);
@@ -601,7 +637,11 @@ static PHP_METHOD(QConfig, GetBatchKeys)
 		array_init(return_value);
 		for (i = 0; i < nodes.count; i++) 
 		{
+#if PHP_VERSION_ID >= 70000
+			add_next_index_string(return_value, nodes.data[i]);
+#else
 			add_next_index_string(return_value, nodes.data[i], 1);
+#endif
 		}
 
 		destroy_string_vector(&nodes);
