@@ -97,6 +97,7 @@ cd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start
 
 ## 文档
 * [Getting Started](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20Getting%20Started%20Guide.md) - QConf 使用说明，包括QConf的安装，运行，API等信息
+* [实现介绍](http://catkang.github.io/2015/06/23/qconf.html)
 * [wiki](https://github.com/Qihoo360/QConf/wiki)
 * [qconf video guide](https://github.com/Qihoo360/QConf/wiki/QConf-%E7%AE%80%E6%98%93%E9%83%A8%E7%BD%B2%E5%92%8C%E4%BD%BF%E7%94%A8)
 
