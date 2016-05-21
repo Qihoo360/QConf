@@ -241,8 +241,9 @@ static void sig_handler(int sig)
     case SIGTERM:
     case SIGUSR2:
         qconf_thread_exit();
-        qconf_agent_destroy();
-        exit(0);
+        //qconf_agent_destroy();
+        //exit(0);
+        break;
     case SIGHUP:
         break;
     case SIGUSR1:

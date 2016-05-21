@@ -309,6 +309,7 @@ static void *assist_watcher_process(void *p)
     while (!_stop_watcher_setting)
     {
         msleep_interval(interval);
+        if (_stop_watcher_setting) break;
         process_tbl();
     }
     pthread_exit(NULL);
