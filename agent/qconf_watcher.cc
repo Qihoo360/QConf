@@ -186,6 +186,7 @@ int qconf_init_msg_key()
 void qconf_thread_exit()
 {
     _stop_watcher_setting = true;
+    send_msg(_msg_queue_id, QCONF_STOP_MSG);
     _watch_nodes_cond.SignalAll();
     _change_trigger_cond.SignalAll();
     _gray_idcs_cond.SignalAll();
@@ -329,6 +330,7 @@ static void *msg_process(void *p)
     while (!_stop_watcher_setting)
     {
         int ret = receive_msg(_msg_queue_id, key);
+        if (_stop_watcher_setting) break;
         if (QCONF_OK == ret)
         {
             add_watcher_node(key);

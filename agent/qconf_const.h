@@ -102,4 +102,6 @@
 #define QCONF_FB_RETRIES                    3
 #define QCONF_FB_RESULT                     "0"
 
+#define QCONF_STOP_MSG                      "__STOP__"
+
 #endif
