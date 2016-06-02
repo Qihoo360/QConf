@@ -254,8 +254,8 @@ start () {
 
 stop () {
     chk_agent_exist
-    #kill $chdpid
-    killall -9 $agentpath
+    kill $chdpid
+    #killall -9 $agentpath
     echo "$agent stop."
 }
 

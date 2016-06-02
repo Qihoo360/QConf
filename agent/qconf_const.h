@@ -3,6 +3,9 @@
 
 #include "qconf_common.h"
 
+//change++++++++++++++++++++++++++++++++
+#define QCONF_STOP_MSG_QUEUE                "MSG_END"
+//+++++++++++++++++++++++++++++++++++++
 // agent version
 #define QCONF_AGENT_VERSION                 "1.0.2"
 
