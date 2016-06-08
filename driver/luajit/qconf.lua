@@ -45,7 +45,7 @@ int qconf_get_host(const char *path, char *buf, int buf_len, const char *idc);
 const char* qconf_version();
 ]]
 
--- define the max length of conf buffer which is 1M 
+-- define the max length of conf buffer which is 1M
 -- define the max length of one ip and port which is 256
 local qconf_conf_buf_max_len = 1048576
 local qconf_host_buf_max_len = 256
@@ -96,14 +96,17 @@ if ret ~= 0 then
     os.exit(-1)
 end
 
+-- qconf interned buff
+-- Lua string is an (interned) copy of the data and bears no relation to the original data area anymore. 
+-- http://luajit.org/ext_ffi_api.html#ffi_string
+local buff = ffi.new("char[?]", qconf_conf_buf_max_len, {0})
+
 -- qconf get_conf function
 local function get_conf(key, idc)
-    local size = qconf_conf_buf_max_len 
-    local buf = ffi.new("char[?]", size, {0})
-    local ret = qconf.qconf_get_conf(key, buf, size, idc)
+    local ret = qconf.qconf_get_conf(key, buff, qconf_conf_buf_max_len, idc)
 
     if ret == 0 then
-        return ret, ffi.string(buf)
+        return ret, ffi.string(buff)
     else
         return ret, qconf_errors[tostring(ret)]
     end
@@ -116,7 +119,7 @@ local function get_allhost(key, idc)
     if ret ~= 0 then
         return ret, qconf_errors[tostring(ret)]
     end
-    
+
     ret = qconf.qconf_get_allhost(key, nodes, idc)
     if ret ~= 0 then
         return ret, qconf_errors[tostring(ret)]
@@ -135,12 +138,10 @@ end
 
 -- qconf get_host function
 local function get_host(key, idc)
-    local size = qconf_host_buf_max_len
-    local buf = ffi.new("char[?]", size)
+    local ret = qconf.qconf_get_host(key, buff, qconf_host_buf_max_len, idc)
 
-    ret = qconf.qconf_get_host(key, buf, size, idc)
     if ret == 0 then
-        return ret, ffi.string(buf)
+        return ret, ffi.string(buff)
     else
         return ret, qconf_errors[tostring(ret)]
     end
@@ -153,7 +154,7 @@ local function get_batch_conf(key, idc)
     if ret ~= 0 then
         return ret, qconf_errors[tostring(ret)]
     end
-    
+
     ret = qconf.qconf_get_batch_conf(key, bnodes, idc)
     if ret ~= 0 then
         return ret, qconf_errors[tostring(ret)]
@@ -177,7 +178,7 @@ local function get_batch_keys(key, idc)
     if ret ~= 0 then
         return ret, qconf_errors[tostring(ret)]
     end
-    
+
     ret = qconf.qconf_get_batch_keys(key, nodes, idc)
     if ret ~= 0 then
         return ret, qconf_errors[tostring(ret)]
