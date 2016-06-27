@@ -68,11 +68,9 @@ static PHP_METHOD(Qconf, __construct)
    */
 static PHP_METHOD(Qconf, getConf)
 {
-	char *path;
-	int path_len;
+	char *path, *idc;
+	size_t path_len, idc_len;
 	long get_flags = QCONF_WAIT;
-	char *idc = NULL;
-	int idc_len = 0;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|sl", &path, &path_len, &idc, &idc_len, &get_flags) == FAILURE) 
 	{
@@ -113,11 +111,9 @@ static PHP_METHOD(Qconf, getConf)
    */
 static PHP_METHOD(Qconf, getHost)
 {
-	char *path;
-	int path_len;
+	char *path, *idc;
+	size_t path_len, idc_len;
 	long get_flags = QCONF_WAIT;
-	char *idc = NULL;
-	int idc_len = 0;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|sl", &path, &path_len, &idc, &idc_len, &get_flags) == FAILURE) 
 	{
@@ -158,13 +154,11 @@ static PHP_METHOD(Qconf, getHost)
    */
 static PHP_METHOD(Qconf, getAllHost)
 {
-	char *path;
-	int path_len;
+	char *path, *idc;
+	size_t path_len, idc_len;
 	int i;
 	long get_flags = QCONF_WAIT;
 	int ret = 0;
-	char *idc = NULL;
-	int idc_len = 0;
 	string_vector_t nodes;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|sl", &path, &path_len, &idc, &idc_len, &get_flags) == FAILURE) 
@@ -214,13 +208,11 @@ static PHP_METHOD(Qconf, getAllHost)
    */
 static PHP_METHOD(Qconf, getBatchConf)
 {
-	char *path;
-	int path_len;
+	char *path, *idc;
+	size_t path_len, idc_len;
 	int i;
 	qconf_batch_nodes bnodes;
 	long get_flags = QCONF_WAIT;
-	char *idc = NULL;
-	int idc_len = 0;
 	int ret = 0;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|sl", &path, &path_len, &idc, &idc_len, &get_flags) == FAILURE) 
@@ -270,12 +262,10 @@ static PHP_METHOD(Qconf, getBatchConf)
    */
 static PHP_METHOD(Qconf, getBatchKeys)
 {
-	char *path;
-	int path_len;
+	char *path, *idc;
+	size_t path_len, idc_len;
 	int i;
 	long get_flags = QCONF_WAIT;
-	char *idc = NULL;
-	int idc_len = 0;
 	string_vector_t nodes;
 	int ret = 0;
 
@@ -327,12 +317,10 @@ static PHP_METHOD(Qconf, getBatchKeys)
    */
 static PHP_METHOD(Qconf, getHostNative)
 {
-	char *path;
-	int path_len;
+	char *path, *idc;
+	size_t path_len, idc_len;
 	int i;
 	long get_flags = QCONF_WAIT;
-	char *idc = NULL;
-	int idc_len = 0;
 	int ret = 0;
 	string_vector_t nodes;
 
@@ -384,12 +372,10 @@ static PHP_METHOD(Qconf, getHostNative)
    */
 static PHP_METHOD(Qconf, getAllHostNative)
 {
-	char *path;
-	int path_len;
+	char *path, *idc;
+	size_t path_len, idc_len;
 	int i;
 	long get_flags = QCONF_WAIT;
-	char *idc = NULL;
-	int idc_len = 0;
 	int ret = 0;
 	string_vector_t nodes;
 
@@ -446,11 +432,9 @@ static PHP_METHOD(QConfig, __construct)
    */
 static PHP_METHOD(QConfig, Get)
 {
-	char *path;
-	int path_len;
+	char *path, *idc;
+	size_t path_len, idc_len;
 	long get_flags = QCONF_WAIT;
-	char *idc = NULL;
-	int idc_len = 0;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|sl", &path, &path_len, &idc, &idc_len, &get_flags) == FAILURE) 
 	{
@@ -491,13 +475,11 @@ static PHP_METHOD(QConfig, Get)
    */
 static PHP_METHOD(QConfig, GetChild)
 {
-	char *path;
-	int path_len;
+	char *path, *idc;
+	size_t path_len, idc_len;
 	int i;
 	long get_flags = QCONF_WAIT;
 	int ret = 0;
-	char *idc = NULL;
-	int idc_len = 0;
 	string_vector_t nodes;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|sl", &path, &path_len, &idc, &idc_len, &get_flags) == FAILURE) 
@@ -547,13 +529,11 @@ static PHP_METHOD(QConfig, GetChild)
    */
 static PHP_METHOD(QConfig, GetBatchConf)
 {
-	char *path;
-	int path_len;
+	char *path, *idc;
+	size_t path_len, idc_len;
 	int i;
 	qconf_batch_nodes bnodes;
 	long get_flags = QCONF_WAIT;
-	char *idc = NULL;
-	int idc_len = 0;
 	int ret = 0;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|sl", &path, &path_len, &idc, &idc_len, &get_flags) == FAILURE) 
@@ -603,12 +583,10 @@ static PHP_METHOD(QConfig, GetBatchConf)
    */
 static PHP_METHOD(QConfig, GetBatchKeys)
 {
-	char *path;
-	int path_len;
+	char *path, *idc;
+	size_t path_len, idc_len;
 	int i;
 	long get_flags = QCONF_WAIT;
-	char *idc = NULL;
-	int idc_len = 0;
 	string_vector_t nodes;
 	int ret = 0;
 
@@ -660,12 +638,10 @@ static PHP_METHOD(QConfig, GetBatchKeys)
    */
 static PHP_METHOD(QConfig, GetBatchKeysNative)
 {
-	char *path;
-	int path_len;
+	char *path, *idc;
+	size_t path_len, idc_len;
 	int i;
 	long get_flags = QCONF_WAIT;
-	char *idc = NULL;
-	int idc_len = 0;
 	int ret = 0;
 	string_vector_t nodes;
 
