@@ -3,10 +3,15 @@
 static PyObject* QconfError;
 
 #define QCONF_DRIVER_PYTHON_VERSION  "1.0.0"
+#if PY_MAJOR_VERSION >= 3
+    #define Pys_FromString(val) PyBytes_FromString(val)
+#else
+    #define Pys_FromString(val) PyString_FromString(val)
+#endif
 
 static int print_error_message(const int error_code)
 {
-    char* message = NULL;
+    const char* message = NULL;
     switch (error_code)
     {
         case QCONF_ERR_OTHER :
@@ -124,7 +129,7 @@ static PyObject* Qconf_get_conf(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    return PyString_FromString(value);
+    return Pys_FromString(value);
 }
 
 static PyObject* Qconf_get_host(PyObject *self, PyObject *args)
@@ -141,7 +146,7 @@ static PyObject* Qconf_get_host(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    return PyString_FromString(host);
+    return Pys_FromString(host);
 }
 
 static PyObject* convert_to_pylist(const string_vector_t *nodes)
@@ -160,7 +165,7 @@ static PyObject* convert_to_pylist(const string_vector_t *nodes)
         return NULL;
     }
     for (i = 0; i < count; i++){
-        item = PyString_FromString((*nodes).data[i]);
+        item = Pys_FromString((*nodes).data[i]);
         PyList_SetItem(pyList, i, item);
     }
     return pyList;
@@ -183,7 +188,7 @@ static PyObject* convert_to_pydict(const qconf_batch_nodes *bnodes)
     PyObject *pval = NULL;
     for (i = 0; i < count; i++)
     {
-        pval =  PyString_FromString((*bnodes).nodes[i].value);
+        pval =  Pys_FromString((*bnodes).nodes[i].value);
         if (NULL != pval)
         {
             PyDict_SetItemString(pyDict, (*bnodes).nodes[i].key, pval);
@@ -292,7 +297,7 @@ static PyObject* Qconf_get_batch_keys(PyObject *self, PyObject *args)
 
 static PyObject* Qconf_version(PyObject *self)
 {
-    return PyString_FromString(QCONF_DRIVER_PYTHON_VERSION);
+    return Pys_FromString(QCONF_DRIVER_PYTHON_VERSION);
 }
 
 
@@ -306,24 +311,65 @@ static PyMethodDef qconf_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "qconf_py",     /* m_name */
+    "Python extension of Qconf",  /* m_doc */
+    -1,                  /* m_size */
+    qconf_methods,    /* m_methods */
+    NULL,                /* m_reload */
+    NULL,                /* m_traverse */
+    NULL,                /* m_clear */
+    NULL,                /* m_free */
+};
+#endif
 
-PyMODINIT_FUNC initqconf_py(void) 
+#if PY_MAJOR_VERSION >= 3
+    #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+#else
+    #define MOD_INIT(name) PyMODINIT_FUNC init##name(void)
+#endif
+
+
+MOD_INIT(qconf_py)
 {
     PyObject *m;
+#if PY_MAJOR_VERSION >= 3
+    m = PyModule_Create(&moduledef);
+#else
     m = Py_InitModule3("qconf_py", qconf_methods, "Python extension of Qconf");
+#endif
     if (NULL == m)
+#if PY_MAJOR_VERSION >= 3
+        return NULL;
+#else
         return;
+#endif
     QconfError = PyErr_NewException("qconf_py.Error", NULL, NULL);
     Py_INCREF(QconfError);
     PyModule_AddObject(m, "Error", QconfError);
 
     int ret = Qconf_init();
     if (QCONF_ERR_OTHER == ret)
+#if PY_MAJOR_VERSION >= 3
+        return NULL;
+#else
         return;
+#endif
     ret = Py_AtExit(Qconf_dealloc);
     if (-1 == ret)
     {
         Qconf_dealloc();
+#if PY_MAJOR_VERSION >= 3
+        return NULL;
+#else
         return;
+#endif
     }
+#if PY_MAJOR_VERSION >= 3
+    return m;
+#else
+    return;
+#endif
 }
