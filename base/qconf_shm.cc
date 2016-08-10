@@ -11,6 +11,8 @@
 
 #include <vector>
 #include <string>
+#include <map>
+#include <list>
 
 #include "qconf_log.h"
 #include "qconf_shm.h"
@@ -187,10 +189,19 @@ int qconf_check_md5(string &val)
 static int hash_tbl_set_(qhasharr_t *tbl, const string &key, const string &val)
 {
     if (key.empty()) return QCONF_ERR_PARAM;
-
     pthread_mutex_lock(&_qhasharr_op_mutex);
     bool ret = qhasharr_put(tbl, key.data(), key.size(), val.data(), val.size());
     pthread_mutex_unlock(&_qhasharr_op_mutex);
+
+    while (!ret && errno == ENOBUFS) {
+        string removeKey = (LRU::getInstance())->removeKey();
+        errno = 0;
+        bool removeRet = hash_tbl_remove(tbl, removeKey);
+        pthread_mutex_lock(&_qhasharr_op_mutex);
+        ret = qhasharr_put(tbl, key.data(), key.size(), val.data(), val.size());
+        pthread_mutex_unlock(&_qhasharr_op_mutex);
+    }
+    LRU::getInstance()->visitKey(key);
 
     return ret ? QCONF_OK : QCONF_ERR_TBL_SET;
 }
@@ -326,3 +337,79 @@ int hash_tbl_clear(qhasharr_t *tbl)
 
     return QCONF_OK;
 }
+
+LRU* LRU::lruInstance = NULL;
+
+LRU::LRU() {
+    lruMem.clear();
+    keyToIterator.clear();
+}
+
+LRU::~LRU() {
+    delete lruInstance;
+    lruInstance = NULL;
+}
+
+LRU* LRU::getInstance() {
+    if (!lruInstance) {
+        lruInstance = new LRU();
+    }
+    return lruInstance;
+}
+
+string LRU::removeKey() {
+    string key = lruMem.back();
+    lruMem.pop_back();
+    if (keyToIterator.find(key) != keyToIterator.end()) {
+        keyToIterator.erase(key);
+    }
+
+    return key;
+}
+
+void LRU::visitKey(string key) {
+    if (key == "a") {
+        return;
+    }
+    if (keyToIterator.find(key) == keyToIterator.end()) {
+        lruMem.push_front(key);
+        keyToIterator[key] = lruMem.begin();
+    }
+    else {
+        list<string>::iterator it = keyToIterator[key];
+        lruMem.erase(it);
+        lruMem.push_front(key);
+        keyToIterator[key] = lruMem.begin();
+    }
+    return;
+}
+
+
+void LRU::initLruMem(qhasharr_t* tbl) {
+    int count = 0;
+    int max_slots = 0, used_slots = 0;
+    qhasharr_slot_t* slot = NULL;
+    qhasharr_init(tbl, &slot);
+    count = hash_tbl_get_count(tbl, max_slots, used_slots);
+
+    string tblkey, tblval;
+
+    for (int idx = 0; idx < max_slots;) {
+        int ret = hash_tbl_getnext(tbl, tblkey, tblval, idx);
+        if (ret == QCONF_OK) {
+
+            char data_type;
+            string idc, path;
+            deserialize_from_tblkey(tblkey, data_type, idc, path);
+            if (!path.empty()) {
+                visitKey(tblkey);
+            }
+
+        }
+        else if (QCONF_ERR_TBL_END == ret){}
+        else{
+            LOG_ERR_KEY_INFO(tblkey, "Failed to get next item in shmtbl");
+        }
+    }
+}
+
