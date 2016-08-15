@@ -13,6 +13,14 @@
                 "<!(echo $QCONF_INSTALL)/include",
                 "/usr/local/qconf/include",
                 "/usr/local/include/qconf"
+            ],
+            "copies": [
+                {
+                    'destination': '/usr/local/qconf/lib',
+                    'files': [
+                        './build/Release/qconf.node'
+                    ]
+                }
             ]
         }
     ]
