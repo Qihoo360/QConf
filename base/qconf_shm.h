@@ -53,6 +53,7 @@ private:
 public:
 	static LRU* lruInstance;
 	~LRU();
+    std::string getRemoveKey();
 	std::string removeKey();
 	void visitKey(std::string key);
 	static LRU* getInstance();
