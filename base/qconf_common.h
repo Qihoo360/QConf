@@ -107,6 +107,7 @@ typedef struct String_vector string_vector_t;
 #define QCONF_DATA_TYPE_BATCH_NODE          '4'
 
 #define QCONF_DATA_TYPE_LOCAL_IDC           'a'
+#define QCONF_KEY_TYPE_LOCAL_IDC            "a"
 
 // zookeeper default recv timeout(unit:millisecond)
 #define QCONF_ZK_DEFAULT_RECV_TIMEOUT       3000
