@@ -167,7 +167,15 @@ static void lock_ht_keys(const map<K, V> &ht, Mutex &mu, vector<K> &idcs)
 
 int qconf_init_shm_tbl()
 {
-    return create_hash_tbl(_shm_tbl, QCONF_DEFAULT_SHM_KEY, 0644);
+    int ret = create_hash_tbl(_shm_tbl, QCONF_DEFAULT_SHM_KEY, 0644);
+    if (ret == QCONF_OK) {
+        bool initRet = LRU::getInstance()->initLruMem(_shm_tbl);
+        if (!initRet) {
+            LOG_ERR("Init LRU memory failed");
+            ret = QCONF_ERR_MEM; 
+        }
+    }
+    return ret;
 }
 
 void qconf_clear_shm_tbl()
@@ -371,7 +379,6 @@ static void deque_process()
             _exist_watch_nodes.erase(tblkey);
         }
         _watch_nodes_mutex.Unlock();
-
         if (!tblkey.empty() && QCONF_OK != set_watcher_and_update_tbl(tblkey))
         {
             LOG_ERR_KEY_INFO(tblkey, "Failed to set watcher and update tbl!");
@@ -504,7 +511,6 @@ static int set_watcher_and_update_tbl(const string &tblkey)
     string idc, path, gray_value;
     int ret = QCONF_ERR_OTHER;
     char data_type = QCONF_DATA_TYPE_UNKNOWN;
-
     // If the node is gray nodes
     if (is_gray_node(tblkey, gray_value))
     {

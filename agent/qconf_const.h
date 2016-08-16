@@ -83,6 +83,9 @@
 #define QCONF_KEY_MAX_REPEAT_READ_TIMES     "max_repeat_read_times"
 #define QCONF_KEY_LOCAL_IDC                 "local_idc"
 
+//shared memory size
+#define SHARED_MEMORY_SIZE                  "shared_memory_size"
+
 /* trigger type */
 #define QCONF_TRIGGER_TYPE_ADD_OR_MODIFY    '0'
 #define QCONF_TRIGGER_TYPE_REMOVE           '2'
