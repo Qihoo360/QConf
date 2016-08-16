@@ -2,6 +2,8 @@
 #define QCONF_SHM_H
 
 #include <string>
+#include <list>
+#include <map>
 
 #include "qlibc/qlibc.h"
 
@@ -43,4 +45,18 @@ int hash_tbl_get_count(qhasharr_t *tbl, int &max_slots, int &used_slots);
 int qconf_check_md5(std::string &val);
 int hash_tbl_clear(qhasharr_t *tbl);
 
+class LRU{
+private:
+	std::list<std::string> lruMem;
+	std::map<std::string, std::list<std::string>::iterator> keyToIterator;
+	LRU();
+public:
+	static LRU* lruInstance;
+	~LRU();
+    std::string getRemoveKey();
+	std::string removeKey();
+	void visitKey(std::string key);
+	static LRU* getInstance();
+    bool initLruMem(qhasharr_t* tbl);
+};
 #endif
