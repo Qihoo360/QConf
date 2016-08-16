@@ -194,14 +194,23 @@ static int hash_tbl_set_(qhasharr_t *tbl, const string &key, const string &val)
     pthread_mutex_unlock(&_qhasharr_op_mutex);
 
     while (!ret && errno == ENOBUFS) {
-        string removeKey = (LRU::getInstance())->removeKey();
+        string removeKey = (LRU::getInstance())->getRemoveKey();
         errno = 0;
         bool removeRet = hash_tbl_remove(tbl, removeKey);
+        if (removeRet == QCONF_OK) {
+            LRU::getInstance()->removeKey();
+        }
+        else {
+            LOG_ERR("remove key from shared memory failed");
+            break;
+        }
         pthread_mutex_lock(&_qhasharr_op_mutex);
         ret = qhasharr_put(tbl, key.data(), key.size(), val.data(), val.size());
         pthread_mutex_unlock(&_qhasharr_op_mutex);
     }
-    LRU::getInstance()->visitKey(key);
+    if (ret) {
+        LRU::getInstance()->visitKey(key);
+    }
 
     return ret ? QCONF_OK : QCONF_ERR_TBL_SET;
 }
@@ -355,6 +364,14 @@ LRU* LRU::getInstance() {
         lruInstance = new LRU();
     }
     return lruInstance;
+}
+
+string LRU::getRemoveKey() {
+    if (lruMem.empty()) {
+        LOG_ERR("Memory is empty nothing to remove. Maybe it's too small");
+        return "";
+    }
+    return lruMem.back();
 }
 
 string LRU::removeKey() {
