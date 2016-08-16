@@ -27,7 +27,7 @@ static pthread_mutex_t _qhasharr_op_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static int hash_tbl_get_(qhasharr_t *tbl, const string &key, string &val);
 static int hash_tbl_set_(qhasharr_t *tbl, const string &key, const string &val);
-
+int maxSlotsNum = 0;
     
 void qconf_destroy_qhasharr_lock()
 {
@@ -85,7 +85,7 @@ int create_hash_tbl(qhasharr_t *&tbl, key_t shmkey, mode_t mode)
     size_t memsize = 0;
     void* shmptr = NULL;
 
-    memsize = qhasharr_calculate_memsize(QCONF_MAX_SLOTS_NUM);
+    memsize = qhasharr_calculate_memsize(maxSlotsNum);
 
     shmid = shmget(shmkey, memsize, IPC_CREAT | IPC_EXCL | mode);
     if (-1 == shmid)

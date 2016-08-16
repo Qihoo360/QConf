@@ -21,6 +21,7 @@
 
 using namespace std;
 
+extern int maxSlotsNum;
 const string QCONF_PID_FILE("/pid");
 const string QCONF_LOG_FMT("/logs/qconf.log.%Y-%m-%d-%H");
 
@@ -97,13 +98,20 @@ int main(int argc, char **arg)
     signal(SIGUSR2, sig_handler);
 
     // Environment initialize
+    ret = get_agent_conf(SHARED_MEMORY_SIZE, value);
+    if (ret == QCONF_OK) {
+        maxSlotsNum = atoi(value.c_str());
+    }
+    else {
+        maxSlotsNum = QCONF_MAX_SLOTS_NUM;
+    }
+
     ret = qconf_agent_init(agent_dir, log_dir);
     if (QCONF_OK != ret)
     {
         LOG_ERR("Failed to init qconf agent!");
         return ret;
     }
-
     // main 
     watcher_setting_start();
    
