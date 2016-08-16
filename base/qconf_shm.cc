@@ -385,7 +385,7 @@ string LRU::removeKey() {
 }
 
 void LRU::visitKey(string key) {
-    if (key == "a") {
+    if (key == QCONF_KEY_TYPE_LOCAL_IDC) {
         return;
     }
     if (keyToIterator.find(key) == keyToIterator.end()) {
