@@ -169,7 +169,11 @@ int qconf_init_shm_tbl()
 {
     int ret = create_hash_tbl(_shm_tbl, QCONF_DEFAULT_SHM_KEY, 0644);
     if (ret == QCONF_OK) {
-        LRU::getInstance()->initLruMem(_shm_tbl);
+        bool initRet = LRU::getInstance()->initLruMem(_shm_tbl);
+        if (!initRet) {
+            LOG_ERR("Init LRU memory failed");
+            ret = QCONF_ERR_MEM; 
+        }
     }
     return ret;
 }

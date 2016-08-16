@@ -57,6 +57,6 @@ public:
 	std::string removeKey();
 	void visitKey(std::string key);
 	static LRU* getInstance();
-    void initLruMem(qhasharr_t* tbl);
+    bool initLruMem(qhasharr_t* tbl);
 };
 #endif
