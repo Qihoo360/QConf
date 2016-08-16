@@ -402,11 +402,9 @@ void LRU::visitKey(string key) {
 }
 
 
-void LRU::initLruMem(qhasharr_t* tbl) {
+bool LRU::initLruMem(qhasharr_t* tbl) {
     int count = 0;
     int max_slots = 0, used_slots = 0;
-    qhasharr_slot_t* slot = NULL;
-    qhasharr_init(tbl, &slot);
     count = hash_tbl_get_count(tbl, max_slots, used_slots);
 
     string tblkey, tblval;
@@ -426,7 +424,9 @@ void LRU::initLruMem(qhasharr_t* tbl) {
         else if (QCONF_ERR_TBL_END == ret){}
         else{
             LOG_ERR_KEY_INFO(tblkey, "Failed to get next item in shmtbl");
+            return false;
         }
     }
+    return true;
 }
 
