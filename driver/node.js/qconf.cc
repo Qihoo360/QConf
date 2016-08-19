@@ -1,5 +1,6 @@
 #include <node.h>
 #include <qconf.h>
+#include <string>
 #include <v8.h>
 
 using namespace v8;  
@@ -27,10 +28,12 @@ Handle<Value> QConf_get_conf(const Arguments& args) {
     String::Utf8Value v8Path(args[0]);
     path = *v8Path;
 
+    std::string temp;
     if (args.Length() >= 2) {
         String::Utf8Value v8Idc(args[1]);
-        idc = *v8Idc;
+        temp = std::string(*v8Idc);
     }
+    idc = temp.c_str();
 
     ret = qconf_get_conf(path, value, sizeof(value), idc);
 
@@ -58,10 +61,12 @@ Handle<Value> QConf_get_batch_keys(const Arguments& args) {
     String::Utf8Value v8Path(args[0]);
     path = *v8Path;
 
+    std::string temp;
     if (args.Length() >= 2) {
         String::Utf8Value v8Idc(args[1]);
-        idc = *v8Idc;
+        temp = std::string(*v8Idc);
     }
+    idc = temp.c_str();
 
     init_string_vector(&keys);
     ret = qconf_get_batch_keys(path, &keys, idc);
@@ -96,10 +101,12 @@ Handle<Value> QConf_get_batch_conf(const Arguments& args) {
     String::Utf8Value v8Path(args[0]);
     path = *v8Path;
 
+    std::string temp;
     if (args.Length() >= 2) {
         String::Utf8Value v8Idc(args[1]);
-        idc = *v8Idc;
+        temp = std::string(*v8Idc);
     }
+    idc = temp.c_str();
 
     init_qconf_batch_nodes(&nodes);
     ret = qconf_get_batch_conf(path, &nodes, idc);
@@ -134,11 +141,12 @@ Handle<Value> QConf_get_host(const Arguments& args) {
     String::Utf8Value v8Path(args[0]);
     path = *v8Path;
 
+    std::string temp;
     if (args.Length() >= 2) {
         String::Utf8Value v8Idc(args[1]);
-        idc = *v8Idc;
+        temp = std::string(*v8Idc);
     }
-
+    idc = temp.c_str();
     ret = qconf_get_host(path, value, sizeof(value), idc);
 
     if (ret != QCONF_OK) {
@@ -165,10 +173,12 @@ Handle<Value> QConf_get_allhost(const Arguments& args) {
     String::Utf8Value v8Path(args[0]);
     path = *v8Path;
 
+    std::string temp;
     if (args.Length() >= 2) {
         String::Utf8Value v8Idc(args[1]);
-        idc = *v8Idc;
+        temp = std::string(*v8Idc);
     }
+    idc = temp.c_str();
     
     init_string_vector(&nodes);
     ret = qconf_get_allhost(path, &nodes, idc);
@@ -187,6 +197,11 @@ Handle<Value> QConf_get_allhost(const Arguments& args) {
 }
 
 void init(Handle<Object> target) {
+    int ret = qconf_init();
+    if (ret != QCONF_OK) {
+        ThrowException(Exception::TypeError(String::New("QConf init failed")));
+        return;
+    }
     target->Set(String::NewSymbol("version"),
             FunctionTemplate::New(QConf_version)->GetFunction());
 
