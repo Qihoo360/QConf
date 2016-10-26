@@ -1,8 +1,8 @@
 #CMakelist driver
 if (${HAS_PREFIX})
-    set(DRIVER_COMPILE_FLAGS "-c -D__STDC_FORMAT_MACROS -DQCONF_INTERNAL -fPIC -g -pthread -Wall")
+    set(DRIVER_COMPILE_FLAGS "-O2 -c -D__STDC_FORMAT_MACROS -DQCONF_INTERNAL -fPIC -g -pthread -Wall")
 else()
-    set(DRIVER_COMPILE_FLAGS "-c -D__STDC_FORMAT_MACROS -fPIC -g -pthread -Wall")
+    set(DRIVER_COMPILE_FLAGS "-O2 -c -D__STDC_FORMAT_MACROS -fPIC -g -pthread -Wall")
 endif()
 #set(LINK_FLAGS "-lpthread")
 
