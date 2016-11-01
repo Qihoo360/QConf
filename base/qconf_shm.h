@@ -42,7 +42,7 @@ bool hash_tbl_exist(qhasharr_t *tbl, const std::string &key);
 int hash_tbl_remove(qhasharr_t *tbl, const std::string &key);
 int hash_tbl_getnext(qhasharr_t *tbl, std::string &tblkey, std::string &tblval, int &idx);
 int hash_tbl_get_count(qhasharr_t *tbl, int &max_slots, int &used_slots);
-int qconf_check_md5(std::string &val);
+int qconf_verify(std::string &val);
 int hash_tbl_clear(qhasharr_t *tbl);
 
 class LRU{

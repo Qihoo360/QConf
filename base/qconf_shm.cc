@@ -20,6 +20,9 @@
 #include "qconf_common.h"
 #include "qconf_format.h"
 
+#define NEED_MD5_TBLLEN 1024
+// #define USE_MIXED_VERIFY
+
 using namespace std;
 
 // share memory set and remove lock
@@ -165,10 +168,48 @@ int hash_tbl_get(qhasharr_t *tbl, const string &key, string &val)
     if (QCONF_OK != ret)
         return ret;
 
-    return qconf_check_md5(val);
+    return qconf_verify(val);
 }
 
-int qconf_check_md5(string &val)
+#ifdef USE_MIXED_VERIFY
+int qconf_verify(string &tblval)
+{
+    size_t tblval_size = tblval.size();
+    uint16_t val_size = 0;
+    const char *valstr = NULL, *veristr = NULL;
+    char val_md5[QCONF_MD5_INT_LEN] = {0};
+
+    qconf_decode_num(tblval.data(), val_size, uint16_t);
+    valstr = tblval.data() + sizeof(uint16_t);
+    veristr = valstr + val_size;
+
+    // verify MD5 code
+    if (val_size > NEED_MD5_TBLLEN)
+    {
+        if (tblval_size < sizeof(uint16_t) + val_size + QCONF_MD5_INT_LEN)
+            return QCONF_ERR_TBL_DATA_MESS;
+        qhashmd5(valstr, val_size, val_md5);
+
+        if (0 == memcmp(val_md5, veristr, QCONF_MD5_INT_LEN))
+        {
+            tblval.assign(valstr, val_size);
+            return QCONF_OK;
+        }
+    }
+    // verify original value
+    else
+    {
+        if (0 == memcmp(valstr, veristr, val_size))
+        {
+            tblval.assign(valstr, val_size);
+            return QCONF_OK;
+        }
+    }
+
+    return QCONF_ERR_TBL_DATA_MESS;
+}
+#else
+int qconf_verify(string &val)
 {
     if (val.size() < QCONF_MD5_INT_LEN)
         return QCONF_ERR_TBL_DATA_MESS;
@@ -185,6 +226,7 @@ int qconf_check_md5(string &val)
 
     return QCONF_ERR_TBL_DATA_MESS;
 }
+#endif
 
 static int hash_tbl_set_(qhasharr_t *tbl, const string &key, const string &val)
 {
@@ -223,16 +265,38 @@ int hash_tbl_set(qhasharr_t *tbl, const string &key, const string &val)
     string val_in_mem;
     int ret = QCONF_OK;
     char val_md5[QCONF_MD5_INT_LEN] = {0};
+    int val_size = val.size();
 
     ret = hash_tbl_get(tbl, key, val_in_mem);
 
     if (QCONF_OK == ret && 0 == val.compare(val_in_mem))
         return QCONF_ERR_SAME_VALUE;
 
+#ifdef USE_MIXED_VERIFY
+    /*        __________
+     *       |          |
+     *       v          |
+     *  | value len | value | verification code |
+     */
+    char buf[sizeof(uint16_t)] = {0};
+    qconf_encode_num(buf, val_size, uint16_t);
+    val_tmp.assign(buf, sizeof(uint16_t));
+    val_tmp.append(val);
+
+    // Use MD5 as verification code
+    if (val_size > NEED_MD5_TBLLEN) {
+        qhashmd5(val.data(), val_size, val_md5);
+        val_tmp.append(val_md5, QCONF_MD5_INT_LEN);
+    }
+    // Use original value as verification code
+    else
+        val_tmp += val;
+#else
     qhashmd5(val.data(), val.size(), val_md5);
 
     val_tmp.assign(val);
     val_tmp.append(val_md5, QCONF_MD5_INT_LEN);
+#endif
 
     ret = hash_tbl_set_(tbl, key, val_tmp);
 
@@ -265,7 +329,7 @@ int hash_tbl_getnext(qhasharr_t *tbl, string &tblkey, string &tblval, int &idx)
     }
 
     tblval.assign((char*)obj.data, obj.data_size);
-    ret = qconf_check_md5(tblval);
+    ret = qconf_verify(tblval);
     if (QCONF_OK != ret)
     {
         free(obj.name);
