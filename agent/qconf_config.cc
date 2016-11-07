@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <assert.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -31,6 +32,9 @@ using namespace std;
 
 static string strtrim(const string &cnt);
 static int is_ip_port(const string &item);
+static int is_ip_port(const string &item);
+static int get_first_host_by_name(const string &domain, string &ip_address);
+static int is_domain_port(const string &item);
 static int is_valid_idc(const string &idc, const string &value);
 static int is_valid_conf(const string &key, const string &value);
 static int load_conf_(const string &conf_path);
@@ -137,6 +141,61 @@ static int is_ip_port(const string &item)
     }
 }
 
+static int get_first_host_by_name(const string &domain, string &ip_address)
+{
+    char **pptr;
+    const char *ip_res;
+    struct hostent *hptr;
+    char str[32];
+
+    if(NULL == (hptr = gethostbyname(domain.c_str())))
+        return QCONF_ERR_OTHER;
+
+    switch(hptr->h_addrtype)
+    {
+        case AF_INET:
+        case AF_INET6:
+            pptr=hptr->h_addr_list;
+            if (pptr)
+                ip_res = inet_ntop(hptr->h_addrtype, *pptr, str, sizeof(str));
+            if (ip_res)
+            {
+                ip_address.assign(ip_res);
+                return QCONF_OK;
+            }
+            break;
+        default:
+            break;
+    }
+
+    LOG_ERR("Invalid domain name: %s", domain.c_str());
+    return QCONF_ERR_OTHER;
+}
+
+/**
+ * Judge whether the content is ip_port
+ */
+static int is_domain_port(const string &item)
+{
+    if (item.empty()) return QCONF_ERR_PARAM;
+
+    string::size_type spos;
+    string domain, _port, ip_address;
+
+    spos = item.find(':');
+    if (spos == string::npos)
+        return QCONF_ERR_OTHER;
+    domain = item.substr(0, spos);
+    _port = item.substr(spos);
+
+    if (QCONF_OK != get_first_host_by_name(domain, ip_address))
+        return QCONF_ERR_OTHER;
+    if (QCONF_OK != is_ip_port(ip_address + _port))
+        return QCONF_ERR_OTHER;
+
+    return QCONF_OK;
+}
+
 /**
  * Validation for idc map
  */
@@ -144,14 +203,14 @@ static int is_valid_idc(const string &idc, const string &value)
 {
     if (idc.empty() || value.empty()) return QCONF_ERR_PARAM;
 
-    string ip_port;
+    string idc_address;
     stringstream ss(value);
 
-    while (getline(ss, ip_port, ','))
+    while (getline(ss, idc_address, ','))
     {
-        if (QCONF_OK != is_ip_port(ip_port))
+        if ((QCONF_OK != is_domain_port(idc_address)) && (QCONF_OK != is_ip_port(idc_address)))
         {
-            LOG_ERR("Invalid of ip_port:%s\n", ip_port.c_str());
+            LOG_ERR("Invalid of ip_port:%s\n", idc_address.c_str());
             return QCONF_ERR_INVALID_IP;
         }
     }

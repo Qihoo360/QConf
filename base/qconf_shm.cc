@@ -403,9 +403,8 @@ void LRU::visitKey(string key) {
 
 
 bool LRU::initLruMem(qhasharr_t* tbl) {
-    int count = 0;
     int max_slots = 0, used_slots = 0;
-    count = hash_tbl_get_count(tbl, max_slots, used_slots);
+    hash_tbl_get_count(tbl, max_slots, used_slots);
 
     string tblkey, tblval;
 
