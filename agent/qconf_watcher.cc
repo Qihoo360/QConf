@@ -389,9 +389,8 @@ static void deque_process()
 static int process_tbl()
 {
     // Check share memory
-    int count = 0;
     int max_slots = 0, used_slots = 0;
-    count = hash_tbl_get_count(_shm_tbl, max_slots, used_slots);
+    hash_tbl_get_count(_shm_tbl, max_slots, used_slots);
 
     string tblkey, tblval;
     for (int idx = 0; idx < max_slots && !_stop_watcher_setting; ) 

@@ -1,0 +1,4 @@
+*.swp
+*lockfile
+*.out
+**tags

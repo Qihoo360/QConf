@@ -193,12 +193,11 @@ int qconf_dump_tbl(qhasharr_t *tbl)
 
     string tblkey;
     string tblval;
-    int count = 0;
     int ret = QCONF_OK;
     int max_slots = 0, used_slots = 0;
 
     // get key count
-    count = hash_tbl_get_count(tbl, max_slots, used_slots);
+    hash_tbl_get_count(tbl, max_slots, used_slots);
 
     for (int idx = 0; idx < max_slots;)
     {
