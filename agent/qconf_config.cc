@@ -32,7 +32,6 @@ using namespace std;
 
 static string strtrim(const string &cnt);
 static int is_ip_port(const string &item);
-static int is_ip_port(const string &item);
 static int get_first_host_by_name(const string &domain, string &ip_address);
 static int is_domain_port(const string &item);
 static int is_valid_idc(const string &idc, const string &value);
