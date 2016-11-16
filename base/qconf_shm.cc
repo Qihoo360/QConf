@@ -175,18 +175,18 @@ int hash_tbl_get(qhasharr_t *tbl, const string &key, string &val)
 int qconf_verify(string &tblval)
 {
     size_t tblval_size = tblval.size();
-    uint16_t val_size = 0;
+    QCONF_VALUE_SIZE_TYPE val_size = 0;
     const char *valstr = NULL, *veristr = NULL;
     char val_md5[QCONF_MD5_INT_LEN] = {0};
 
-    qconf_decode_num(tblval.data(), val_size, uint16_t);
-    valstr = tblval.data() + sizeof(uint16_t);
+    qconf_decode_num(tblval.data(), val_size, QCONF_VALUE_SIZE_TYPE);
+    valstr = tblval.data() + QCONF_VALUE_SIZE_LEN;
     veristr = valstr + val_size;
 
     // verify MD5 code
     if (val_size > NEED_MD5_TBLLEN)
     {
-        if (tblval_size < sizeof(uint16_t) + val_size + QCONF_MD5_INT_LEN)
+        if (tblval_size < QCONF_VALUE_SIZE_LEN + val_size + QCONF_MD5_INT_LEN)
             return QCONF_ERR_TBL_DATA_MESS;
         qhashmd5(valstr, val_size, val_md5);
 
@@ -199,7 +199,7 @@ int qconf_verify(string &tblval)
     // verify original value
     else
     {
-        if (tblval_size < sizeof(uint16_t) + val_size * 2)
+        if (tblval_size < QCONF_VALUE_SIZE_LEN + val_size * 2)
             return QCONF_ERR_TBL_DATA_MESS;
         if (0 == memcmp(valstr, veristr, val_size))
         {
@@ -267,7 +267,6 @@ int hash_tbl_set(qhasharr_t *tbl, const string &key, const string &val)
     string val_in_mem;
     int ret = QCONF_OK;
     char val_md5[QCONF_MD5_INT_LEN] = {0};
-    int val_size = val.size();
 
     ret = hash_tbl_get(tbl, key, val_in_mem);
 
@@ -280,9 +279,10 @@ int hash_tbl_set(qhasharr_t *tbl, const string &key, const string &val)
      *       v          |
      *  | value len | value | verification code |
      */
-    char buf[sizeof(uint16_t)] = {0};
-    qconf_encode_num(buf, val_size, uint16_t);
-    val_tmp.assign(buf, sizeof(uint16_t));
+    QCONF_VALUE_SIZE_TYPE val_size = val.size();
+    char buf[QCONF_VALUE_SIZE_LEN] = {0};
+    qconf_encode_num(buf, val_size, QCONF_VALUE_SIZE_TYPE);
+    val_tmp.assign(buf, QCONF_VALUE_SIZE_LEN);
     val_tmp.append(val);
 
     // Use MD5 as verification code
