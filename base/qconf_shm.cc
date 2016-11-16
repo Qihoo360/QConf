@@ -199,6 +199,8 @@ int qconf_verify(string &tblval)
     // verify original value
     else
     {
+        if (tblval_size < sizeof(uint16_t) + val_size * 2)
+            return QCONF_ERR_TBL_DATA_MESS;
         if (0 == memcmp(valstr, veristr, val_size))
         {
             tblval.assign(valstr, val_size);
