@@ -1,0 +1,10 @@
+tags
+*.out
+*.swp
+logs/*
+zk_adaptor.h
+zookeeper.h
+*.a
+monitor_pid
+tmp/*
+variables-and-locks.txt
