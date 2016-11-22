@@ -9,7 +9,7 @@ execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../deps/zookeeper COMMAN
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../deps/zookeeper COMMAND ./configure
     --prefix=${PROJECT_SOURCE_DIR}/../deps/zookeeper/_install)
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../deps/zookeeper COMMAND
-    make)
+    make -j24)
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../deps/zookeeper COMMAND
     make install)
 execute_process(WORKING_DIRECTORY
