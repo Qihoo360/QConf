@@ -1,3 +1,6 @@
+#include <unistd.h>
+#include <pthread.h>
+
 #include <fstream>
 #include <string>
 #include <unordered_map>
@@ -6,9 +9,6 @@
 #include <set>
 #include <vector>
 #include <iostream>
-
-#include <unistd.h>
-#include <pthread.h>
 
 #include "monitor_config.h"
 #include "monitor_util.h"

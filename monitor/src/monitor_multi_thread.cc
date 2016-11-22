@@ -119,12 +119,9 @@ bool MultiThread::isOnlyOneUp(string node, int val) {
         sl->setWatchFlag();
         sl->modifyServiceFatherStatus(serviceFather, STATUS_UP, -1);
         sl->modifyServiceFatherStatus(serviceFather, STATUS_DOWN, 1);
-        pthread_mutex_unlock(&updateServiceLock);
         ret = false;
     }
-    else {
-        pthread_mutex_unlock(&updateServiceLock);
-    }
+    pthread_mutex_unlock(&updateServiceLock);
     return ret;
 }
 
