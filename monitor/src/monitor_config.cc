@@ -19,21 +19,19 @@ using namespace std;
 
 Config* Config::_instance = NULL;
 
-Config::Config(){
+Config::Config(const string &confPath) :
+    slash::BaseConf(confPath) {
     pthread_mutex_init(&serviceMapLock, NULL);
     resetConfig();
 }
 
-Config::~Config(){
+Config::~Config() {
     delete _instance;
 }
 
-Config* Config::getInstance(){
-    if (!_instance){
-        _instance = new Config();
-        _instance->load();
-        //reload the config result in the change of loglevel in Log
-        Log::init(_instance->getLogLevel());
+Config* Config::getInstance() {
+    if (!_instance) {
+        _instance = new Config(CONF_PATH);
     }
     return _instance;
 }
@@ -49,146 +47,81 @@ int Config::resetConfig(){
     _scanInterval = 3;
     _serviceMap.clear();
     _zkRecvTimeout = 3000;
-    return 0;
+    return M_OK;
 }
 
-int Config::setValueInt(const string& key, const string& value){
-    int intValue = atoi(value.c_str());
-    if (key == daemonMode) {
-        if (intValue != 0) {
-            _daemonMode = 1;
+int Config::load() {
+    int ret;
+    ret = this->LoadConf();
+    if (ret != 0)
+        return M_ERR;
+
+    Log::init(MAX_LOG_LEVEL);
+
+    // _daemonMode
+    GetConfBool(DAEMON_MODE, &_daemonMode);
+    // _autoRestart
+    GetConfBool(AUTO_RESTART, &_autoRestart);
+    // _logLevel
+    GetConfInt(LOG_LEVEL, &_logLevel);
+    if (_logLevel < MIN_LOG_LEVEL) {
+        _logLevel = MIN_LOG_LEVEL;
+        LOG(LOG_WARNING, "log level has been setted MIN_LOG_LEVEL");
+    } else if (_logLevel > MAX_LOG_LEVEL) {
+        _logLevel = MAX_LOG_LEVEL;
+        LOG(LOG_WARNING, "log level has been setted MAX_LOG_LEVEL");
+    }
+    // Find the zk host this monitor should focus on. Their idc should be the same
+    // _monitorHostname
+    char hostname[128] = {0};
+    if (gethostname(hostname, sizeof(hostname)) != 0) {
+        LOG(LOG_ERROR, "get host name failed");
+        return M_ERR;
+    }
+    _monitorHostname.assign(hostname);
+
+    // _zkHost
+    vector<string> word = Util::split(_monitorHostname, '.');
+    bool find_zk_host = false;
+    for (auto iter = word.begin(); iter != word.end(); iter++) {
+        if (GetConfStr(ZK_HOST + *iter, &_zkHost)) {
+            find_zk_host = true;
+            break;
         }
     }
-    else if (key == autoRestart){
-        if (intValue == 0) {
-            _autoRestart = 0;
-        }
+    if (!find_zk_host) {
+        LOG(LOG_ERROR, "get zk host name failed");
+        return M_ERR;
     }
-    else if (key == logLevel){
-        if (intValue >= minLogLevel && intValue <= maxLogLevel) {
-            _logLevel = intValue;
-        }
-    }
-    else if (key == connRetryCount){
-        if (intValue > 0) {
-            _connRetryCount = intValue;
-        }
-    }
-    else if (key == scanInterval){
-        if (intValue > 0) {
-            _scanInterval = intValue;
-        }
-    }
-    return 0;
+
+    // _logLevel
+    GetConfInt(LOG_LEVEL, &_logLevel);
+    // _connRetryCount
+    GetConfInt(CONN_RETRY_COUNT, &_connRetryCount);
+    // _scanInterval
+    GetConfInt(SCAN_INTERVAL, &_scanInterval);
+    // _instanceName
+    GetConfStr(INSTANCE_NAME, &_instanceName);
+    // _zkLogPath
+    GetConfStr(ZK_LOG_PATH, &_zkLogPath);
+    // _zkRecvTimeout
+    GetConfInt(ZK_RECV_TIMEOUT, &_zkRecvTimeout);
+
+    //reload the config result in the change of loglevel in Log
+    Log::init(_instance->getLogLevel());
+    return M_OK;
 }
 
-int Config::setValueStr(const string& key, const string& value){
-    if (key == instanceName){
-        _instanceName = value;
-    }
-    else if (key == zkLogPath){
-        _zkLogPath = value;
-    }
-    //find the zk host this monitor should focus on. Their idc should be the same
-    else if (key.substr(0, zkHost.length()) == zkHost){
-        char hostname[128] = {0};
-        if (gethostname(hostname, sizeof(hostname)) != 0) {
-            LOG(LOG_ERROR, "get host name failed");
-            exit(-1);
-        }
-        _monitorHostname = string(hostname);
-        string idc = key.substr(zkHost.length());
-        vector<string> singleWord = Util::split(string(hostname), '.');
-        size_t i = 0;
-        for (; i < singleWord.size(); ++i){
-            if (singleWord[i] == idc){
-                _zkHost = value;
-                break;
-            }
-        }
-    }
-    return 0;
-}
-
-int Config::load(){
-    ifstream file;
-    file.open(confPath);
-
-    if (file.good()){
-        resetConfig();
-        string line;
-        while (!file.eof()) {
-            getline(file, line);
-            Util::trim(line);
-            if (line.size() <= 0 || line[0] == '#') {
-                continue;
-            }
-            size_t pos = line.find('=');
-            if (pos == string::npos){
-                continue;
-            }
-            //get the key
-            string key = line.substr(0, pos);
-            Util::trim(key);
-            if (key.size() == 0) {
-                continue;
-            }
-            //get the value
-            string value = line.substr(pos + 1);
-            Util::trim(value);
-            if (value.size() == 0) {
-                continue;
-            }
-            setValueInt(key, value);
-            setValueStr(key, value);
-        }
-    }
-    else {
-        LOG(LOG_FATAL_ERROR, "Load configure file failed. path: %s", confPath.c_str());
-        exit(-1);
-    }
-    file.close();
-    return 0;
-}
-
-int Config::getLogLevel(){
-    return _logLevel;
-}
-
-int Config::isDaemonMode(){
-    return _daemonMode;
-}
-
-string Config::getMonitorHostname(){
-    return _monitorHostname;
-}
-
-int Config::isAutoRestart(){
-    return _autoRestart;
-}
-
-int Config::getConnRetryCount(){
-    return _connRetryCount;
-}
-
-int Config::getScanInterval(){
-    return _scanInterval;
-}
-
-string Config::getInstanceName(){
-    return _instanceName;
-}
-
-string Config::getZkHost(){
-    return _zkHost;
-}
-
-string Config::getZkLogPath(){
-    return _zkLogPath;
-}
-
-int Config::getZkRecvTimeout() {
-    return _zkRecvTimeout;
+int Config::printConfig() {
+    LOG(LOG_INFO, "daemonMode: %d", _daemonMode);
+    LOG(LOG_INFO, "autoRestart: %d", _autoRestart);
+    LOG(LOG_INFO, "logLevel: %d", _logLevel);
+    LOG(LOG_INFO, "connRetryCount: %d", _connRetryCount);
+    LOG(LOG_INFO, "scanInterval: %d", _scanInterval);
+    LOG(LOG_INFO, "instanceName: %s", _instanceName.c_str());
+    LOG(LOG_INFO, "zkHost: %s", _zkHost.c_str());
+    LOG(LOG_INFO, "zkLogPath: %s", _zkLogPath.c_str());
+    return M_OK;
 }
 
 string Config::getNodeList() {
@@ -207,18 +140,6 @@ string Config::getMonitorList() {
     }
     return LOCK_ROOT_DIR + SLASH + _instanceName + SLASH + MONITOR_LIST;
 }
-
-int Config::printMap() {
-    for (auto it = _serviceMap.begin(); it != _serviceMap.end(); ++it) {
-        LOG(LOG_INFO, "path: %s", (it->first).c_str());
-        LOG(LOG_INFO, "host: %s", (it->second).getHost().c_str());
-        LOG(LOG_INFO, "port: %d", (it->second).getPort());
-        LOG(LOG_INFO, "service father: %s", (it->second).getServiceFather().c_str());
-        LOG(LOG_INFO, "status: %d", (it->second).getStatus());
-    }
-    return 0;
-}
-
 
 int Config::addService(string ipPath, ServiceItem serviceItem) {
     pthread_mutex_lock(&serviceMapLock);
@@ -259,4 +180,15 @@ ServiceItem Config::getServiceItem(const string& ipPath) {
     ret = _serviceMap[ipPath];
     pthread_mutex_unlock(&serviceMapLock);
     return ret;
+}
+
+int Config::printServiceMap() {
+    for (auto it = _serviceMap.begin(); it != _serviceMap.end(); ++it) {
+        LOG(LOG_INFO, "path: %s", (it->first).c_str());
+        LOG(LOG_INFO, "host: %s", (it->second).getHost().c_str());
+        LOG(LOG_INFO, "port: %d", (it->second).getPort());
+        LOG(LOG_INFO, "service father: %s", (it->second).getServiceFather().c_str());
+        LOG(LOG_INFO, "status: %d", (it->second).getStatus());
+    }
+    return 0;
 }

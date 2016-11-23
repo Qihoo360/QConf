@@ -78,21 +78,3 @@ int Util::writeToFile(const string content, const string fileName) {
     file.close();
     return 0;
 }
-
-int Util::printConfig(){
-    LOG(LOG_INFO, "daemonMode: %d", Config::getInstance()->isDaemonMode());
-    LOG(LOG_INFO, "autoRestart: %d", Config::getInstance()->isAutoRestart());
-    LOG(LOG_INFO, "logLevel: %d", Config::getInstance()->getLogLevel());
-    LOG(LOG_INFO, "connRetryCount: %d", Config::getInstance()->getConnRetryCount());
-    LOG(LOG_INFO, "scanInterval: %d", Config::getInstance()->getScanInterval());
-    LOG(LOG_INFO, "instanceName: %s", (Config::getInstance()->getInstanceName()).c_str());
-    LOG(LOG_INFO, "zkHost: %s", (Config::getInstance()->getZkHost()).c_str());
-    LOG(LOG_INFO, "zkLogPath: %s", (Config::getInstance()->getZkLogPath()).c_str());
-    return 0;
-}
-
-int Util::printServiceMap() {
-    Config* conf = Config::getInstance();
-    conf->printMap();
-    return 0;
-}

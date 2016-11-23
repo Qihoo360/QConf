@@ -5,20 +5,21 @@
 using namespace std;
 
 //config file name
-const string confPath = "conf/monitor.conf";
+const string CONF_PATH = "conf/monitor.conf";
 
 //config file keys
-const string daemonMode = "daemon_mode";
-const string autoRestart = "auto_restart";
-const string logLevel = "log_level";
-const string connRetryCount = "connect_retry_count";
-const string scanInterval = "scan_interval";
-const string instanceName = "instance_name";
-const string zkHost = "zookeeper.";
-const string zkLogPath = "zk_log";
+const string DAEMON_MODE = "daemon_mode";
+const string AUTO_RESTART = "auto_restart";
+const string LOG_LEVEL = "log_level";
+const string CONN_RETRY_COUNT = "connect_retry_count";
+const string SCAN_INTERVAL = "scan_interval";
+const string INSTANCE_NAME = "instance_name";
+const string ZK_HOST = "zookeeper.";
+const string ZK_LOG_PATH = "zk_log_path";
+const string ZK_RECV_TIMEOUT = "zk_recv_timeout";
 
-constexpr int minLogLevel = 0;
-constexpr int maxLogLevel = 6;
+constexpr int MIN_LOG_LEVEL = 0;
+constexpr int MAX_LOG_LEVEL = 6;
 
 //log file
 const string logPath = "logs/";

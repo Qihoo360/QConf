@@ -96,6 +96,10 @@ int loadServiceToConf(ServiceListener *sl) {
 
 int main(int argc, char** argv) {
     Config* conf = Config::getInstance();
+    if (conf->load() != M_OK)
+        return M_ERR;
+    conf->DumpConf();
+    conf->printConfig();
 
     if (Process::isProcessRunning(MONITOR_PROCESS_NAME)) {
         LOG(LOG_ERROR, "Monitor is already running.");
