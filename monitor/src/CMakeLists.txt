@@ -9,7 +9,7 @@ execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../deps/zookeeper COMMAN
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../deps/zookeeper COMMAND ./configure
     --prefix=${PROJECT_SOURCE_DIR}/../deps/zookeeper/_install)
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../deps/zookeeper COMMAND
-    make -j24)
+    make)
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../deps/zookeeper COMMAND
     make install)
 execute_process(WORKING_DIRECTORY
@@ -18,6 +18,13 @@ execute_process(WORKING_DIRECTORY
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../deps/zookeeper COMMAND
     cp src/zk_adaptor.h src/zk_hashtable.h _install/include/zookeeper)
 include_directories(${PROJECT_SOURCE_DIR}/../deps/zookeeper/_install/include/zookeeper)
+
+#build slash
+execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/third/slash COMMAND make)
+include_directories(${PROJECT_SOURCE_DIR}/third/slash/output/include)
+#build pink
+execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/third/pink COMMAND make)
+include_directories(${PROJECT_SOURCE_DIR}/third/pink/output/include)
 
 aux_source_directory(. DIR_SRCS)
 
@@ -36,5 +43,10 @@ target_link_libraries (qconf_monitor ${CMAKE_THREAD_LIBS_INIT})
 # link static libzookeeper_mt
 target_link_libraries(qconf_monitor
     ${PROJECT_SOURCE_DIR}/../deps/zookeeper/_install/lib/libzookeeper_mt.a)
+
+# link static slash
+target_link_libraries(qconf_monitor ${PROJECT_SOURCE_DIR}/third/slash/output/lib/libslash.a)
+# link static pink
+target_link_libraries(qconf_monitor ${PROJECT_SOURCE_DIR}/third/pink/output/lib/libpink.a)
 
 install(TARGETS qconf_monitor DESTINATION bin)

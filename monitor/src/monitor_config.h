@@ -1,5 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
+#include "base_conf.h"
+
 #include <string>
 #include <unordered_set>
 #include <map>
@@ -12,48 +14,46 @@
 
 using namespace std;
 
-class Config {
+class Config : public slash::BaseConf {
 private:
     static Config* _instance;
 
     pthread_mutex_t serviceMapLock;
 
-    int _daemonMode;
+    bool _daemonMode;
+    bool _autoRestart;
     string _monitorHostname;
-    int _autoRestart;
     int _logLevel;
     int _connRetryCount;
     int _scanInterval;
-    std::string _instanceName;
-    std::string _zkHost;
-    std::string _zkLogPath;
+    string _instanceName;
+    string _zkHost;
+    string _zkLogPath;
     int _zkRecvTimeout;
 
     //core data. the key is the full path of ipPort and the value is serviceItem of this ipPort
     map<string, ServiceItem> _serviceMap;
 
-    Config();
-    int setValueInt(const string& key, const string& value);
-    int setValueStr(const string& key, const string& value);
-
+    Config(const string &confPath);
 public:
     ~Config();
     static Config* getInstance();
     int load();
     int resetConfig();
-    int isDaemonMode();
-    int isAutoRestart();
 
-    string getMonitorHostname();
-    int getLogLevel();
-    int getConnRetryCount();
-    int getScanInterval();
-    string getInstanceName();
-    string getZkHost();
-    string getZkLogPath();
-    int getZkRecvTimeout();
+    bool isDaemonMode() { return _daemonMode; }
+    bool isAutoRestart() { return _autoRestart; }
+    string getMonitorHostname() { return _monitorHostname; }
+    int getLogLevel() { return _logLevel; }
+    int getConnRetryCount() { return _connRetryCount; }
+    int getScanInterval() { return _scanInterval; }
+    string getInstanceName() { return _instanceName; }
+    string getZkHost() { return _zkHost; }
+    string getZkLogPath() { return _zkLogPath; }
+    int getZkRecvTimeout() { return _zkRecvTimeout; }
     string getNodeList();
     string getMonitorList();
+    int printConfig();
 
     map<string, ServiceItem> getServiceMap();
     int setServiceMap(string node, int val);
@@ -63,6 +63,6 @@ public:
     void deleteService(const string& ipPath);
 
     ServiceItem getServiceItem(const string& ipPath);
-    int printMap();
+    int printServiceMap();
 };
 #endif
