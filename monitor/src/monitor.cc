@@ -14,7 +14,7 @@
 #include "monitor_zk.h"
 #include "monitor_load_balance.h"
 #include "monitor_listener.h"
-#include "monitor_multi_thread.h"
+#include "monitor_work_thread.h"
 
 using namespace std;
 
@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
         this loop is for load balance.
         If rebalance is needed, the loop will be reiterate
         */
-        while (!Process::isStop() && !MultiThread::isThreadError()) {
+        while (!Process::isStop()) {
             LOG(LOG_INFO, " second loop start -> !!!!!!");
 
             LoadBalance* lb = LoadBalance::getInstance();
@@ -158,13 +158,12 @@ int main(int argc, char** argv) {
             }
 
             //multiThread module
-            MultiThread* ml = MultiThread::getInstance();
-            ml->runMainThread();
+            WorkThread workThread;
+            workThread.Start();
 
             //It's important !! Remember to close it always
             delete lb;
             delete sl;
-            delete ml;
         }
     }
     LOG(LOG_ERROR, "EXIT main loop!!!");

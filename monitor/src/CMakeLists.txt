@@ -24,6 +24,7 @@ execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/third/slash COMMAND make
 include_directories(${PROJECT_SOURCE_DIR}/third/slash/output/include)
 #build pink
 execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/third/pink COMMAND make)
+include_directories(${PROJECT_SOURCE_DIR}/third/pink/output)
 include_directories(${PROJECT_SOURCE_DIR}/third/pink/output/include)
 
 aux_source_directory(. DIR_SRCS)

@@ -47,7 +47,7 @@ public:
     void updateMd5ToServiceFather(const string& md5Path, const string& serviceFather);
     int getMonitors();
     int balance();
-    const vector<string> getMyServiceFather();
+    vector<string> getMyServiceFather();
 
     static void watcher(zhandle_t* zhandle, int type, int state, const char* path, void* context);
     static void processChildEvent(zhandle_t* zhandle, const string path);
