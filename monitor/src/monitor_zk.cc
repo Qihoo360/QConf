@@ -17,38 +17,12 @@
 
 using namespace std;
 
-char _zkLockBuf[512] = {0};
-
-Zk* Zk::zk = NULL;
-
-Zk* Zk::getInstance() {
-    if (!zk) {
-        zk = new Zk();
+void MonitorZk::watcher(zhandle_t* zhandle, int type, int state, const char* node, void* context) {
+    MonitorZk *object = reinterpret_cast<MonitorZk *>(context);
+    if (object == NULL) {
+        LOG(LOG_FATAL_ERROR, "error in watcher.");
+        return;
     }
-    return zk;
-}
-
-void Zk::processDeleteEvent(zhandle_t* zhandle, const string& path) {
-    Zk* zk = Zk::getInstance();
-    Config* conf = Config::getInstance();
-    if (path == conf->getNodeList()) {
-        LOG(LOG_INFO, "node %s is removed", path.c_str());
-        zk->createZnode(path);
-    }
-    if (path == conf->getMonitorList()) {
-        LOG(LOG_INFO, "monitor dir %s is removed. Restart main loop", path.c_str());
-        Process::setStop();
-    }
-}
-
-/*
-The watcher in Zk will deal with events as follow:
-1. zk disconnect with zookeeper server -> restart main loop
-2. md5List is removed -> create it
-3. monitorList is removed -> restart main loop
-*/
-void Zk::watcher(zhandle_t* zhandle, int type, int state, const char* node, void* context){
-    dp();
     switch (type) {
         case SESSION_EVENT_DEF:
             if (state == ZOO_EXPIRED_SESSION_STATE) {
@@ -62,275 +36,235 @@ void Zk::watcher(zhandle_t* zhandle, int type, int state, const char* node, void
             break;
         case CHILD_EVENT_DEF:
             LOG(LOG_DEBUG, "[ child event ] ...");
+            object->processChildEvent(string(node));
             break;
         case CREATED_EVENT_DEF:
             LOG(LOG_DEBUG, "[ created event ]...");
             break;
         case DELETED_EVENT_DEF:
             LOG(LOG_DEBUG, "[ deleted event ] ...");
-            processDeleteEvent(zhandle, string(node));
+            object->processDeleteEvent(string(node));
             break;
         case CHANGED_EVENT_DEF:
             LOG(LOG_DEBUG, "[ changed event ] ...");
+            object->processChangedEvent(string(node));
             break;
         default:
             break;
     }
 }
 
-Zk::Zk():_zh(NULL), _recvTimeout(3000), _zkLogPath(""), _zkHost(""), _zkLogFile(NULL) {
-    conf = Config::getInstance();
+MonitorZk::MonitorZk():
+    _zh(NULL),
+    _zk_node_buffer(NULL) {
+    _recvTimeout = p_conf->zkRecvTimeout();
+    _zkHost = p_conf->zkHost();
 }
 
-/*
- * Initialize Zk api environment.
- *
- * zk_host       [in] zookeeper server host
- * log_path      [in] zookeerp api log path
- * recv_timeout  [in] receive timeout
- *
- */
-int Zk::initEnv(const string zkHost, const string zkLogPath, const int recvTimeout) {
-    if (zkLogPath.size() <= 0) {
-        return M_ERR;
-    }
-    _zkLogFile = fopen(zkLogPath.c_str(), "a");
-    if (!_zkLogFile) {
-        LOG(LOG_ERROR, "log file open failed. path:%s. error:%s", zkLogPath.c_str(), strerror(errno));
-        return M_ERR;
-    }
-    _zkLogPath = zkLogPath;
-    //set the log file stream of zookeeper
-    zoo_set_log_stream(_zkLogFile);
-    LOG(LOG_INFO, "zoo_set_log_stream path:%s", zkLogPath.c_str());
+int MonitorZk::initEnv() {
+    if (_zkHost.size() <= 0) return MONITOR_ERR_PARAM;
 
-    if (zkHost.size() <= 0) {
-        LOG(LOG_ERROR, "zkHost %s wrong!", zkHost.c_str());
-        fclose(_zkLogFile);
-        return M_ERR;
-    }
-    _zkHost = zkHost;
-    _recvTimeout = recvTimeout > 1000 ? recvTimeout : _recvTimeout;
     //init zookeeper handler
-    _zh = zookeeper_init(zkHost.c_str(), watcher, _recvTimeout, NULL, NULL, 0);
+    _zh = zookeeper_init(_zkHost.c_str(), watcher, _recvTimeout, NULL, (void *)this, 0);
     if (!_zh) {
-        LOG(LOG_ERROR, "zookeeper_init failed. Check whether zk_host(%s) is correct or not", zkHost.c_str());
-        fclose(_zkLogFile);
+        LOG(LOG_ERROR, "zookeeper_init failed. Check whether zk_host(%s) is correct or not", _zkHost.c_str());
         return M_ERR;
     }
+
+    _zk_node_buffer = new char[MONITOR_MAX_VALUE_SIZE];
+    if (NULL == _zk_node_buffer) {
+        LOG(LOG_ERROR, "Failed to get zk node buf");
+        return MONITOR_ERR_MEM;
+    }
+
     return M_OK;
 }
 
-void Zk::destroyEnv() {
+MonitorZk::~MonitorZk(){
     if (_zh) {
         LOG(LOG_DEBUG, "zookeeper close ...");
         zookeeper_close(_zh);
         _zh = NULL;
     }
-    if (_zkLogFile) {
-        // set the zookeeper log stream to be default stderr
-        zoo_set_log_stream(NULL);
-        LOG(LOG_DEBUG, "zkLog close ...");
-        fclose(_zkLogFile);
-        _zkLogFile = NULL;
-    }
-    zk = NULL;
-}
-
-Zk::~Zk(){
-    destroyEnv();
+    delete _zk_node_buffer;
 };
 
-void Zk::zErrorHandler(const int& ret) {
-    if (ret == ZSESSIONEXPIRED ||  /*!< The session has been expired by the server */
-        ret == ZSESSIONMOVED ||    /*!< session moved to another server, so operation is ignored */
-        ret == ZOPERATIONTIMEOUT ||/*!< Operation timeout */
-        ret == ZINVALIDSTATE)     /*!< Invliad zhandle state */
+int MonitorZk::zk_modify(const std::string &path, const std::string &value)
+{
+    for (int i = 0; i < MONITOR_GET_RETRIES; ++i)
     {
-        LOG(LOG_ERROR, "API return: %s. Reinitialize zookeeper handle.", zerror(ret));
-    }
-    else if (ret == ZCLOSING ||    /*!< ZooKeeper is closing */
-            ret == ZCONNECTIONLOSS)  /*!< Connection to the server has been lost */
-    {
-        LOG(LOG_FATAL_ERROR, "connect to zookeeper Failed!. API return : %s. Try to initialize zookeeper handle", zerror(ret));
-    }
-}
-
-bool Zk::znodeExist(const string& path) {
-    if (!_zh) {
-        LOG(LOG_ERROR, "_zh is NULL!");
-        return false;
-    }
-    struct Stat stat;
-    int ret = zoo_exists(_zh, path.c_str(), 1, &stat);
-    if (ret == ZOK) {
-        LOG(LOG_INFO, "node exist. node: %s", path.c_str());
-        return true;
-    }
-    else if (ret == ZNONODE) {
-        LOG(LOG_INFO, "node not exist. node: %s", path.c_str());
-        return false;
-    }
-    else {
-        LOG(LOG_ERROR, "zoo_exist failed. error: %s. node: %s", zerror(ret), path.c_str());
-        zErrorHandler(ret);
-        return false;
-    }
-}
-
-//after create znode, set the watcher with zoo_exists
-int Zk::createZnode(string path) {
-    vector<string> nodeList = Util::split(path, '/');
-    string node("");
-    //root should sure be exist
-    for (auto it = nodeList.begin(); it != nodeList.end(); ++it) {
-        node += "/";
-        node += (*it);
-        int ret = zoo_create(_zh, node.c_str(), NULL, 0, &ZOO_OPEN_ACL_UNSAFE, 0, NULL, 0);
-        if (ret == ZOK) {
-            LOG(LOG_INFO, "Create node succeeded. node: %s", node.c_str());
-        }
-        else if (ret == ZNODEEXISTS) {
-            LOG(LOG_INFO, "Create node .Node exists. node: %s", node.c_str());
-        }
-        else {
-            LOG(LOG_ERROR, "create node failed. error: %s. node: %s ", zerror(ret), node.c_str());
-            zErrorHandler(ret);
-            return M_ERR;
+        int ret = zoo_set(_zh, path.c_str(), value.c_str(), value.size(), -1);
+        switch (ret)
+        {
+            case ZOK:
+                return MONITOR_OK;
+            case ZNONODE:
+                return MONITOR_NODE_NOT_EXIST;
+            case ZINVALIDSTATE:
+            case ZMARSHALLINGERROR:
+                continue;
+            default:
+                return MONITOR_ERR_ZOO_FAILED;
         }
     }
-    //add the watcher
-    struct Stat stat;
-    zoo_exists(_zh, node.c_str(), 1, &stat);
-    return M_OK;
+    return MONITOR_ERR_ZOO_FAILED;
 }
 
-int Zk::createZnode2(string path) {
-    if (path.size() <= 0) {
-        LOG(LOG_ERROR, "parameter error, path is empty");
-        return M_ERR;
+/**
+ * Get znode from zookeeper, and set a watcher
+ */
+int MonitorZk::zk_get_node(const string &path, string &buf, int watcher) {
+    int ret = 0;
+    int buffer_len = MONITOR_MAX_VALUE_SIZE;
+
+    for (int i = 0; i < MONITOR_GET_RETRIES; ++i) {
+        ret = zoo_get(_zh, path.c_str(), watcher, _zk_node_buffer, &buffer_len, NULL);
+        switch (ret) {
+            case ZOK:
+                if (-1 == buffer_len) buffer_len = 0;
+                buf.assign(_zk_node_buffer, buffer_len);
+                return MONITOR_OK;
+            case ZNONODE:
+                return MONITOR_NODE_NOT_EXIST;
+            case ZINVALIDSTATE:
+            case ZMARSHALLINGERROR:
+                continue;
+            default:
+                LOG(LOG_ERROR, "Failed to call zoo_get. err:%s. path:%s",
+                        zerror(ret), path.c_str());
+                return MONITOR_ERR_ZOO_FAILED;
+        }
     }
-    if (path[0] != '/') {
-        path = '/' + path;
+
+    LOG(LOG_ERROR, "Failed to call zoo_get after retry. err:%s. path:%s",
+            zerror(ret), path.c_str());
+    return MONITOR_ERR_ZOO_FAILED;
+}
+
+/**
+ * Create znode on zookeeper
+ */
+int MonitorZk::zk_create_node(const string &path, const string &value, int flags) {
+    return zk_create_node(path, value, flags, NULL, 0);
+}
+
+int MonitorZk::zk_create_node(const string &path, const string &value, int flags, char *path_buffer, int path_len) {
+    int ret = 0;
+    for (int i = 0; i < MONITOR_GET_RETRIES; ++i) {
+        ret = zoo_create(_zh, path.c_str(), value.c_str(), value.length(), &ZOO_OPEN_ACL_UNSAFE, flags, path_buffer, path_len);
+        switch (ret) {
+            case ZOK:
+                return MONITOR_OK;
+            case ZNODEEXISTS:
+                return MONITOR_NODE_EXIST;
+            case ZNONODE:
+            case ZNOCHILDRENFOREPHEMERALS:
+            case ZBADARGUMENTS:
+                LOG(LOG_ERROR, "Failed to call zoo_create. err:%s. path:%s",
+                        zerror(ret), path.c_str());
+                return MONITOR_ERR_ZOO_FAILED;
+            default:
+                continue;
+        }
     }
-    if (path.back() == '/') {
-        path.pop_back();
+
+    LOG(LOG_ERROR, "Failed to call zoo_create after retry. err:%s. path:%s",
+            zerror(ret), path.c_str());
+    return MONITOR_ERR_ZOO_FAILED;
+}
+
+/**
+ * Get children nodes from zookeeper and set a watcher
+ */
+int MonitorZk::zk_get_chdnodes(const string &path, String_vector &nodes) {
+    if (NULL == _zh || path.empty()) return MONITOR_ERR_PARAM;
+
+    int ret;
+    for (int i = 0; i < MONITOR_GET_RETRIES; ++i) {
+        ret = zoo_get_children(_zh, path.c_str(), 1, &nodes);
+        switch(ret) {
+            case ZOK:
+                return MONITOR_OK;
+            case ZNONODE:
+                return MONITOR_NODE_NOT_EXIST;
+            case ZINVALIDSTATE:
+            case ZMARSHALLINGERROR:
+                continue;
+            default:
+                LOG(LOG_ERROR, "Failed to call zoo_get_children. err:%s. path:%s",
+                        zerror(ret), path.c_str());
+                return MONITOR_ERR_ZOO_FAILED;
+        }
     }
-    string node = path;
-    while (1) {
-        int ret = zoo_create(_zh, node.c_str(), NULL, 0, &ZOO_OPEN_ACL_UNSAFE, 0, NULL, 0);
-        if (ret == ZOK) {
-            LOG(LOG_INFO, "Create node succeeded. node: %s", path.c_str());
-            if (node == path) {
+
+    LOG(LOG_ERROR, "Failed to call zoo_get_children after retry. err:%s. path:%s",
+            zerror(ret), path.c_str());
+    return MONITOR_ERR_ZOO_FAILED;
+}
+
+int MonitorZk::zk_get_chdnodes_with_status(const string &path, String_vector &nodes, vector<char> &status) {
+    if (NULL == _zh || path.empty()) return MONITOR_ERR_PARAM;
+    int ret = zk_get_chdnodes(path, nodes);
+    if (MONITOR_OK == ret) {
+        string child_path;
+        status.resize(nodes.count);
+        for (int i = 0; i < nodes.count; ++i) {
+            child_path = path + '/' + nodes.data[i];
+            char s = 0;
+            ret = zk_get_service_status(child_path, s);
+            if (MONITOR_OK != ret) return MONITOR_ERR_OTHER;
+            status[i] = s;
+        }
+    }
+    return ret;
+}
+
+int MonitorZk::zk_get_service_status(const string &path, char &status) {
+    if (NULL == _zh || path.empty()) return MONITOR_ERR_PARAM;
+
+    string buf;
+    if (MONITOR_OK == zk_get_node(path, buf, 1)) {
+        int value = STATUS_UNKNOWN;
+        value = atoi(buf.c_str());
+        switch(value) {
+            case STATUS_UP:
+            case STATUS_DOWN:
+            case STATUS_OFFLINE:
+                status = static_cast<char>(value);
                 break;
-            }
-            else {
-                node = path;
-            }
+            default:
+                LOG(LOG_FATAL_ERROR, "Invalid service status of path:%s, status:%ld!",
+                        path.c_str(), value);
+                return MONITOR_ERR_OTHER;
         }
-        else if (ret == ZNODEEXISTS) {
-            LOG(LOG_INFO, "Create node .Node exists. node: %s", path.c_str());
-            if (node == path) {
-                break;
-            }
-            else {
-                node = path;
-            }
-        }
-        else if (ret == ZNONODE) {
-            size_t pos = node.rfind('/');
-            node = node.substr(0, pos);
-        }
-        else {
-            LOG(LOG_ERROR, "create node failed. error: %s. node: %s ", zerror(ret), node.c_str());
-            zErrorHandler(ret);
-            return M_ERR;
-        }
+    } else {
+        LOG(LOG_FATAL_ERROR, "Failed to get service status, path:%s", path.c_str());
+        return MONITOR_ERR_OTHER;
     }
-    //add the watcher
-    struct Stat stat;
-    zoo_exists(_zh, node.c_str(), 1, &stat);
-    return M_OK;
+    return MONITOR_OK;
 }
 
-int Zk::checkAndCreateZnode(string path) {
-    if (path.size() <= 0) {
-        return M_ERR;
-    }
-    if (path[0] != '/') {
-        path = '/' + path;
-    }
-    if (path.back() == '/') {
-        path.pop_back();
-    }
-    // check weather the node exist
-    if (znodeExist(path)) {
-        return M_OK;
-    }
-    else {
-        if (createZnode(path) == M_OK) {
-            LOG(LOG_INFO, "create znode succeeded, path:%s", path.c_str());
-            return M_OK;
-        }
-        else {
-            LOG(LOG_ERROR, "create znode failed, path:%s", path.c_str());
-            return M_ERR;
-        }
-    }
-}
+bool MonitorZk::zk_exists(const string &path) {
+    int ret = 0;
 
-int Zk::registerMonitor(string path) {
-    int ret = ZOK;
-    while (_zh) {
-        memset(_zkLockBuf, 0, sizeof(_zkLockBuf));
-        string hostName = conf->getMonitorHostname();
-        //register the monitor.
-        if (hostName.empty()) {
-            ret = zoo_create(_zh, path.c_str(), NULL, 0, &ZOO_OPEN_ACL_UNSAFE,
-                ZOO_EPHEMERAL | ZOO_SEQUENCE, _zkLockBuf, sizeof(_zkLockBuf));
+    for (int i = 0; i < MONITOR_GET_RETRIES; ++i) {
+        ret = zoo_exists(_zh, path.c_str(), 1, NULL);
+        switch (ret) {
+            case ZOK:
+                return true;
+            case ZNONODE:
+                return false;
+            case ZINVALIDSTATE:
+            case ZMARSHALLINGERROR:
+                continue;
+            default:
+                LOG(LOG_FATAL_ERROR, "Failed to call zoo_exists. err:%s. path:%s",
+                        zerror(ret), path.c_str());
+                return MONITOR_ERR_ZOO_FAILED;
         }
-        //if set the value of monitor node. It may be used in rebalance
-        else {
-            ret = zoo_create(_zh, path.c_str(), hostName.c_str(), hostName.length(), &ZOO_OPEN_ACL_UNSAFE,
-                ZOO_EPHEMERAL | ZOO_SEQUENCE, _zkLockBuf, sizeof(_zkLockBuf));
-        }
+    }
 
-        if (ret == ZOK) {
-            LOG(LOG_INFO, "Create zookeeper node succeeded. node: %s", _zkLockBuf);
-        }
-        else if (ret == ZNODEEXISTS) {
-            LOG(LOG_INFO, "Create zookeeper node .Node exists. node: %s", _zkLockBuf);
-        }
-        else {
-            LOG(LOG_ERROR, "create zookeeper node failed. API return : %d. node: %s ", ret, path.c_str());
-            zErrorHandler(ret);
-            // wait a second
-            sleep(1);
-            continue;
-        }
-        break;
-    }
-    if (!_zh) {
-        LOG(LOG_TRACE, "zkLock...out...error return...");
-        return  M_ERR;
-    }
-    return M_OK;
-}
-
-int Zk::setZnode(string node, string data) {
-    int ver = -1; //will not check the version of node
-    if (!_zh) {
-        LOG(LOG_FATAL_ERROR, "_zh is NULL. restart the main loop!");
-        Process::setStop();
-        return -1;
-    }
-    int status = zoo_set(_zh, node.c_str(), data.c_str(), data.length(), ver);
-    if (status == ZOK) {
-        return 0;
-    }
-    else {
-        LOG(LOG_ERROR, "%s failed when zoo_set node(%s), data(%d), error:%s", \
-            __FUNCTION__, node.c_str(), data.c_str(), zerror(status));
-        return -1;
-    }
+    LOG(LOG_ERROR, "Failed to call zoo_exists after retry. err:%s. path:%s",
+            zerror(ret), path.c_str());
+    return MONITOR_ERR_ZOO_FAILED;
 }

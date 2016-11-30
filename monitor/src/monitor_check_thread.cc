@@ -25,7 +25,7 @@
 #include "monitor_listener.h"
 
 CheckThread::CheckThread(int pos, WorkThread *workThread) :
-    pink::Thread::Thread(Config::getInstance()->getScanInterval()),
+    pink::Thread::Thread(p_conf->scanInterval()),
     _service_pos(pos),
     _should_exit(true),
     _workThread(workThread) {
@@ -126,15 +126,15 @@ int CheckThread::isServiceExist(struct in_addr *addr, char* host, int port, int 
 
 //try to connect to the ipPort to see weather it's connecteble
 int CheckThread::tryConnect(const string &curServiceFather) {
-    auto serviceFatherToIp = ServiceListener::getInstance()->getServiceFatherToIp();
+    auto serviceFatherToIp = p_serviceListerner->getServiceFatherToIp();
     unordered_set<string> ip = serviceFatherToIp[curServiceFather];
-    int retryCount = Config::getInstance()->getConnRetryCount();
+    int retryCount = p_conf->connRetryCount();
     for (auto it = ip.begin(); it != ip.end(); ++it) {
-        if (Process::isStop() || LoadBalance::getReBalance() || isRunning()) {
+        if (Process::isStop() || p_loadBalance->needReBalance() || isRunning()) {
             break;
         }
         //It's important to get serviceMap in the loop to find zk's change in real time
-        auto serviceMap = Config::getInstance()->getServiceMap();
+        auto serviceMap = p_conf->serviceMap();
         string ipPort = curServiceFather + "/" + (*it);
         /*
         some service father don't have services and we add "" to serviceFatherToIp
@@ -144,23 +144,23 @@ int CheckThread::tryConnect(const string &curServiceFather) {
             continue;
         }
         ServiceItem item = serviceMap[ipPort];
-        int oldStatus = item.getStatus();
+        int oldStatus = item.status();
         //If the node is STATUS_UNKNOWN or STATUS_OFFLINE, we will ignore it
         if (oldStatus == STATUS_UNKNOWN || oldStatus == STATUS_OFFLINE) {
             continue;
         }
         struct in_addr addr;
-        item.getAddr(&addr);
+        item.addr(&addr);
         int curTryTimes = (oldStatus == STATUS_UP) ? 1 : 3;
-        int timeout = item.getConnectTimeout() > 0 ? item.getConnectTimeout() : 3;
+        int timeout = item.connectTimeout() > 0 ? item.connectTimeout() : 3;
 
-        int res = isServiceExist(&addr, (char*)item.getHost().c_str(), item.getPort(), timeout, item.getStatus());
+        int res = isServiceExist(&addr, (char*)item.host().c_str(), item.port(), timeout, item.status());
 
         int status = (res)? 0 : 2;
         //If status is down. I will retry.
         while (curTryTimes < retryCount && status == STATUS_DOWN) {
             LOG(LOG_ERROR, "can not connect to service:%s, current try times:%d, max try times:%d", ipPort.c_str(), curTryTimes, retryCount);
-            res = isServiceExist(&addr, (char*)item.getHost().c_str(), item.getPort(), timeout, item.getStatus());
+            res = isServiceExist(&addr, (char*)item.host().c_str(), item.port(), timeout, item.status());
             status = (res) ? 0 : 2;
             ++curTryTimes;
         }
@@ -185,7 +185,7 @@ void *CheckThread::ThreadMain() {
     int timeout = cron_interval_;
     _should_exit = false;
 
-    while (!Process::isStop() && !LoadBalance::getReBalance() && !isRunning()) {
+    while (!Process::isStop() && !p_loadBalance->needReBalance() && !isRunning()) {
         if (cron_interval_ > 0 ) {
             gettimeofday(&now, NULL);
             if (when.tv_sec > now.tv_sec || (when.tv_sec == now.tv_sec && when.tv_usec > now.tv_usec)) {
@@ -203,7 +203,7 @@ void *CheckThread::ThreadMain() {
 }
 
 void CheckThread::CronHandle() {
-    auto serviceFathers = LoadBalance::getInstance()->getMyServiceFather();
+    auto serviceFathers = p_loadBalance->myServiceFather();
     int serviceFatherNum = serviceFathers.size();
     string curServiceFather = serviceFathers[_service_pos];
     LOG(LOG_INFO, "|checkService| pthread id %x, pthread pos %d, current service father %s", \
