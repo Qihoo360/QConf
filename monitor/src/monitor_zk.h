@@ -13,32 +13,35 @@
 
 using namespace std;
 
-class Zk{
+// interface
+class MonitorZk {
 private:
-    Config* conf;
-    static Zk* zk;
-
     zhandle_t* _zh;
     int _recvTimeout;
     string _zkLogPath;
     string _zkHost;
-    FILE* _zkLogFile;
-    Zk();
-public:
-    ~Zk();
-    static Zk* getInstance();
-    int initEnv(const string zkHost, const string zkLogPath, const int recvTimeout);
-    void destroyEnv();
+    char *_zk_node_buffer;
 
-    int checkAndCreateZnode(string path);
-    int createZnode(string path);
-    int createZnode2(string path);
-    int setZnode(string node, string data);
-    int registerMonitor(string path);
-    bool znodeExist(const string& path);
-    void zErrorHandler(const int& ret);
+protected:
+    MonitorZk();
+    Config* _conf;
+
+    int initEnv();
+    virtual ~MonitorZk();
+
+    int zk_get_node(const string &path, string &buf, int watcher);
+    int zk_create_node(const string &path, const string &value, int flags);
+    int zk_create_node(const string &path, const string &value, int flags, char *path_buffer, int path_len);
+    int zk_get_chdnodes(const string &path, String_vector &nodes);
+    int zk_get_chdnodes_with_status(const string &path, String_vector &nodes, vector<char> &status);
+    int zk_get_service_status(const string &path, char &status);
+    bool zk_exists(const string &path);
 
     static void watcher(zhandle_t* zhandle, int type, int state, const char* node, void* context);
-    static void processDeleteEvent(zhandle_t* zhandle, const string& path);
+    virtual void processDeleteEvent(const string &path) = 0;
+    virtual void processChildEvent(const string &path) = 0;
+    virtual void processChangedEvent(const string &path) = 0;
+public:
+    int zk_modify(const std::string &path, const std::string &value);
 };
 #endif

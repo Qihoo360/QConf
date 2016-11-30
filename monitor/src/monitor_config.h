@@ -16,8 +16,6 @@ using namespace std;
 
 class Config : public slash::BaseConf {
 private:
-    static Config* _instance;
-
     pthread_mutex_t serviceMapLock;
 
     bool _daemonMode;
@@ -34,35 +32,38 @@ private:
     //core data. the key is the full path of ipPort and the value is serviceItem of this ipPort
     map<string, ServiceItem> _serviceMap;
 
-    Config(const string &confPath);
 public:
+    Config(const string &confPath);
     ~Config();
-    static Config* getInstance();
-    int load();
+    int Load();
     int resetConfig();
 
     bool isDaemonMode() { return _daemonMode; }
     bool isAutoRestart() { return _autoRestart; }
-    string getMonitorHostname() { return _monitorHostname; }
-    int getLogLevel() { return _logLevel; }
-    int getConnRetryCount() { return _connRetryCount; }
-    int getScanInterval() { return _scanInterval; }
-    string getInstanceName() { return _instanceName; }
-    string getZkHost() { return _zkHost; }
-    string getZkLogPath() { return _zkLogPath; }
-    int getZkRecvTimeout() { return _zkRecvTimeout; }
-    string getNodeList();
-    string getMonitorList();
+    string monitorHostname() { return _monitorHostname; }
+    int logLevel() { return _logLevel; }
+    int connRetryCount() { return _connRetryCount; }
+    int scanInterval() { return _scanInterval; }
+    string instanceName() { return _instanceName; }
+    string zkHost() { return _zkHost; }
+    string zkLogPath() { return _zkLogPath; }
+    int zkRecvTimeout() { return _zkRecvTimeout; }
+    string nodeList();
+    string monitorList();
     int printConfig();
 
-    map<string, ServiceItem> getServiceMap();
+    FILE *_zkLogFile;
+    int setZkLog();
+
+    map<string, ServiceItem> serviceMap();
     int setServiceMap(string node, int val);
     void clearServiceMap();
 
     int addService(string ipPath, ServiceItem serviceItem);
     void deleteService(const string& ipPath);
 
-    ServiceItem getServiceItem(const string& ipPath);
+    ServiceItem serviceItem(const string& ipPath);
     int printServiceMap();
 };
+extern Config *p_conf;
 #endif

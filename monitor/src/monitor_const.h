@@ -37,6 +37,18 @@ const string CMDFILE = "tmp/cmd";
 //return status
 constexpr int M_OK = 0;
 constexpr int M_ERR = -1;
+const int MONITOR_OK = 0;
+const int MONITOR_ERR_OTHER = 1;
+const int MONITOR_NODE_EXIST = 2;
+const int MONITOR_NODE_NOT_EXIST = 4;
+const int MONITOR_ERR_FAILED_OPEN_FILE = 5;
+const int MONITOR_ERR_MEM = 6;
+const int MONITOR_ERR_PARAM = 7;
+const int MONITOR_ERR_ZOO_FAILED = 8;
+
+const int MONITOR_MAX_VALUE_SIZE = 1048577;
+const int MONITOR_GET_RETRIES = 3;
+
 
 // server status define
 #define STATUS_UNKNOWN  -1

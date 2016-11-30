@@ -1,3 +1,5 @@
+#include "zookeeper.h"
+
 #include <unistd.h>
 #include <pthread.h>
 
@@ -17,8 +19,6 @@
 
 using namespace std;
 
-Config* Config::_instance = NULL;
-
 Config::Config(const string &confPath) :
     slash::BaseConf(confPath) {
     pthread_mutex_init(&serviceMapLock, NULL);
@@ -26,14 +26,13 @@ Config::Config(const string &confPath) :
 }
 
 Config::~Config() {
-    delete _instance;
-}
-
-Config* Config::getInstance() {
-    if (!_instance) {
-        _instance = new Config(CONF_PATH);
+    if (_zkLogFile) {
+        // set the zookeeper log stream to be default stderr
+        zoo_set_log_stream(NULL);
+        LOG(LOG_DEBUG, "zkLog close ...");
+        fclose(_zkLogFile);
+        _zkLogFile = NULL;
     }
-    return _instance;
 }
 
 int Config::resetConfig(){
@@ -50,7 +49,7 @@ int Config::resetConfig(){
     return M_OK;
 }
 
-int Config::load() {
+int Config::Load() {
     int ret;
     ret = this->LoadConf();
     if (ret != 0)
@@ -107,8 +106,31 @@ int Config::load() {
     // _zkRecvTimeout
     GetConfInt(ZK_RECV_TIMEOUT, &_zkRecvTimeout);
 
-    //reload the config result in the change of loglevel in Log
-    Log::init(_instance->getLogLevel());
+    // Reload the config result in the change of loglevel in Log
+    Log::init(this->logLevel());
+
+    // Set zookeeper log path
+    if (setZkLog() != M_OK) {
+        LOG(LOG_ERROR, "set zk log path failed");
+        return M_ERR;
+    }
+    return M_OK;
+}
+
+int Config::setZkLog() {
+    if (_zkLogPath.size() <= 0) {
+        return M_ERR;
+    }
+    _zkLogFile = fopen(_zkLogPath.c_str(), "a+");
+    if (!_zkLogFile) {
+        LOG(LOG_ERROR, "log file open failed. path:%s. error:%s", _zkLogPath.c_str(), strerror(errno));
+        return M_ERR;
+    }
+    //set the log file stream of zookeeper
+    zoo_set_log_stream(_zkLogFile);
+    zoo_set_debug_level(ZOO_LOG_LEVEL_WARN);
+    LOG(LOG_INFO, "zoo_set_log_stream path:%s", _zkLogPath.c_str());
+
     return M_OK;
 }
 
@@ -124,7 +146,7 @@ int Config::printConfig() {
     return M_OK;
 }
 
-string Config::getNodeList() {
+string Config::nodeList() {
     //should judge weather instanceName is empty
     if (_instanceName.empty()) {
         LOG(LOG_ERROR, "instance name is empty. using default_instance");
@@ -133,7 +155,7 @@ string Config::getNodeList() {
     return LOCK_ROOT_DIR + SLASH + _instanceName + SLASH + NODE_LIST;
 }
 
-string Config::getMonitorList() {
+string Config::monitorList() {
     if (_instanceName.empty()) {
         LOG(LOG_ERROR, "instance name is empty. using default_instance");
         return LOCK_ROOT_DIR + SLASH + "default_instance" + SLASH + MONITOR_LIST;
@@ -154,7 +176,7 @@ void Config::deleteService(const string& ipPath) {
     pthread_mutex_unlock(&serviceMapLock);
 }
 
-map<string, ServiceItem> Config::getServiceMap() {
+map<string, ServiceItem> Config::serviceMap() {
     map<string, ServiceItem> ret;
     pthread_mutex_lock(&serviceMapLock);
     ret = _serviceMap;
@@ -174,7 +196,7 @@ void Config::clearServiceMap() {
     _serviceMap.clear();
 }
 
-ServiceItem Config::getServiceItem(const string& ipPath) {
+ServiceItem Config::serviceItem(const string& ipPath) {
     ServiceItem ret;
     pthread_mutex_lock(&serviceMapLock);
     ret = _serviceMap[ipPath];
@@ -185,10 +207,10 @@ ServiceItem Config::getServiceItem(const string& ipPath) {
 int Config::printServiceMap() {
     for (auto it = _serviceMap.begin(); it != _serviceMap.end(); ++it) {
         LOG(LOG_INFO, "path: %s", (it->first).c_str());
-        LOG(LOG_INFO, "host: %s", (it->second).getHost().c_str());
-        LOG(LOG_INFO, "port: %d", (it->second).getPort());
-        LOG(LOG_INFO, "service father: %s", (it->second).getServiceFather().c_str());
-        LOG(LOG_INFO, "status: %d", (it->second).getStatus());
+        LOG(LOG_INFO, "host: %s", (it->second).host().c_str());
+        LOG(LOG_INFO, "port: %d", (it->second).port());
+        LOG(LOG_INFO, "service father: %s", (it->second).serviceFather().c_str());
+        LOG(LOG_INFO, "status: %d", (it->second).status());
     }
     return 0;
 }

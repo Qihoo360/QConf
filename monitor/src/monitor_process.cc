@@ -140,11 +140,11 @@ void Process::processParam(const string& op) {
     string stat;
     ServiceItem item;
     string node;
-    map<string, ServiceItem> serviceMap = Config::getInstance()->getServiceMap();
+    map<string, ServiceItem> serviceMap = p_conf->serviceMap();
 
     //list node
     if (op != UP && op != DOWN && op != OFFLINE && op != ALL) {
-        unordered_set<string> ips = (ServiceListener::getInstance()->getServiceFatherToIp())[op];
+        unordered_set<string> ips = (p_serviceListerner->getServiceFatherToIp())[op];
         if (ips.empty()) {
             LOG(LOG_ERROR, "node: %s doesn't exist.", op.c_str());
             return;
@@ -166,7 +166,7 @@ void Process::processParam(const string& op) {
                 ipPort = op + "/" + (*it);
             }
             item = serviceMap[ipPort];
-            status = item.getStatus();
+            status = item.status();
             if (status == STATUS_UP) {
                 ++upCount;
                 stat = "up";
@@ -206,9 +206,9 @@ void Process::processParam(const string& op) {
     allCount = serviceMap.size();
     for (auto it = serviceMap.begin(); it != serviceMap.end(); ++it) {
         item = it->second;
-        status = item.getStatus();
-        node = item.getServiceFather();
-        service = item.getHost() + ":" + to_string(item.getPort());
+        status = item.status();
+        node = item.serviceFather();
+        service = item.host() + ":" + to_string(item.port());
         if (status == STATUS_UP) {
             stat = "up";
             if (op == UP || op == ALL) {

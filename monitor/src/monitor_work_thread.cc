@@ -7,10 +7,9 @@
 
 WorkThread::WorkThread() :
     _is_running(false),
-    _lb(LoadBalance::getInstance()),
     _waitingIndex(MAX_THREAD_NUM),
     _updateThread(NULL) {
-    _serviceFathers = _lb->getMyServiceFather();
+    _serviceFathers = p_loadBalance->myServiceFather();
     _serviceFatherNum = _serviceFathers.size();
     _hasThread.resize(_serviceFatherNum, false);
 }
@@ -30,8 +29,8 @@ int WorkThread::Start() {
     int oldThreadNum = 0;
     int newThreadNum = 0;
     //If the number of service father < MAX_THREAD_NUM, one service father one thread
-    while (!Process::isStop() && !LoadBalance::getReBalance() && !isRunning()) {
-        auto serviceFatherToIp = ServiceListener::getInstance()->getServiceFatherToIp();
+    while (!Process::isStop() && !p_loadBalance->needReBalance() && !isRunning()) {
+        auto serviceFatherToIp = p_serviceListerner->getServiceFatherToIp();
 
         newThreadNum = min(static_cast<int>(serviceFatherToIp.size()), MAX_THREAD_NUM);
         for (; oldThreadNum < newThreadNum; ++oldThreadNum) {

@@ -10,15 +10,14 @@
 
 //traversal all the service under the service father to judge weather it's only one service up
 static bool isOnlyOneUp(string node) {
-    ServiceListener* sl = ServiceListener::getInstance();
     bool ret = true;
     int alive = 0;
     size_t pos = node.rfind('/');
     string serviceFather = node.substr(0, pos);
-    unordered_set<string> ips = (sl->getServiceFatherToIp())[serviceFather];
+    unordered_set<string> ips = (p_serviceListerner->getServiceFatherToIp())[serviceFather];
     for (auto it = ips.begin(); it != ips.end(); ++it) {
         string ipPath = serviceFather + "/" + (*it);
-        int status = (Config::getInstance()->getServiceItem(ipPath)).getStatus();
+        int status = (p_conf->serviceItem(ipPath)).status();
         if (status == STATUS_UP) {
             ++alive;
         }
@@ -33,17 +32,6 @@ static bool isOnlyOneUp(string node) {
     return ret;
 }
 
-static int updateZk(string node, int val) {
-    Zk *zk = Zk::getInstance();
-    string status = to_string(val);
-    return zk->setZnode(node, status);
-}
-
-static int updateConf(string node, int val) {
-    Config::getInstance()->setServiceMap(node, val);
-    return 0;
-}
-
 //update service thread. comes first update first
 void updateServiceFunc(void *arg) {
     LOG(LOG_INFO, "in update service");
@@ -51,7 +39,7 @@ void updateServiceFunc(void *arg) {
     string key = updateInfo->first;
     int val = updateInfo->second;
     delete updateInfo;
-    int oldStatus = (Config::getInstance()->getServiceItem(key)).getStatus();
+    int oldStatus = (p_conf->serviceItem(key)).status();
 
     //compare the new status and old status to decide weather to update status
     if (val == STATUS_DOWN) {
@@ -61,13 +49,10 @@ void updateServiceFunc(void *arg) {
                     But monitor CAN NOT connect to it. its Status will not change!", key.c_str());
             }
             else {
-                int res = updateZk(key, val);
-                if (res != 0) {
+                if (p_serviceListerner->zk_modify(key, to_string(val)) != MONITOR_OK)
                     LOG(LOG_ERROR, "update zk failed. server %s should be %d", key.c_str(), val);
-                }
-                else {
-                    updateConf(key, val);
-                }
+                else
+                    p_conf->setServiceMap(key, val);
             }
         }
         else if (oldStatus == STATUS_DOWN) {
@@ -82,13 +67,10 @@ void updateServiceFunc(void *arg) {
     }
     else if (val == STATUS_UP) {
         if (oldStatus == STATUS_DOWN) {
-            int res = updateZk(key, val);
-            if (res != 0) {
+            if (p_serviceListerner->zk_modify(key, to_string(val)) != MONITOR_OK)
                 LOG(LOG_ERROR, "update zk failed. server %s should be %d", key.c_str(), val);
-            }
-            else {
-                updateConf(key, val);
-            }
+            else
+                p_conf->setServiceMap(key, val);
         }
         else if (oldStatus == STATUS_UP) {
             LOG(LOG_INFO, "service %s keeps up", key.c_str());

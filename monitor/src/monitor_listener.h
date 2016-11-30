@@ -1,5 +1,11 @@
 #ifndef SERVICELISTENER_H
 #define SERVICELISTENER_H
+#include <zookeeper.h>
+#include <zk_adaptor.h>
+#include "slash_mutex.h"
+
+#include <pthread.h>
+
 #include <set>
 #include <unordered_set>
 #include <map>
@@ -8,23 +14,14 @@
 #include <vector>
 #include <iostream>
 
-#include <pthread.h>
-
-#include <zookeeper.h>
-#include <zk_adaptor.h>
-
 #include "monitor_config.h"
 #include "monitor_service_item.h"
 #include "monitor_load_balance.h"
 
 using namespace std;
 
-class ServiceListener {
-//private:
-public:
-    ServiceListener();
-    static ServiceListener* slInstance;
-    zhandle_t* zh;
+class ServiceListener : public MonitorZk {
+private:
     /*
     core data
     key is serviceFather and value is a set of ipPort
@@ -36,32 +33,19 @@ public:
     It's used for check weather there are only one service alive
     */
     unordered_map<string, vector<int>> serviceFatherStatus;
-
-    Config* conf;
-    LoadBalance* lb;
     //there exist some common method. I should make a base class maybe
-    int initEnv();
-    int destroyEnv();
-    int zkGetChildren(const string path, struct String_vector* children);
     size_t getIpNum(const string& serviceFather);
 
-    pthread_mutex_t serviceFatherToIpLock;
-    pthread_mutex_t serviceFatherStatusLock;
-    pthread_mutex_t watchFlagLock;
-
-    bool watchFlag;
+    slash::Mutex _serviceFatherToIpLock;
+    slash::Mutex _serviceFatherStatusLock;
 
 public:
-    static ServiceListener* getInstance();
-    ~ServiceListener();
-
+    ServiceListener();
+    int initListener();
     int getAllIp();
 
     int loadService(string path, string serviceFather, string ipPort, vector<int>& );
     int loadAllService();
-
-    int zkGetNode(const char* path, char* data, int* dataLen);
-    int addChildren(const string serviceFather, struct String_vector children);
 
     int getAddrByHost(const char* host, struct in_addr* addr);
 
@@ -69,20 +53,26 @@ public:
     unordered_map<string, unordered_set<string>> getServiceFatherToIp();
     bool ipExist(const string& serviceFather, const string& ipPort);
     bool serviceFatherExist(const string& serviceFather);
+    int addChildren(const string &serviceFather, struct String_vector &children);
     void addIpPort(const string& serviceFather, const string& ipPort);
     void deleteIpPort(const string& serviceFather, const string& ipPort);
 
-    static void watcher(zhandle_t* zhandle, int type, int state, const char* node, void* context);
-    static void processDeleteEvent(zhandle_t* zhandle, const string& path);
-    static void processChildEvent(zhandle_t* zhandle, const string& path);
-    static void processChangedEvent(zhandle_t* zhandle, const string& path);
+    void processDeleteEvent(const string& path);
+    void processChildEvent(const string& path);
+    void processChangedEvent(const string& path);
 
-    int modifyServiceFatherStatus(const string& serviceFather, int status, int op);
-    int modifyServiceFatherStatus(const string& serviceFather, vector<int>& statusv);
+    void modifyServiceFatherStatus(const string& serviceFather, int status, int op);
+    void modifyServiceFatherStatus(const string& serviceFather, vector<int>& statusv);
     int getServiceFatherStatus(const string& serviceFather, int status);
 
+    //这个标记一开始是用来区分zk节点的值是由monitor去改变的还是zk自己改变的
+    //是为了使用serviceFatherStatus来判断是否仅剩一个up的服务节点的
+    //最后发现这样还是不可行，因为网络的原因等，还是无法确认每次设置了标记位之后就清除，再设置，暂时无用
+    /* pthread_mutex_t watchFlagLock;
+    bool watchFlag;
     void setWatchFlag();
     void clearWatchFlag();
-    bool getWatchFlag();
+    bool getWatchFlag(); */
 };
+extern ServiceListener *p_serviceListerner;
 #endif

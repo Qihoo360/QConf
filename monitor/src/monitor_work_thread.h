@@ -20,7 +20,6 @@ private:
     bool _is_running;
 
     //copy of myServiceFather in loadBalance
-    LoadBalance* _lb;
     vector<string> _serviceFathers;
     int _serviceFatherNum;
 

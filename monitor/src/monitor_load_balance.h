@@ -1,8 +1,8 @@
 #ifndef LOADBALANCE_H
 #define LOADBALANCE_H
-#include <set>
+#include "slash_mutex.h"
+
 #include <unordered_set>
-#include <map>
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -14,47 +14,41 @@
 #include <zk_adaptor.h>
 
 #include "monitor_config.h"
+#include "monitor_zk.h"
 
 using namespace std;
 
-class LoadBalance {
+// Implement Zk interface
+class LoadBalance : public MonitorZk {
 public:
-    zhandle_t* zh;
-    static bool reBalance;
-    static LoadBalance* lbInstance;
-    Config* conf;
+    char _zkLockBuf[512] = {0};
+    bool _needReBalance;
+    slash::Mutex _md5ToServiceFatherLock;
 
-    pthread_mutex_t md5ToServiceFatherLock;
 
     //use map but not unordered_map so it can be sorted autonatically
     //key is md5 and value is serviceFather
-    map<string, string> md5ToServiceFather;
-    unordered_set<string> monitors;
-    vector<string> myServiceFather;
+    unordered_map<string, string> _md5ToServiceFather;
+    unordered_set<string> _monitors;
+    vector<string> _myServiceFather;
 
     LoadBalance();
-    int destroyEnv();
-
 public:
-    ~LoadBalance();
-    int initEnv();
-    static LoadBalance* getInstance();
-
-    int zkGetChildren(const string path, struct String_vector* children);
-    int zkGetNode(const char* md5Path, char* serviceFather, int* dataLen);
+    int initMonitor();
+    int registerMonitor(const string &path);
 
     int getMd5ToServiceFather();
     void updateMd5ToServiceFather(const string& md5Path, const string& serviceFather);
     int getMonitors();
     int balance();
-    vector<string> getMyServiceFather();
+    const vector<string> &myServiceFather() { return _myServiceFather; }
 
-    static void watcher(zhandle_t* zhandle, int type, int state, const char* path, void* context);
-    static void processChildEvent(zhandle_t* zhandle, const string path);
-    static void processChangedEvent(zhandle_t* zhandle, const string path);
+    void processDeleteEvent(const string& path);
+    void processChildEvent(const string &path);
+    void processChangedEvent(const string &path);
 
-    static void setReBalance();
-    static void clearReBalance();
-    static bool getReBalance();
+    void setReBalance() { _needReBalance = true; }
+    bool needReBalance() { return _needReBalance; }
 };
+extern LoadBalance *p_loadBalance;
 #endif
