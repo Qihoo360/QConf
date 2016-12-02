@@ -34,8 +34,8 @@ CheckThread::CheckThread(int pos, WorkThread *workThread) :
 CheckThread::~CheckThread() {
 }
 
-int CheckThread::isServiceExist(struct in_addr *addr, char* host, int port, int timeout, int curStatus) {
-    bool exist = true;
+bool CheckThread::_isServiceExist(struct in_addr *addr, string host, int port, int timeout, int curStatus) {
+    bool exist = false;
     int sock = -1, val = 1, ret = 0;
     struct timeval conn_tv;
     struct timeval recv_tv;
@@ -72,7 +72,7 @@ int CheckThread::isServiceExist(struct in_addr *addr, char* host, int port, int 
         if (errno != EINPROGRESS) {
             if (curStatus != STATUS_DOWN) {
                 LOG(LOG_ERROR, "connect failed. host:%s port:%d error:%s",
-                        host, port, strerror(errno));
+                        host.c_str(), port, strerror(errno));
             }
             close(sock);
             return false;
@@ -85,18 +85,13 @@ int CheckThread::isServiceExist(struct in_addr *addr, char* host, int port, int 
     FD_ZERO(&errfds);
     FD_SET(sock, &errfds);
     ret = select(sock+1, &readfds, &writefds, &errfds, &conn_tv);
-    if ( ret == 0 ){
+    if ( ret <= 0 ){
         // connect timeout
         if (curStatus != STATUS_DOWN) {
-            LOG(LOG_ERROR, "connect timeout. host:%s port:%d timeout:%d error:%s",
-                host, port, timeout, strerror(errno));
-        }
-        exist = false;
-    }
-    if (ret < 0) {
-        if (curStatus != STATUS_DOWN) {
-            LOG(LOG_ERROR, "select error. host:%s port:%d timeout:%d error:%s",
-                host, port, timeout, strerror(errno));
+            if (ret == 0) LOG(LOG_ERROR, "connect timeout. host:%s port:%d timeout:%d error:%s",
+                              host.c_str(), port, timeout, strerror(errno));
+            else LOG(LOG_ERROR, "select error. host:%s port:%d timeout:%d error:%s",
+                     host.c_str(), port, timeout, strerror(errno));
         }
         exist = false;
     }
@@ -104,7 +99,7 @@ int CheckThread::isServiceExist(struct in_addr *addr, char* host, int port, int 
         if (! FD_ISSET(sock, &readfds) && ! FD_ISSET(sock, &writefds)) {
             if (curStatus != STATUS_DOWN) {
                LOG(LOG_ERROR, "select not in read fds and write fds.host:%s port:%d error:%s",
-                   host, port, strerror(errno));
+                   host.c_str(), port, strerror(errno));
             }
         }
         else if (FD_ISSET(sock, &errfds)) {
@@ -124,8 +119,8 @@ int CheckThread::isServiceExist(struct in_addr *addr, char* host, int port, int 
     return exist;
 }
 
-//try to connect to the ipPort to see weather it's connecteble
-int CheckThread::tryConnect(const string &curServiceFather) {
+// Try to connect to the ipPort to see weather it's connecteble
+int CheckThread::_tryConnect(const string &curServiceFather) {
     auto serviceFatherToIp = p_serviceListerner->getServiceFatherToIp();
     unordered_set<string> ip = serviceFatherToIp[curServiceFather];
     int retryCount = p_conf->connRetryCount();
@@ -133,37 +128,32 @@ int CheckThread::tryConnect(const string &curServiceFather) {
         if (Process::isStop() || p_loadBalance->needReBalance() || isRunning()) {
             break;
         }
-        //It's important to get serviceMap in the loop to find zk's change in real time
+        // It's important to get serviceMap in the loop to find zk's change in real time
         auto serviceMap = p_conf->serviceMap();
         string ipPort = curServiceFather + "/" + (*it);
         /*
         some service father don't have services and we add "" to serviceFatherToIp
         so we need to judge weather It's a legal ipPort
         */
-        if (serviceMap.find(ipPort) == serviceMap.end()) {
+        if (serviceMap.find(ipPort) == serviceMap.end())
             continue;
-        }
+
         ServiceItem item = serviceMap[ipPort];
         int oldStatus = item.status();
         //If the node is STATUS_UNKNOWN or STATUS_OFFLINE, we will ignore it
-        if (oldStatus == STATUS_UNKNOWN || oldStatus == STATUS_OFFLINE) {
+        if (oldStatus == STATUS_UNKNOWN || oldStatus == STATUS_OFFLINE)
             continue;
-        }
+
         struct in_addr addr;
         item.addr(&addr);
         int curTryTimes = (oldStatus == STATUS_UP) ? 1 : 3;
         int timeout = item.connectTimeout() > 0 ? item.connectTimeout() : 3;
-
-        int res = isServiceExist(&addr, (char*)item.host().c_str(), item.port(), timeout, item.status());
-
-        int status = (res)? 0 : 2;
-        //If status is down. I will retry.
-        while (curTryTimes < retryCount && status == STATUS_DOWN) {
+        int status = STATUS_DOWN;
+        do {
             LOG(LOG_ERROR, "can not connect to service:%s, current try times:%d, max try times:%d", ipPort.c_str(), curTryTimes, retryCount);
-            res = isServiceExist(&addr, (char*)item.host().c_str(), item.port(), timeout, item.status());
-            status = (res) ? 0 : 2;
-            ++curTryTimes;
-        }
+            bool res = _isServiceExist(&addr, item.host(), item.port(), timeout, item.status());
+            status = (res) ? STATUS_UP : STATUS_DOWN;
+        } while (curTryTimes < retryCount && status == STATUS_DOWN);
 
         LOG(LOG_INFO, "|checkService| service:%s, old status:%d, new status:%d. Have tried times:%d, max try times:%d", ipPort.c_str(), oldStatus, status, curTryTimes, retryCount);
         if (status != oldStatus) {
@@ -209,7 +199,7 @@ void CheckThread::CronHandle() {
     LOG(LOG_INFO, "|checkService| pthread id %x, pthread pos %d, current service father %s", \
         (unsigned int)this->thread_id(), (int)_service_pos, curServiceFather.c_str());
 
-    tryConnect(curServiceFather);
+    _tryConnect(curServiceFather);
 
     if (serviceFatherNum > MAX_THREAD_NUM) {
         _workThread->setHasThread(_service_pos, false);

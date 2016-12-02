@@ -23,52 +23,53 @@ LoadBalance *p_loadBalance = NULL;
 ServiceListener *p_serviceListerner = NULL;
 
 int doLoadBalance() {
+    int ret = MONITOR_OK;
     //load balance
-    if (p_loadBalance->initMonitor() != M_OK) {
+    if ((ret = p_loadBalance->initMonitor()) != MONITOR_OK) {
         LOG(LOG_ERROR, "init load balance env failed");
-        return M_ERR;
+        return ret;
     }
 
-    if (p_loadBalance->getMd5ToServiceFather() != M_OK) {
+    if ((ret = p_loadBalance->getMd5ToServiceFather()) != MONITOR_OK) {
         LOG(LOG_ERROR, "get md5 to service father failed");
-        /* TODO
+        /* TODO (gaodq)
          * how to deal with this in a better way?
          * if the reason of failure is node not exist, we should restart main loop
         */
-        return M_ERR;
+        return ret;
     }
 
-    if (p_loadBalance->getMonitors() != M_OK) {
+    if ((ret = p_loadBalance->getMonitors()) != MONITOR_OK) {
         LOG(LOG_ERROR, "get monitors failed");
-        return M_ERR;
+        return ret;
     }
 
-    if (p_loadBalance->balance() != M_OK) {
+    if ((ret = p_loadBalance->balance()) != MONITOR_OK) {
         LOG(LOG_ERROR, "balance failed");
-        return M_ERR;
+        return ret;
     }
-    return M_OK;
+    return ret;
 }
 
 int loadServiceToConf() {
-    if (p_serviceListerner->initListener() != M_OK) {
+    int ret = MONITOR_OK;
+    if ((ret = p_serviceListerner->initListener()) != MONITOR_OK) {
         LOG(LOG_ERROR, "init service listener env failed");
-        return M_ERR;
+        return ret;
     }
     p_serviceListerner->getAllIp();
     p_serviceListerner->loadAllService();
-    return M_OK;
+    return ret;
 }
 
 int main(int argc, char** argv) {
+    int ret = MONITOR_OK;
     p_conf = new Config(CONF_PATH);
-    if (p_conf->Load() != M_OK) return M_ERR;
-    p_conf->DumpConf();
-    p_conf->printConfig();
+    if ((ret = p_conf->Load()) != MONITOR_OK) return ret;
 
     if (Process::isProcessRunning(MONITOR_PROCESS_NAME)) {
         LOG(LOG_ERROR, "Monitor is already running.");
-        return M_ERR;
+        return MONITOR_ERR_OTHER;
     }
     if (p_conf->isDaemonMode())
         Process::daemonize();
@@ -76,19 +77,13 @@ int main(int argc, char** argv) {
     if (p_conf->isAutoRestart()) {
         int childExitStatus = -1;
         int ret = Process::processKeepalive(childExitStatus, PIDFILE);
-        //parent process
-        if (ret > 0) {
+        // Parent process
+        if (ret > 0)
             return childExitStatus;
-        }
-        else if (ret < 0) {
-            return M_ERR;
-        }
-        else {
-            //child process write pid to PIDFILE
-            if (Util::writePid(PIDFILE.c_str()) != M_OK) {
-                return M_ERR;
-            }
-        }
+        else if (ret < 0)
+            return MONITOR_ERR_OTHER;
+        else if ((ret = Util::writePid(PIDFILE.c_str())) != MONITOR_OK) 
+            return ret;
     }
 
     /*
@@ -98,14 +93,15 @@ int main(int argc, char** argv) {
     while (!Process::isStop()) {
         LOG(LOG_INFO, " main loop start -> !!!!!!");
         p_loadBalance = new LoadBalance();
-        if (!p_loadBalance || doLoadBalance() != M_OK) {
+        if (!p_loadBalance || doLoadBalance() != MONITOR_OK) {
             delete p_loadBalance;
+            // TODO (gaodunqiao) continue ? too much TIME_WAIT about zookeeper
             continue;
         }
 
         // After load balance. Each monitor should load the service to Config
         p_serviceListerner = new ServiceListener();
-        if (!p_serviceListerner || loadServiceToConf() != M_OK) {
+        if (!p_serviceListerner || loadServiceToConf() != MONITOR_OK) {
             delete p_serviceListerner;
             delete p_loadBalance;
             continue;

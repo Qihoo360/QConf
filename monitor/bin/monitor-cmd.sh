@@ -4,12 +4,12 @@ monitor=qconf_monitor
 cmdfile=tmp/cmd
 pidfile=monitor_pid
 
-chdpid=$(cat $pidfile)
+chdpid=$(if [ -e $pidfile ]; then cat $pidfile; else echo 0; fi)
 exist=$(ps -A | grep -w $monitor | grep -w $chdpid)
 
 start () {
     if [ "$exist" = "" ]; then
-        nohup bin/$monitor > /dev/null 2>&1 &
+        bin/$monitor > /dev/null 2>&1
         echo "$monitor start."
     else
         echo "$monitor is already running"

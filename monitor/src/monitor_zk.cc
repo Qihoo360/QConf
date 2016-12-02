@@ -68,7 +68,7 @@ int MonitorZk::initEnv() {
     _zh = zookeeper_init(_zkHost.c_str(), watcher, _recvTimeout, NULL, (void *)this, 0);
     if (!_zh) {
         LOG(LOG_ERROR, "zookeeper_init failed. Check whether zk_host(%s) is correct or not", _zkHost.c_str());
-        return M_ERR;
+        return MONITOR_ERR_ZOO_FAILED;
     }
 
     _zk_node_buffer = new char[MONITOR_MAX_VALUE_SIZE];
@@ -77,7 +77,7 @@ int MonitorZk::initEnv() {
         return MONITOR_ERR_MEM;
     }
 
-    return M_OK;
+    return MONITOR_OK;
 }
 
 MonitorZk::~MonitorZk(){
@@ -91,9 +91,10 @@ MonitorZk::~MonitorZk(){
 
 int MonitorZk::zk_modify(const std::string &path, const std::string &value)
 {
+    int ret = 0;
     for (int i = 0; i < MONITOR_GET_RETRIES; ++i)
     {
-        int ret = zoo_set(_zh, path.c_str(), value.c_str(), value.size(), -1);
+        ret = zoo_set(_zh, path.c_str(), value.c_str(), value.size(), -1);
         switch (ret)
         {
             case ZOK:
@@ -107,6 +108,8 @@ int MonitorZk::zk_modify(const std::string &path, const std::string &value)
                 return MONITOR_ERR_ZOO_FAILED;
         }
     }
+    LOG(LOG_ERROR, "Failed to call zk_modify after retry. err:%s. path:%s",
+            zerror(ret), path.c_str());
     return MONITOR_ERR_ZOO_FAILED;
 }
 
@@ -251,9 +254,9 @@ bool MonitorZk::zk_exists(const string &path) {
         ret = zoo_exists(_zh, path.c_str(), 1, NULL);
         switch (ret) {
             case ZOK:
-                return true;
+                return MONITOR_OK;
             case ZNONODE:
-                return false;
+                return MONITOR_NODE_NOT_EXIST;
             case ZINVALIDSTATE:
             case ZMARSHALLINGERROR:
                 continue;

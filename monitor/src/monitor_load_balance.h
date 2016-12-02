@@ -20,7 +20,7 @@ using namespace std;
 
 // Implement Zk interface
 class LoadBalance : public MonitorZk {
-public:
+private:
     char _zkLockBuf[512] = {0};
     bool _needReBalance;
     slash::Mutex _md5ToServiceFatherLock;
@@ -32,23 +32,25 @@ public:
     unordered_set<string> _monitors;
     vector<string> _myServiceFather;
 
-    LoadBalance();
+    void _updateMd5ToServiceFather(const string& md5Path, const string& serviceFather);
 public:
+    // Initial
+    LoadBalance();
     int initMonitor();
     int registerMonitor(const string &path);
-
     int getMd5ToServiceFather();
-    void updateMd5ToServiceFather(const string& md5Path, const string& serviceFather);
     int getMonitors();
     int balance();
-    const vector<string> &myServiceFather() { return _myServiceFather; }
 
     void processDeleteEvent(const string& path);
     void processChildEvent(const string &path);
     void processChangedEvent(const string &path);
 
+    // Setter
     void setReBalance() { _needReBalance = true; }
+    // Getter
     bool needReBalance() { return _needReBalance; }
+    const vector<string> &myServiceFather() { return _myServiceFather; }
 };
 extern LoadBalance *p_loadBalance;
 #endif

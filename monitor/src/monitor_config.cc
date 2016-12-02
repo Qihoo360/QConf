@@ -21,8 +21,8 @@ using namespace std;
 
 Config::Config(const string &confPath) :
     slash::BaseConf(confPath) {
-    pthread_mutex_init(&serviceMapLock, NULL);
     resetConfig();
+    _serviceMap.clear();
 }
 
 Config::~Config() {
@@ -46,14 +46,12 @@ int Config::resetConfig(){
     _scanInterval = 3;
     _serviceMap.clear();
     _zkRecvTimeout = 3000;
-    return M_OK;
+    return MONITOR_OK;
 }
 
 int Config::Load() {
-    int ret;
-    ret = this->LoadConf();
-    if (ret != 0)
-        return M_ERR;
+    if (this->LoadConf() != 0);
+        return MONITOR_ERR_OTHER;
 
     Log::init(MAX_LOG_LEVEL);
 
@@ -75,7 +73,7 @@ int Config::Load() {
     char hostname[128] = {0};
     if (gethostname(hostname, sizeof(hostname)) != 0) {
         LOG(LOG_ERROR, "get host name failed");
-        return M_ERR;
+        return MONITOR_ERR_MEM;
     }
     _monitorHostname.assign(hostname);
 
@@ -90,7 +88,7 @@ int Config::Load() {
     }
     if (!find_zk_host) {
         LOG(LOG_ERROR, "get zk host name failed");
-        return M_ERR;
+        return MONITOR_ERR_OTHER;
     }
 
     // _logLevel
@@ -110,28 +108,12 @@ int Config::Load() {
     Log::init(this->logLevel());
 
     // Set zookeeper log path
-    if (setZkLog() != M_OK) {
+    int ret;
+    if ((ret = _setZkLog()) != MONITOR_OK) {
         LOG(LOG_ERROR, "set zk log path failed");
-        return M_ERR;
+        return ret;
     }
-    return M_OK;
-}
-
-int Config::setZkLog() {
-    if (_zkLogPath.size() <= 0) {
-        return M_ERR;
-    }
-    _zkLogFile = fopen(_zkLogPath.c_str(), "a+");
-    if (!_zkLogFile) {
-        LOG(LOG_ERROR, "log file open failed. path:%s. error:%s", _zkLogPath.c_str(), strerror(errno));
-        return M_ERR;
-    }
-    //set the log file stream of zookeeper
-    zoo_set_log_stream(_zkLogFile);
-    zoo_set_debug_level(ZOO_LOG_LEVEL_WARN);
-    LOG(LOG_INFO, "zoo_set_log_stream path:%s", _zkLogPath.c_str());
-
-    return M_OK;
+    return MONITOR_OK;
 }
 
 int Config::printConfig() {
@@ -143,7 +125,7 @@ int Config::printConfig() {
     LOG(LOG_INFO, "instanceName: %s", _instanceName.c_str());
     LOG(LOG_INFO, "zkHost: %s", _zkHost.c_str());
     LOG(LOG_INFO, "zkLogPath: %s", _zkLogPath.c_str());
-    return M_OK;
+    return MONITOR_OK;
 }
 
 string Config::nodeList() {
@@ -164,43 +146,33 @@ string Config::monitorList() {
 }
 
 int Config::addService(string ipPath, ServiceItem serviceItem) {
-    pthread_mutex_lock(&serviceMapLock);
+    slash::MutexLock l(&_serviceMapLock);
     _serviceMap[ipPath] = serviceItem;
-    pthread_mutex_unlock(&serviceMapLock);
     return 0;
 }
 
 void Config::deleteService(const string& ipPath) {
-    pthread_mutex_lock(&serviceMapLock);
+    slash::MutexLock l(&_serviceMapLock);
     _serviceMap.erase(ipPath);
-    pthread_mutex_unlock(&serviceMapLock);
 }
 
 map<string, ServiceItem> Config::serviceMap() {
     map<string, ServiceItem> ret;
-    pthread_mutex_lock(&serviceMapLock);
+    slash::MutexLock l(&_serviceMapLock);
     ret = _serviceMap;
-    pthread_mutex_unlock(&serviceMapLock);
     return ret;
 }
 
 int Config::setServiceMap(string node, int val) {
-    pthread_mutex_lock(&serviceMapLock);
+    slash::MutexLock l(&_serviceMapLock);
     _serviceMap[node].setStatus(val);
-    pthread_mutex_unlock(&serviceMapLock);
     return 0;
-}
-
-//no necessity to add lock
-void Config::clearServiceMap() {
-    _serviceMap.clear();
 }
 
 ServiceItem Config::serviceItem(const string& ipPath) {
     ServiceItem ret;
-    pthread_mutex_lock(&serviceMapLock);
+    slash::MutexLock l(&_serviceMapLock);
     ret = _serviceMap[ipPath];
-    pthread_mutex_unlock(&serviceMapLock);
     return ret;
 }
 
@@ -213,4 +185,21 @@ int Config::printServiceMap() {
         LOG(LOG_INFO, "status: %d", (it->second).status());
     }
     return 0;
+}
+
+int Config::_setZkLog() {
+    if (_zkLogPath.size() <= 0) {
+        return MONITOR_ERR_ZOO_FAILED;
+    }
+    _zkLogFile = fopen(_zkLogPath.c_str(), "a+");
+    if (!_zkLogFile) {
+        LOG(LOG_ERROR, "log file open failed. path:%s. error:%s", _zkLogPath.c_str(), strerror(errno));
+        return MONITOR_ERR_FAILED_OPEN_FILE;
+    }
+    //set the log file stream of zookeeper
+    zoo_set_log_stream(_zkLogFile);
+    zoo_set_debug_level(ZOO_LOG_LEVEL_WARN);
+    LOG(LOG_INFO, "zoo_set_log_stream path:%s", _zkLogPath.c_str());
+
+    return MONITOR_OK;
 }

@@ -16,9 +16,9 @@ public:
 
 private:
     void *ThreadMain();
-    int tryConnect(const string &curServiceFather);
+    int _tryConnect(const string &curServiceFather);
     void CronHandle();
-    int isServiceExist(struct in_addr *addr, char* host, int port, int timeout, int curStatus);
+    bool _isServiceExist(struct in_addr *addr, string host, int port, int timeout, int curStatus);
 
     int _service_pos;
     bool _should_exit;
