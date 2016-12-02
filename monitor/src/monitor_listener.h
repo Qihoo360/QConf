@@ -33,8 +33,16 @@ private:
     It's used for check weather there are only one service alive
     */
     unordered_map<string, vector<int>> serviceFatherStatus;
-    //there exist some common method. I should make a base class maybe
-    size_t getIpNum(const string& serviceFather);
+
+    int _addChildren(const string &serviceFather, struct String_vector &children);
+    int _getAddrByHost(const char* host, struct in_addr* addr);
+    int _loadService(string path, string serviceFather, string ipPort, vector<int>& );
+    int _getIpNum(const string& serviceFather);
+    bool _ipExist(const string& serviceFather, const string& ipPort);
+    void _modifyServiceFatherToIp(const string &op, const string& path);
+    bool _serviceFatherExist(const string& serviceFather);
+    void _addIpPort(const string& serviceFather, const string& ipPort);
+    void _deleteIpPort(const string& serviceFather, const string& ipPort);
 
     slash::Mutex _serviceFatherToIpLock;
     slash::Mutex _serviceFatherStatusLock;
@@ -43,36 +51,13 @@ public:
     ServiceListener();
     int initListener();
     int getAllIp();
-
-    int loadService(string path, string serviceFather, string ipPort, vector<int>& );
     int loadAllService();
 
-    int getAddrByHost(const char* host, struct in_addr* addr);
-
-    void modifyServiceFatherToIp(const string op, const string& path);
     unordered_map<string, unordered_set<string>> getServiceFatherToIp();
-    bool ipExist(const string& serviceFather, const string& ipPort);
-    bool serviceFatherExist(const string& serviceFather);
-    int addChildren(const string &serviceFather, struct String_vector &children);
-    void addIpPort(const string& serviceFather, const string& ipPort);
-    void deleteIpPort(const string& serviceFather, const string& ipPort);
 
     void processDeleteEvent(const string& path);
     void processChildEvent(const string& path);
     void processChangedEvent(const string& path);
-
-    void modifyServiceFatherStatus(const string& serviceFather, int status, int op);
-    void modifyServiceFatherStatus(const string& serviceFather, vector<int>& statusv);
-    int getServiceFatherStatus(const string& serviceFather, int status);
-
-    //这个标记一开始是用来区分zk节点的值是由monitor去改变的还是zk自己改变的
-    //是为了使用serviceFatherStatus来判断是否仅剩一个up的服务节点的
-    //最后发现这样还是不可行，因为网络的原因等，还是无法确认每次设置了标记位之后就清除，再设置，暂时无用
-    /* pthread_mutex_t watchFlagLock;
-    bool watchFlag;
-    void setWatchFlag();
-    void clearWatchFlag();
-    bool getWatchFlag(); */
 };
 extern ServiceListener *p_serviceListerner;
 #endif

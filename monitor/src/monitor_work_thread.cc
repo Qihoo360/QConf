@@ -45,7 +45,7 @@ int WorkThread::Start() {
         LOG(LOG_INFO, "exit check thread: %d", i);
     }
     Exit();
-    return M_ERR;
+    return MONITOR_ERR_OTHER;
 }
 
 int WorkThread::getAndAddWaitingIndex() {

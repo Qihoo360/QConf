@@ -35,8 +35,6 @@ const string PIDFILE = "monitor_pid";
 const string CMDFILE = "tmp/cmd";
 
 //return status
-constexpr int M_OK = 0;
-constexpr int M_ERR = -1;
 const int MONITOR_OK = 0;
 const int MONITOR_ERR_OTHER = 1;
 const int MONITOR_NODE_EXIST = 2;

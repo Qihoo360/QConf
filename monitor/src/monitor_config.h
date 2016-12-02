@@ -1,6 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 #include "base_conf.h"
+#include "slash_mutex.h"
 
 #include <string>
 #include <unordered_set>
@@ -16,8 +17,6 @@ using namespace std;
 
 class Config : public slash::BaseConf {
 private:
-    pthread_mutex_t serviceMapLock;
-
     bool _daemonMode;
     bool _autoRestart;
     string _monitorHostname;
@@ -29,8 +28,12 @@ private:
     string _zkLogPath;
     int _zkRecvTimeout;
 
-    //core data. the key is the full path of ipPort and the value is serviceItem of this ipPort
+    FILE *_zkLogFile;
+    int _setZkLog();
+
+    // Core data. the key is the full path of ipPort and the value is serviceItem of this ipPort
     map<string, ServiceItem> _serviceMap;
+    slash::Mutex _serviceMapLock;
 
 public:
     Config(const string &confPath);
@@ -52,12 +55,8 @@ public:
     string monitorList();
     int printConfig();
 
-    FILE *_zkLogFile;
-    int setZkLog();
-
     map<string, ServiceItem> serviceMap();
     int setServiceMap(string node, int val);
-    void clearServiceMap();
 
     int addService(string ipPath, ServiceItem serviceItem);
     void deleteService(const string& ipPath);

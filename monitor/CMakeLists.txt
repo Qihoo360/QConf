@@ -12,3 +12,5 @@ add_subdirectory(src)
 
 install(DIRECTORY bin DESTINATION .)
 install(DIRECTORY conf DESTINATION .)
+install(DIRECTORY DESTINATION logs)
+install(DIRECTORY DESTINATION tmp)
