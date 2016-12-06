@@ -6,7 +6,6 @@
 #include "monitor_work_thread.h"
 
 WorkThread::WorkThread() :
-    _is_running(false),
     _waitingIndex(MAX_THREAD_NUM),
     _updateThread(NULL) {
     _serviceFathers = p_loadBalance->myServiceFather();
@@ -22,14 +21,14 @@ int WorkThread::Start() {
 
     _updateThread = new pink::BGThread;
     if (_updateThread->StartThread() != pink::kSuccess) {
-        this->Exit();
         LOG(LOG_ERROR, "create the update service thread error");
+        return MONITOR_ERR_OTHER;
     }
 
     int oldThreadNum = 0;
     int newThreadNum = 0;
     //If the number of service father < MAX_THREAD_NUM, one service father one thread
-    while (!Process::isStop() && !p_loadBalance->needReBalance() && !isRunning()) {
+    while (!Process::isStop() && !p_loadBalance->needReBalance()) {
         auto serviceFatherToIp = p_serviceListerner->getServiceFatherToIp();
 
         newThreadNum = min(static_cast<int>(serviceFatherToIp.size()), MAX_THREAD_NUM);
@@ -37,27 +36,24 @@ int WorkThread::Start() {
             _checkThreads[oldThreadNum] = new CheckThread(oldThreadNum, this);
             _checkThreads[oldThreadNum]->StartThread();
         }
-        sleep(2);
+        sleep(MONITOR_SLEEP);
     }
 
     for (int i = 0; i < oldThreadNum; ++i) {
         delete _checkThreads[i];
         LOG(LOG_INFO, "exit check thread: %d", i);
     }
-    Exit();
     return MONITOR_ERR_OTHER;
 }
 
 int WorkThread::getAndAddWaitingIndex() {
     int index;
-    slash::MutexLock l(&_waitingIndexLock);
+    slash::MutexLock lw(&_waitingIndexLock);
     index = _waitingIndex;
     _waitingIndex = (_waitingIndex+1) % _serviceFatherNum;
-    {
-    slash::MutexLock l(&_hasThreadLock);
+    slash::MutexLock lh(&_hasThreadLock);
     while (_hasThread[_waitingIndex]) {
         _waitingIndex = (_waitingIndex+1) % _serviceFatherNum;
-    }
     }
     return index;
 }

@@ -50,8 +50,9 @@ private:
 public:
     ServiceListener();
     int initListener();
-    int getAllIp();
-    int loadAllService();
+    void getAllIp();
+    void loadAllService();
+    void cleanServiceFatherToIp() { serviceFatherToIp.clear(); }
 
     unordered_map<string, unordered_set<string>> getServiceFatherToIp();
 

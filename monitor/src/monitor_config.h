@@ -60,6 +60,7 @@ public:
 
     int addService(string ipPath, ServiceItem serviceItem);
     void deleteService(const string& ipPath);
+    void clearService() { _serviceMap.clear(); }
 
     ServiceItem serviceItem(const string& ipPath);
     int printServiceMap();

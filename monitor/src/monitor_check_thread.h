@@ -12,7 +12,6 @@ class CheckThread : public pink::Thread {
 public:
     CheckThread(int init_pos, WorkThread *workThread);
     ~CheckThread();
-    bool isRunning() { return _should_exit; }
 
 private:
     void *ThreadMain();
@@ -21,7 +20,6 @@ private:
     bool _isServiceExist(struct in_addr *addr, string host, int port, int timeout, int curStatus);
 
     int _service_pos;
-    bool _should_exit;
     WorkThread *_workThread;
 };
 

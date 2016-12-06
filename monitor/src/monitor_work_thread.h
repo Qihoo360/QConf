@@ -17,8 +17,6 @@ using namespace std;
 
 class WorkThread {
 private:
-    bool _is_running;
-
     //copy of myServiceFather in loadBalance
     vector<string> _serviceFathers;
     int _serviceFatherNum;
@@ -35,9 +33,6 @@ public:
     WorkThread();
     ~WorkThread();
     int Start();
-
-    bool isRunning() { return _is_running; }
-    void Exit() { _is_running = false; }
 
     int getAndAddWaitingIndex();
     void setHasThread(int index, bool val);

@@ -35,24 +35,28 @@ const string PIDFILE = "monitor_pid";
 const string CMDFILE = "tmp/cmd";
 
 //return status
-const int MONITOR_OK = 0;
-const int MONITOR_ERR_OTHER = 1;
-const int MONITOR_NODE_EXIST = 2;
-const int MONITOR_NODE_NOT_EXIST = 4;
-const int MONITOR_ERR_FAILED_OPEN_FILE = 5;
-const int MONITOR_ERR_MEM = 6;
-const int MONITOR_ERR_PARAM = 7;
-const int MONITOR_ERR_ZOO_FAILED = 8;
+enum ERR_CODE {
+    MONITOR_OK = 0,
+    MONITOR_ERR_OTHER,
+    MONITOR_NODE_NOT_EXIST,
+    MONITOR_ERR_FAILED_OPEN_FILE,
+    MONITOR_ERR_MEM,
+    MONITOR_ERR_PARAM,
+    MONITOR_ERR_ZOO_FAILED
+};
 
 const int MONITOR_MAX_VALUE_SIZE = 1048577;
 const int MONITOR_GET_RETRIES = 3;
+const int MONITOR_SLEEP = 2;
 
 
 // server status define
-#define STATUS_UNKNOWN  -1
-#define STATUS_UP        0
-#define STATUS_OFFLINE   1
-#define STATUS_DOWN      2
+enum SERVER_STAT {
+    STATUS_UNKNOWN = -1,
+    STATUS_UP,
+    STATUS_OFFLINE,
+    STATUS_DOWN
+};
 
 //znode and path
 const string LOCK_ROOT_DIR = "/qconf_monitor_lock_node";

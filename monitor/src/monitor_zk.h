@@ -35,7 +35,7 @@ protected:
     int zk_get_chdnodes(const string &path, String_vector &nodes);
     int zk_get_chdnodes_with_status(const string &path, String_vector &nodes, vector<char> &status);
     int zk_get_service_status(const string &path, char &status);
-    bool zk_exists(const string &path);
+    int zk_exists(const string &path);
 
     static void watcher(zhandle_t* zhandle, int type, int state, const char* node, void* context);
     virtual void processDeleteEvent(const string &path) = 0;

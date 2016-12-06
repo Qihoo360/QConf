@@ -22,9 +22,7 @@ using namespace std;
 
 LoadBalance::LoadBalance() :
     _needReBalance(false) {
-    _md5ToServiceFather.clear();
     _monitors.clear();
-    _myServiceFather.clear();
 }
 
 int LoadBalance::initMonitor() {
@@ -36,16 +34,14 @@ int LoadBalance::initMonitor() {
 
     // Create md5 list node add the watcher
     string md5_path = p_conf->nodeList();
-    if ((ret = zk_create_node(md5_path, "", 0)) != MONITOR_OK ||
-        (ret = zk_exists(md5_path)) != MONITOR_OK) {
+    if ((ret = zk_create_node(md5_path, "", 0)) != MONITOR_OK) {
         LOG(LOG_ERROR, "create znode %s failed", md5_path.c_str());
         return ret;
     }
 
     // Create monitor list node add the watcher
     string monitor_path = p_conf->monitorList();
-    if ((ret = zk_create_node(monitor_path, "", 0)) != MONITOR_OK ||
-        (ret = zk_exists(monitor_path)) != MONITOR_OK) {
+    if ((ret = zk_create_node(monitor_path, "", 0)) != MONITOR_OK) {
         LOG(LOG_ERROR, "create znode %s failed", monitor_path.c_str());
         return ret;
     }
@@ -66,7 +62,10 @@ int LoadBalance::registerMonitor(const string &path) {
         //register the monitor.
         ret = zk_create_node(path, hostName, ZOO_EPHEMERAL | ZOO_SEQUENCE,
                              _zkLockBuf, sizeof(_zkLockBuf));
-        if (ret == MONITOR_OK) return ret;
+        if (ret == MONITOR_OK) {
+            LOG(LOG_INFO, "registerMonitor: %s", _zkLockBuf);
+            return ret;
+        }
     }
     LOG(LOG_ERROR, "create zookeeper node failed. API return : %d. node: %s ", ret, path.c_str());
 
@@ -85,6 +84,8 @@ int LoadBalance::getMd5ToServiceFather() {
         return ret;
     }
 
+    _md5ToServiceFather.clear();
+    _myServiceFather.clear();
     for (int i = 0; i < md5Node.count; ++i) {
         string md5NodeStr = string(md5Node.data[i]);
         string md5Path = node_list_path + "/" + md5NodeStr;
@@ -111,8 +112,11 @@ int LoadBalance::getMonitors() {
         return ret;
     }
 
-    for (int i = 0; i < monitorNode.count; ++i)
+    _monitors.clear();
+    for (int i = 0; i < monitorNode.count; ++i) {
         _monitors.insert(string(monitorNode.data[i]));
+        LOG(LOG_INFO, "Monitor: %s", monitorNode.data[i]);
+    }
     LOG(LOG_INFO, "There are %d monitors, I am %s", _monitors.size(), _zkLockBuf);
 
     deallocate_String_vector(&monitorNode);
@@ -152,6 +156,7 @@ int LoadBalance::balance() {
         LOG(LOG_INFO, "my service father:%s", _myServiceFather.back().c_str());
     }
 
+    _needReBalance = false;
     return MONITOR_OK;
 }
 
@@ -170,6 +175,8 @@ void LoadBalance::processDeleteEvent(const string &path) {
 
 void LoadBalance::processChildEvent(const string &path) {
     // The number of registed monitors has changed. So we need rebalance
+    if (path == p_conf->monitorList() ||
+        path == p_conf->nodeList())
     setReBalance();
 }
 
