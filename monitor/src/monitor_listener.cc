@@ -30,8 +30,8 @@ int ServiceListener::initListener() {
 }
 
 // Get all ip belong to my service father
-int ServiceListener::getAllIp() {
-    const vector<string> &serviceFather = p_loadBalance->myServiceFather();
+void ServiceListener::getAllIp() {
+    auto serviceFather = p_loadBalance->myServiceFather();
     for (auto it = serviceFather.begin(); it != serviceFather.end(); ++it) {
         struct String_vector children = {0};
         // Get all ipPort belong to this serviceFather
@@ -44,10 +44,9 @@ int ServiceListener::getAllIp() {
         }
         deallocate_String_vector(&children);
     }
-    return MONITOR_OK;
 }
 
-int ServiceListener::loadAllService() {
+void ServiceListener::loadAllService() {
     // Here we need locks. Maybe we can remove it
     slash::MutexLock l(&_serviceFatherToIpLock);
     for (auto it1 = serviceFatherToIp.begin(); it1 != serviceFatherToIp.end(); ++it1) {
@@ -61,7 +60,6 @@ int ServiceListener::loadAllService() {
         }
         _serviceFatherToIpLock.Lock();
     }
-    return MONITOR_OK;
 }
 
 void ServiceListener::processDeleteEvent(const string& path) {

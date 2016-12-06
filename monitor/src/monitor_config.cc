@@ -50,7 +50,7 @@ int Config::resetConfig(){
 }
 
 int Config::Load() {
-    if (this->LoadConf() != 0);
+    if (this->LoadConf() != 0)
         return MONITOR_ERR_OTHER;
 
     Log::init(MAX_LOG_LEVEL);

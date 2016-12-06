@@ -24,12 +24,6 @@ ServiceListener *p_serviceListerner = NULL;
 
 int doLoadBalance() {
     int ret = MONITOR_OK;
-    //load balance
-    if ((ret = p_loadBalance->initMonitor()) != MONITOR_OK) {
-        LOG(LOG_ERROR, "init load balance env failed");
-        return ret;
-    }
-
     if ((ret = p_loadBalance->getMd5ToServiceFather()) != MONITOR_OK) {
         LOG(LOG_ERROR, "get md5 to service father failed");
         /* TODO (gaodq)
@@ -51,21 +45,18 @@ int doLoadBalance() {
     return ret;
 }
 
-int loadServiceToConf() {
-    int ret = MONITOR_OK;
-    if ((ret = p_serviceListerner->initListener()) != MONITOR_OK) {
-        LOG(LOG_ERROR, "init service listener env failed");
-        return ret;
-    }
+void loadServiceToConf() {
+    p_conf->clearService();
+    p_serviceListerner->cleanServiceFatherToIp();
     p_serviceListerner->getAllIp();
     p_serviceListerner->loadAllService();
-    return ret;
 }
 
 int main(int argc, char** argv) {
     int ret = MONITOR_OK;
     p_conf = new Config(CONF_PATH);
-    if ((ret = p_conf->Load()) != MONITOR_OK) return ret;
+    if ((ret = p_conf->Load()) != MONITOR_OK)
+        return ret;
 
     if (Process::isProcessRunning(MONITOR_PROCESS_NAME)) {
         LOG(LOG_ERROR, "Monitor is already running.");
@@ -82,8 +73,19 @@ int main(int argc, char** argv) {
             return childExitStatus;
         else if (ret < 0)
             return MONITOR_ERR_OTHER;
-        else if ((ret = Util::writePid(PIDFILE.c_str())) != MONITOR_OK) 
+        else if ((ret = Util::writePid(PIDFILE.c_str())) != MONITOR_OK)
             return ret;
+    }
+
+    p_loadBalance = new LoadBalance();
+    if ((ret = p_loadBalance->initMonitor()) != MONITOR_OK) {
+        LOG(LOG_ERROR, "init load balance env failed");
+        return ret;
+    }
+    p_serviceListerner = new ServiceListener();
+    if ((ret = p_serviceListerner->initListener()) != MONITOR_OK) {
+        LOG(LOG_ERROR, "init service listener env failed");
+        return ret;
     }
 
     /*
@@ -92,27 +94,22 @@ int main(int argc, char** argv) {
     */
     while (!Process::isStop()) {
         LOG(LOG_INFO, " main loop start -> !!!!!!");
-        p_loadBalance = new LoadBalance();
-        if (!p_loadBalance || doLoadBalance() != MONITOR_OK) {
-            delete p_loadBalance;
-            // TODO (gaodunqiao) continue ? too much TIME_WAIT about zookeeper
+        if (doLoadBalance() != MONITOR_OK)
             continue;
-        }
 
         // After load balance. Each monitor should load the service to Config
-        p_serviceListerner = new ServiceListener();
-        if (!p_serviceListerner || loadServiceToConf() != MONITOR_OK) {
-            delete p_serviceListerner;
-            delete p_loadBalance;
-            continue;
-        }
+        loadServiceToConf();
 
         //multiThread module
         WorkThread workThread;
         workThread.Start();
+
+        sleep(MONITOR_SLEEP);
     }
 
     LOG(LOG_ERROR, "EXIT main loop!!!");
     delete p_conf;
+    delete p_loadBalance;
+    delete p_serviceListerner;
     return 0;
 }

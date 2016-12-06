@@ -50,7 +50,7 @@ public:
     void setReBalance() { _needReBalance = true; }
     // Getter
     bool needReBalance() { return _needReBalance; }
-    const vector<string> &myServiceFather() { return _myServiceFather; }
+    const vector<string> myServiceFather() { return _myServiceFather; }
 };
 extern LoadBalance *p_loadBalance;
 #endif

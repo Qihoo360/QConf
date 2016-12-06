@@ -27,7 +27,6 @@
 CheckThread::CheckThread(int pos, WorkThread *workThread) :
     pink::Thread::Thread(p_conf->scanInterval()),
     _service_pos(pos),
-    _should_exit(true),
     _workThread(workThread) {
 }
 
@@ -124,10 +123,9 @@ int CheckThread::_tryConnect(const string &curServiceFather) {
     auto serviceFatherToIp = p_serviceListerner->getServiceFatherToIp();
     unordered_set<string> ip = serviceFatherToIp[curServiceFather];
     int retryCount = p_conf->connRetryCount();
-    for (auto it = ip.begin(); it != ip.end(); ++it) {
-        if (Process::isStop() || p_loadBalance->needReBalance() || isRunning()) {
-            break;
-        }
+    for (auto it = ip.begin();
+         it != ip.end() && !Process::isStop() && !p_loadBalance->needReBalance();
+         ++it) {
         // It's important to get serviceMap in the loop to find zk's change in real time
         auto serviceMap = p_conf->serviceMap();
         string ipPort = curServiceFather + "/" + (*it);
@@ -173,9 +171,8 @@ void *CheckThread::ThreadMain() {
     when.tv_sec += (cron_interval_ / 1000);
     when.tv_usec += ((cron_interval_ % 1000 ) * 1000);
     int timeout = cron_interval_;
-    _should_exit = false;
 
-    while (!Process::isStop() && !p_loadBalance->needReBalance() && !isRunning()) {
+    while (!Process::isStop() && !p_loadBalance->needReBalance()) {
         if (cron_interval_ > 0 ) {
             gettimeofday(&now, NULL);
             if (when.tv_sec > now.tv_sec || (when.tv_sec == now.tv_sec && when.tv_usec > now.tv_usec)) {

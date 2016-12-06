@@ -18,7 +18,7 @@
 using namespace std;
 
 void MonitorZk::watcher(zhandle_t* zhandle, int type, int state, const char* node, void* context) {
-    MonitorZk *object = reinterpret_cast<MonitorZk *>(context);
+    MonitorZk *object = static_cast<MonitorZk *>(context);
     if (object == NULL) {
         LOG(LOG_FATAL_ERROR, "error in watcher.");
         return;
@@ -86,7 +86,7 @@ MonitorZk::~MonitorZk(){
         zookeeper_close(_zh);
         _zh = NULL;
     }
-    delete _zk_node_buffer;
+    delete[] _zk_node_buffer;
 };
 
 int MonitorZk::zk_modify(const std::string &path, const std::string &value)
@@ -144,27 +144,30 @@ int MonitorZk::zk_get_node(const string &path, string &buf, int watcher) {
     return MONITOR_ERR_ZOO_FAILED;
 }
 
-/**
+/*
  * Create znode on zookeeper
+ * and add watcher
  */
 int MonitorZk::zk_create_node(const string &path, const string &value, int flags) {
-    return zk_create_node(path, value, flags, NULL, 0);
+    int ret = zk_create_node(path, value, flags, NULL, 0);
+    string watch_path = ret == MONITOR_OK ? path : path.substr(0, path.rfind('/'));
+    return zk_exists(watch_path);
 }
 
+// Create znode on zookeeper
 int MonitorZk::zk_create_node(const string &path, const string &value, int flags, char *path_buffer, int path_len) {
     int ret = 0;
     for (int i = 0; i < MONITOR_GET_RETRIES; ++i) {
         ret = zoo_create(_zh, path.c_str(), value.c_str(), value.length(), &ZOO_OPEN_ACL_UNSAFE, flags, path_buffer, path_len);
         switch (ret) {
             case ZOK:
-                return MONITOR_OK;
             case ZNODEEXISTS:
-                return MONITOR_NODE_EXIST;
+                return MONITOR_OK;
             case ZNONODE:
             case ZNOCHILDRENFOREPHEMERALS:
             case ZBADARGUMENTS:
                 LOG(LOG_ERROR, "Failed to call zoo_create. err:%s. path:%s",
-                        zerror(ret), path.c_str());
+                    zerror(ret), path.c_str());
                 return MONITOR_ERR_ZOO_FAILED;
             default:
                 continue;
@@ -247,7 +250,7 @@ int MonitorZk::zk_get_service_status(const string &path, char &status) {
     return MONITOR_OK;
 }
 
-bool MonitorZk::zk_exists(const string &path) {
+int MonitorZk::zk_exists(const string &path) {
     int ret = 0;
 
     for (int i = 0; i < MONITOR_GET_RETRIES; ++i) {
