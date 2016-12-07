@@ -18,7 +18,6 @@
 
 #include "monitor_log.h"
 #include "monitor_const.h"
-#include "monitor_util.h"
 #include "monitor_service_item.h"
 #include "monitor_options.h"
 #include "monitor_listener.h"
@@ -299,6 +298,28 @@ void Process::HandleCmd(vector<string>& cmd) {
   }
 }
 
+void Process::trim(string &str) {
+    size_t left = 0;
+    while (left < str.size()) {
+        char c = str[left];
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+            ++left;
+        } else {
+            break;
+        }
+    }
+    size_t right = str.size() - 1;
+    while (right >= left) {
+        char c = str[right];
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+            --right;
+        } else {
+            break;
+        }
+    }
+    str = str.substr(left, right - left + 1);
+}
+
 int Process::ProcessFileMsg(const string cmdFile) {
   LOG(LOG_TRACE, "processFileMsg...in...");
   ifstream file;
@@ -307,7 +328,7 @@ int Process::ProcessFileMsg(const string cmdFile) {
     string line;
     while (!file.eof()) {
       getline(file, line);
-      Util::trim(line);
+      trim(line);
       vector<string> cmd_explain;
       slash::StringSplit(line, ':', cmd_explain);
       if (cmd_explain.size() <= 0 || cmd_explain.size() > 2) {

@@ -1,22 +1,25 @@
-#include <thread>
-#include <vector>
-#include <map>
-#include <string>
-#include <fstream>
-#include <iostream>
-#include <cstdio>
+#include "env.h"
+#include "slash_status.h"
 
-#include "monitor_util.h"
+#include <string>
+
 #include "monitor_options.h"
 #include "monitor_const.h"
 #include "monitor_log.h"
 #include "monitor_process.h"
-#include "monitor_zk.h"
 #include "monitor_load_balance.h"
 #include "monitor_listener.h"
 #include "monitor_work_thread.h"
 
-using namespace std;
+int WritePid(const std::string &file_name) {
+    int ret = MONITOR_OK;
+    slash::WritableFile *write_file;
+    slash::NewWritableFile(file_name, &write_file);
+    write_file->Append(to_string(getpid()));
+    write_file->Close();
+    delete write_file;
+    return ret;
+}
 
 int main(int argc, char** argv) {
   int ret = MONITOR_OK;
@@ -42,7 +45,7 @@ int main(int argc, char** argv) {
       return child_exit_status;
     else if (ret < 0)
       return MONITOR_ERR_OTHER;
-    else if ((ret = Util::writePid(PIDFILE.c_str())) != MONITOR_OK)
+    else if ((ret = WritePid(PIDFILE)) != MONITOR_OK)
       return ret;
   }
 

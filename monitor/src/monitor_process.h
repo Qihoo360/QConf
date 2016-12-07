@@ -24,6 +24,7 @@ struct Process{
     static int ProcessKeepalive(int& child_exit_status, const string pid_file);
     static void SigForward(const int sig);
     static void SigHandler(const int sig);
+    static void trim(string &line);
     static int ProcessFileMsg(const string cmd_file);
     static void ProcessParam(const string& op);
     static void SetStop();
