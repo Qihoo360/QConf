@@ -10,7 +10,6 @@
 
 #include "monitor_const.h"
 #include "monitor_options.h"
-#include "monitor_util.h"
 #include "monitor_process.h"
 #include "monitor_log.h"
 #include "monitor_zk.h"

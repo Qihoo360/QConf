@@ -31,7 +31,7 @@ class ServiceListener : public MonitorZk {
   slash::Mutex service_father_to_ip_lock_;
 
   int AddChildren(const string &service_father, struct String_vector &children);
-  int GetAddrByHost(const char* host, struct in_addr* addr);
+  int GetAddrByHost(const string &host, struct in_addr* addr);
   int LoadService(string path, string service_father, string ip_port, vector<int>& );
   int GetIpNum(const string& service_father);
   void ModifyServiceFatherToIp(const string &op, const string& path);

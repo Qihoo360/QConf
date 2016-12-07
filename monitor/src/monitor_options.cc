@@ -14,7 +14,6 @@
 #include <iostream>
 
 #include "monitor_options.h"
-#include "monitor_util.h"
 #include "monitor_log.h"
 #include "monitor_const.h"
 

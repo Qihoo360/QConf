@@ -1,3 +1,5 @@
+#include "slash_string.h"
+
 #include <string>
 #include <vector>
 #include <iostream>
@@ -15,7 +17,6 @@
 #include "monitor_load_balance.h"
 #include "monitor_log.h"
 #include "monitor_const.h"
-#include "monitor_util.h"
 
 using namespace std;
 
@@ -103,10 +104,10 @@ int ServiceListener::AddChildren(const string &service_father, struct String_vec
   return 0;
 }
 
-int ServiceListener::GetAddrByHost(const char* host, struct in_addr* addr) {
+int ServiceListener::GetAddrByHost(const string &host, struct in_addr* addr) {
   int ret = MONITOR_ERR_OTHER;
   struct hostent *ht;
-  if ((ht = gethostbyname(host)) !=  NULL) {
+  if ((ht = gethostbyname(host.c_str())) !=  NULL) {
     *addr = *((struct in_addr *)ht->h_addr);
     ret = MONITOR_OK;
   }
@@ -124,11 +125,11 @@ int ServiceListener::LoadService(string path, string service_father, string ip_p
     status = -1;
   }
   ++(st[status + 1]);
-  size_t pos = ip_port.find(':');
-  string ip = ip_port.substr(0, pos);
-  int port = atoi((ip_port.substr(pos+1)).c_str());
+  string ip;
+  int port;
+  slash::ParseIpPortString(ip_port, ip, port);
   struct in_addr addr;
-  GetAddrByHost(ip.c_str(), &addr);
+  GetAddrByHost(ip, &addr);
   ServiceItem item(ip, &addr, port, service_father, status);
   options_->AddService(path, item);
   LOG(LOG_INFO, "load service succeed, service:%s, status:%d", path.c_str(), status);
@@ -145,16 +146,15 @@ int ServiceListener::GetIpNum(const string& service_father) {
 
 //path is the path of ip_port
 void ServiceListener::ModifyServiceFatherToIp(const string &op, const string& path) {
-  if (op == CLEAR) {
-    slash::MutexLock l(&service_father_to_ip_lock_);
-    service_father_to_ip_.clear();
-  }
   size_t pos = path.rfind('/');
   string service_father = path.substr(0, pos);
   string ip_port = path.substr(pos + 1);
-  size_t pos2 = ip_port.rfind(':');
+  string ip;
+  int port;
+  slash::ParseIpPortString(ip_port, ip, port);
+  /* size_t pos2 = ip_port.rfind(':');
   string ip = ip_port.substr(0, pos2);
-  string port = ip_port.substr(pos2 + 1);
+  string port = ip_port.substr(pos2 + 1); */
   if (op == ADD) {
     //If this ip_port has exist, no need to do anything
     if (IsIpExist(service_father, ip_port)) return;
@@ -162,14 +162,16 @@ void ServiceListener::ModifyServiceFatherToIp(const string &op, const string& pa
     char status = STATUS_UNKNOWN;
     if (zk_get_service_status(path, status) != MONITOR_OK) return;
     struct in_addr addr;
-    GetAddrByHost(ip.c_str(), &addr);
-    ServiceItem item(ip, &addr, atoi(port.c_str()), service_father, status);
+    GetAddrByHost(ip, &addr);
+    ServiceItem item(ip, &addr, port, service_father, status);
 
     options_->AddService(path, item);
     AddIpPort(service_father, ip_port);
-  }
-  if (op == DELETE) {
+  } else if (op == DELETE) {
     DeleteIpPort(service_father, ip_port);
     options_->DeleteService(path);
+  } else if (op == CLEAR) {
+    slash::MutexLock l(&service_father_to_ip_lock_);
+    service_father_to_ip_.clear();
   }
 }
