@@ -1,7 +1,9 @@
 QConf
 =====
+We have build another interesting proect [pika](https://github.com/Qihoo360/pika). Pika is a nosql compatible with redis protocol with huge storage space. You can have a try.
 
 ## Introduction [中文](https://github.com/Qihoo360/QConf/blob/master/README_ZH.md)
+
 QConf is a Distributed Configuration Management System!
 A better replacement of the traditional configuration file. As designed, configuration items which is constantly accessed and modified should be completely separated with application code, and QConf is where it should be.
 
