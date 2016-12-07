@@ -13,65 +13,65 @@
 using namespace std;
 
 class ServiceItem {
-private:
-    //_host is IP without port
-    std::string _host;
-    //_addr is for net
-    struct in_addr _addr;
-    int _port;
-    int _connRetry;
-    int _connTimeout;
-    std::string _serviceFather;
-    //online or offline
-    int _status;
-public:
-    ServiceItem() :
-        _host(""),
-        _port(-1),
-        _connRetry(3),
-        // default 3 seconds
-        _connTimeout(3),
-        _serviceFather(""),
-        _status(STATUS_DOWN) {
-        memset(&_addr, 0, sizeof(struct in_addr));
+ private:
+  //host_ is IP without port
+  std::string host_;
+  //addr_ is for net
+  struct in_addr addr_;
+  int port_;
+  int conn_retry_;
+  int conn_timeout_;
+  std::string service_father_;
+  //online or offline
+  int status_;
+ public:
+  ServiceItem() :
+    host_(""),
+    port_(-1),
+    conn_retry_(3),
+    // default 3 seconds
+    conn_timeout_(3),
+    service_father_(""),
+    status_(STATUS_DOWN) {
+      memset(&addr_, 0, sizeof(struct in_addr));
     }
 
-    ServiceItem(std::string host, struct in_addr *addr, int port,
-                std::string serviceFather, int status) :
-        _host(host),
-        _addr(*addr),
-        _port(port),
-        _connRetry(3),
-        _connTimeout(3),
-        _serviceFather(serviceFather),
-        _status(status) {}
+  ServiceItem(std::string host, struct in_addr *addr_, int port,
+              std::string service_father, int status) :
+    host_(host),
+    addr_(*addr_),
+    port_(port),
+    conn_retry_(3),
+    conn_timeout_(3),
+    service_father_(service_father),
+    status_(status) {}
 
-    void setStatus(int status) { _status = status; }
-    int status() { return _status; }
+  void SetStatus(int status) { status_ = status; }
+  int Status() { return status_; }
 
-    void setHost(string ip) { _host = ip; }
-    string host() { return _host; }
+  void SetHost(string ip) { host_ = ip; }
+  string Host() { return host_; }
 
-    void setPort(int port) { _port = port; }
-    int port() { return _port; }
+  void SetPort(int port) { port_ = port; }
+  int Port() { return port_; }
 
-    void setAddr(struct in_addr* addr) { memcpy(&_addr, addr, sizeof(struct in_addr)); }
-    void addr(struct in_addr* addr) { memcpy(addr, &_addr, sizeof(struct in_addr)); }
+  void SetAddr(struct in_addr* addr_) { memcpy(&addr_, addr_, sizeof(struct in_addr)); }
+  void Addr(struct in_addr* addr_) { memcpy(addr_, &addr_, sizeof(struct in_addr)); }
 
-    void setConnectTimeout(int timeout) { _connTimeout = timeout; }
-    int connectTimeout() { return _connTimeout; }
+  void SetConnectTimeout(int timeout) { conn_timeout_ = timeout; }
+  int ConnectTimeout() { return conn_timeout_; }
 
-    void setServiceFather(string serviceFather) { _serviceFather = serviceFather; }
-    const string serviceFather() { return _serviceFather; }
+  void SetServiceFather(string service_father) { service_father_ = service_father; }
+  const string GetServiceFather() { return service_father_; }
 
-    void clear() {
-        memset(&_addr, 0, sizeof(struct in_addr));
-        _host = "";
-        _port = -1;
-        _connRetry = 0;
-        _serviceFather = "";
-        _status = -1;
-        _connTimeout = -1;
-    }
+  void clear() {
+    memset(&addr_, 0, sizeof(struct in_addr));
+    host_ = "";
+    port_ = -1;
+    conn_retry_ = 0;
+    service_father_ = "";
+    status_ = -1;
+    conn_timeout_ = -1;
+  }
 };
 #endif

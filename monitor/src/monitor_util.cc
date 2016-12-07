@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "monitor_config.h"
+#include "monitor_options.h"
 #include "monitor_log.h"
 #include "monitor_util.h"
 
@@ -34,24 +34,6 @@ int Util::trim(string& str) {
     }
     str = str.substr(left, right - left + 1);
     return 0;
-}
-
-vector<string> Util::split(const string& str, const char separator){
-    vector<string> res;
-    string item;
-    for (size_t i = 0; i < str.size(); ++i) {
-        if (str[i] == separator && !item.empty()) {
-            res.push_back(item);
-            item.clear();
-        }
-        else if (str[i] != separator){
-            item = item + str[i];
-        }
-    }
-    if (!item.empty()) {
-        res.push_back(item);
-    }
-    return res;
 }
 
 int Util::writePid(const char* fileName) {
