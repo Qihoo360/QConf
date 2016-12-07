@@ -6,37 +6,50 @@
 #include <vector>
 #include <string>
 
-#include "monitor_config.h"
+#include "monitor_options.h"
 #include "monitor_const.h"
 #include "monitor_log.h"
-#include "monitor_process.h"
 #include "monitor_load_balance.h"
 #include "monitor_listener.h"
 
 using namespace std;
 
 class WorkThread {
-private:
-    //copy of myServiceFather in loadBalance
-    vector<string> _serviceFathers;
-    int _serviceFatherNum;
+  friend class Process;
+ private:
+  LoadBalance *load_balance_;
+  ServiceListener *service_listener_;
+  MonitorOptions *options_;
+  pink::BGThread *update_thread_;
 
-    //marked weather there is a thread checking this service father
-    vector<bool> _hasThread;
-    slash::Mutex _hasThreadLock;
-    //the next service father waiting for check
-    int _waitingIndex;
-    slash::Mutex _waitingIndexLock;
+  //copy of myServiceFather in loadBalance
+  vector<string> service_father_;
 
-    pink::BGThread *_updateThread;
-public:
-    WorkThread();
-    ~WorkThread();
-    int Start();
+  //marked weather there is a thread checking this service father
+  vector<bool> has_thread_;
+  slash::Mutex has_thread_lock_;
+  //the next service father waiting for check
+  int waiting_index_;
+  slash::Mutex waiting_index_lock_;
 
-    int getAndAddWaitingIndex();
-    void setHasThread(int index, bool val);
+  bool should_exit_;
+ public:
+  WorkThread(MonitorOptions *options);
+  ~WorkThread();
+  int InitEnv();
+  int Start();
 
-    pink::BGThread *getUpdateThread() { return _updateThread; }
+  int DoLoadBalance();
+  void LoadServiceToConf();
+
+  int GetAndAddWaitingIndex();
+  vector<string> GetServiceFather() { return service_father_; }
+  void SetHasThread(int index, bool val) {
+    slash::MutexLock l(&has_thread_lock_);
+    has_thread_[index] = val;
+  }
+
+  pink::BGThread *GetUpdateThread() { return update_thread_; }
 };
+
 #endif

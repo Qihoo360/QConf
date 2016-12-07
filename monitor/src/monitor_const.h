@@ -58,13 +58,6 @@ enum SERVER_STAT {
     STATUS_DOWN
 };
 
-//znode and path
-const string LOCK_ROOT_DIR = "/qconf_monitor_lock_node";
-const string DEFAULT_INSTANCE_NAME = "default_instance";
-const string MONITOR_LIST = "monitor_list";
-const string SLASH = "/";
-const string NODE_LIST = "md5_list";
-
 //multi thread
 #ifdef DEBUGT
 constexpr int MAX_THREAD_NUM = 1;

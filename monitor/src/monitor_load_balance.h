@@ -13,44 +13,46 @@
 #include <zookeeper.h>
 #include <zk_adaptor.h>
 
-#include "monitor_config.h"
+#include "monitor_options.h"
 #include "monitor_zk.h"
 
 using namespace std;
 
 // Implement Zk interface
 class LoadBalance : public MonitorZk {
-private:
-    char _zkLockBuf[512] = {0};
-    bool _needReBalance;
-    slash::Mutex _md5ToServiceFatherLock;
+ private:
+  char zk_lock_buf_[512] = {0};
+  bool need_rebalance_;
+  slash::Mutex md5_to_service_father_lock_;
 
+  //use map but not unordered_map so it can be sorted autonatically
+  //key is md5 and value is serviceFather
+  unordered_map<string, string> md5_to_service_father_;
+  unordered_set<string> monitors_;
+  vector<string> my_service_father_;
 
-    //use map but not unordered_map so it can be sorted autonatically
-    //key is md5 and value is serviceFather
-    unordered_map<string, string> _md5ToServiceFather;
-    unordered_set<string> _monitors;
-    vector<string> _myServiceFather;
+  void UpdateMd5ToServiceFather(const string& md5_path, const string& service_father) {
+    slash::MutexLock l(&md5_to_service_father_lock_);
+    md5_to_service_father_[md5_path] = service_father;
+  }
+ public:
+  // Initial
+  LoadBalance(MonitorOptions *options);
+  int InitMonitor();
+  int RegisterMonitor(const string &path);
+  int GetMd5ToServiceFather();
+  int GetMonitors();
+  int DoBalance();
 
-    void _updateMd5ToServiceFather(const string& md5Path, const string& serviceFather);
-public:
-    // Initial
-    LoadBalance();
-    int initMonitor();
-    int registerMonitor(const string &path);
-    int getMd5ToServiceFather();
-    int getMonitors();
-    int balance();
+  void ProcessDeleteEvent(const string& path);
+  void ProcessChildEvent(const string &path);
+  void ProcessChangedEvent(const string &path);
 
-    void processDeleteEvent(const string& path);
-    void processChildEvent(const string &path);
-    void processChangedEvent(const string &path);
-
-    // Setter
-    void setReBalance() { _needReBalance = true; }
-    // Getter
-    bool needReBalance() { return _needReBalance; }
-    const vector<string> myServiceFather() { return _myServiceFather; }
+  // Setter
+  void SetReBalance() { need_rebalance_ = true; }
+  // Getter
+  bool NeedReBalance() { return need_rebalance_; }
+  const vector<string> GetMyServiceFather() { return my_service_father_; }
+  int GetMyServiceFatherNum() { return my_service_father_.size(); }
 };
-extern LoadBalance *p_loadBalance;
 #endif

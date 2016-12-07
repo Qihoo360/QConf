@@ -14,51 +14,56 @@
 #include <vector>
 #include <iostream>
 
-#include "monitor_config.h"
+#include "monitor_options.h"
 #include "monitor_service_item.h"
 #include "monitor_load_balance.h"
 
 using namespace std;
 
 class ServiceListener : public MonitorZk {
-private:
-    /*
-    core data
-    key is serviceFather and value is a set of ipPort
-    */
-    unordered_map<string, unordered_set<string>> serviceFatherToIp;
-    /*
-    core data
-    key is service father and value is the number of ipPort with different types.
-    It's used for check weather there are only one service alive
-    */
-    unordered_map<string, vector<int>> serviceFatherStatus;
+ private:
+  LoadBalance *load_balance_;
+  /*
+     core data
+     key is serviceFather and value is a set of ipPort
+     */
+  unordered_map<string, unordered_set<string>> service_father_to_ip_;
+  slash::Mutex service_father_to_ip_lock_;
 
-    int _addChildren(const string &serviceFather, struct String_vector &children);
-    int _getAddrByHost(const char* host, struct in_addr* addr);
-    int _loadService(string path, string serviceFather, string ipPort, vector<int>& );
-    int _getIpNum(const string& serviceFather);
-    bool _ipExist(const string& serviceFather, const string& ipPort);
-    void _modifyServiceFatherToIp(const string &op, const string& path);
-    bool _serviceFatherExist(const string& serviceFather);
-    void _addIpPort(const string& serviceFather, const string& ipPort);
-    void _deleteIpPort(const string& serviceFather, const string& ipPort);
+  int AddChildren(const string &service_father, struct String_vector &children);
+  int GetAddrByHost(const char* host, struct in_addr* addr);
+  int LoadService(string path, string service_father, string ip_port, vector<int>& );
+  int GetIpNum(const string& service_father);
+  void ModifyServiceFatherToIp(const string &op, const string& path);
+  bool IsIpExist(const string& service_father, const string& ip_port) {
+    slash::MutexLock l(&service_father_to_ip_lock_);
+    return (service_father_to_ip_[service_father].find(ip_port) == service_father_to_ip_[service_father].end());
+  }
+  bool IsServiceFatherExist(const string& service_father) {
+    slash::MutexLock l(&service_father_to_ip_lock_);
+    return (service_father_to_ip_.find(service_father) == service_father_to_ip_.end());
+  }
+  void AddIpPort(const string& service_father, const string& ip_port) {
+    slash::MutexLock l(&service_father_to_ip_lock_);
+    service_father_to_ip_[service_father].insert(ip_port);
+  }
+  void DeleteIpPort(const string& service_father, const string& ip_port) {
+    slash::MutexLock l(&service_father_to_ip_lock_);
+    service_father_to_ip_[service_father].erase(ip_port);
+  }
+ public:
+  ServiceListener(LoadBalance *load_balance, MonitorOptions *options);
+  int InitListener();
+  void GetAllIp();
+  void LoadAllService();
+  void CleanServiceFatherToIp() { service_father_to_ip_.clear(); }
+  unordered_map<string, unordered_set<string>> GetServiceFatherToIp() {
+    slash::MutexLock l(&service_father_to_ip_lock_);
+    return service_father_to_ip_;
+  }
 
-    slash::Mutex _serviceFatherToIpLock;
-    slash::Mutex _serviceFatherStatusLock;
-
-public:
-    ServiceListener();
-    int initListener();
-    void getAllIp();
-    void loadAllService();
-    void cleanServiceFatherToIp() { serviceFatherToIp.clear(); }
-
-    unordered_map<string, unordered_set<string>> getServiceFatherToIp();
-
-    void processDeleteEvent(const string& path);
-    void processChildEvent(const string& path);
-    void processChangedEvent(const string& path);
+  void ProcessDeleteEvent(const string& path);
+  void ProcessChildEvent(const string& path);
+  void ProcessChangedEvent(const string& path);
 };
-extern ServiceListener *p_serviceListerner;
 #endif
