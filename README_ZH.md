@@ -1,6 +1,8 @@
 QConf
 =====
 
+我们团队开发了另外一个有意思的项目 [pika](https://github.com/Qihoo360/pika), pika 是一个兼容redis 协议的大容量的存储, 用来解决redis 内存不够的问题, 欢迎大家试试
+
 ## 简介 [English](https://github.com/Qihoo360/QConf/blob/master/README.md)
 QConf 是一个分布式配置管理工具。
 用来替代传统的配置文件，使得配置信息和程序代码分离，同时配置变化能够实时同步到客户端，而且保证用户高效读取配置，这使的工程师从琐碎的配置修改、代码提交、配置上线流程中解放出来，极大地简化了配置管理工作。
