@@ -23,7 +23,6 @@ class CheckThread : public pink::Thread {
   bool IsServiceExist(struct in_addr *addr, string host, int port, int timeout, int cur_status);
 
   int service_pos_;
-  bool should_exit_;
   WorkThread *work_thread_;
   MonitorOptions *options_;
   ServiceListener *service_listener_;

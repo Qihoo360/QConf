@@ -145,7 +145,7 @@ int ServiceListener::GetIpNum(const string& service_father) {
 }
 
 //path is the path of ip_port
-void ServiceListener::ModifyServiceFatherToIp(const string &op, const string& path) {
+void ServiceListener::ModifyServiceFatherToIp(const int &op, const string& path) {
   size_t pos = path.rfind('/');
   string service_father = path.substr(0, pos);
   string ip_port = path.substr(pos + 1);

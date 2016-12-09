@@ -34,7 +34,7 @@ class ServiceListener : public MonitorZk {
   int GetAddrByHost(const string &host, struct in_addr* addr);
   int LoadService(string path, string service_father, string ip_port, vector<int>& );
   int GetIpNum(const string& service_father);
-  void ModifyServiceFatherToIp(const string &op, const string& path);
+  void ModifyServiceFatherToIp(const int &op, const string& path);
   bool IsIpExist(const string& service_father, const string& ip_port) {
     slash::MutexLock l(&service_father_to_ip_lock_);
     return (service_father_to_ip_[service_father].find(ip_port) == service_father_to_ip_[service_father].end());

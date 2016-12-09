@@ -36,13 +36,13 @@ const string CMDFILE = "tmp/cmd";
 
 //return status
 enum ERR_CODE {
-    MONITOR_OK = 0,
-    MONITOR_ERR_OTHER,
-    MONITOR_NODE_NOT_EXIST,
-    MONITOR_ERR_FAILED_OPEN_FILE,
-    MONITOR_ERR_MEM,
-    MONITOR_ERR_PARAM,
-    MONITOR_ERR_ZOO_FAILED
+  MONITOR_OK = 0,
+  MONITOR_ERR_OTHER,
+  MONITOR_NODE_NOT_EXIST,
+  MONITOR_ERR_FAILED_OPEN_FILE,
+  MONITOR_ERR_MEM,
+  MONITOR_ERR_PARAM,
+  MONITOR_ERR_ZOO_FAILED
 };
 
 const int MONITOR_MAX_VALUE_SIZE = 1048577;
@@ -52,10 +52,10 @@ const int MONITOR_SLEEP = 2;
 
 // server status define
 enum SERVER_STAT {
-    STATUS_UNKNOWN = -1,
-    STATUS_UP,
-    STATUS_OFFLINE,
-    STATUS_DOWN
+  STATUS_UNKNOWN = -1,
+  STATUS_UP,
+  STATUS_OFFLINE,
+  STATUS_DOWN
 };
 
 //multi thread
@@ -66,9 +66,9 @@ constexpr int MAX_THREAD_NUM = 64;
 #endif
 
 //op of mpdify serviceFatherToIp
-const string DELETE = "delete";
-const string ADD = "add";
-const string CLEAR = "clear";
+const int DELETE = 0;
+const int ADD = 1;
+const int CLEAR = 2;
 
 //command to process
 const string CMD_RELOAD = "reload";

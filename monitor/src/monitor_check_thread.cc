@@ -30,7 +30,6 @@ CheckThread::CheckThread(int pos,
                          ServiceListener *service_listener) :
   pink::Thread::Thread(options->ScanInterval()),
   service_pos_(pos),
-  should_exit_(false),
   work_thread_(work_thread),
   options_(options),
   service_listener_(service_listener) {}

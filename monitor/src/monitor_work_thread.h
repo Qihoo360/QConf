@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <string>
+#include <atomic>
 
 #include "monitor_options.h"
 #include "monitor_const.h"
@@ -32,7 +33,7 @@ class WorkThread {
   int waiting_index_;
   slash::Mutex waiting_index_lock_;
 
-  bool should_exit_;
+  std::atomic<bool> should_exit_;
  public:
   WorkThread(MonitorOptions *options);
   ~WorkThread();
