@@ -17,8 +17,8 @@
 using namespace std;
 
 void MonitorZk::Watcher(zhandle_t* zhandle, int type, int state, const char* node, void* context) {
-  MonitorZk *object = static_cast<MonitorZk *>(context);
-  if (object == NULL) {
+  ZkCallBackHandle *cb_handle = static_cast<ZkCallBackHandle *>(context);
+  if (cb_handle == NULL) {
     LOG(LOG_FATAL_ERROR, "error in watcher.");
     return;
   }
@@ -35,46 +35,42 @@ void MonitorZk::Watcher(zhandle_t* zhandle, int type, int state, const char* nod
       break;
     case CHILD_EVENT_DEF:
       LOG(LOG_DEBUG, "[ child event ] ...");
-      object->ProcessChildEvent(string(node));
+      cb_handle->ProcessChildEvent(string(node));
       break;
     case CREATED_EVENT_DEF:
       LOG(LOG_DEBUG, "[ created event ]...");
       break;
     case DELETED_EVENT_DEF:
       LOG(LOG_DEBUG, "[ deleted event ] ...");
-      object->ProcessDeleteEvent(string(node));
+      cb_handle->ProcessDeleteEvent(string(node));
       break;
     case CHANGED_EVENT_DEF:
       LOG(LOG_DEBUG, "[ changed event ] ...");
-      object->ProcessChangedEvent(string(node));
+      cb_handle->ProcessChangedEvent(string(node));
       break;
     default:
       break;
   }
 }
 
-MonitorZk::MonitorZk(MonitorOptions *options):
-  zk_handle_(NULL),
-  zk_node_buf_(NULL),
-  options_(options) {
-    recv_timeout_ = options_->ZkRecvTimeout();
-    zk_host_ = options_->ZkHost();
-  }
+MonitorZk::MonitorZk(MonitorOptions *options, ZkCallBackHandle *cb_handle)
+  : zk_handle_(NULL),
+    recv_timeout_(options->zk_recv_timeout),
+    zk_host_(options->zk_host),
+    zk_node_buf_(NULL),
+    options_(options),
+    cb_handle_(cb_handle) {
+  zk_node_buf_ = new char[MONITOR_MAX_VALUE_SIZE];
+}
 
 int MonitorZk::InitEnv() {
   if (zk_host_.size() <= 0) return MONITOR_ERR_PARAM;
 
   //init zookeeper handler
-  zk_handle_ = zookeeper_init(zk_host_.c_str(), Watcher, recv_timeout_, NULL, (void *)this, 0);
+  zk_handle_ = zookeeper_init(zk_host_.c_str(), Watcher, recv_timeout_, NULL, (void *)cb_handle_, 0);
   if (!zk_handle_) {
     LOG(LOG_ERROR, "zookeeper_init failed. Check whether zk_host(%s) is correct or not", zk_host_.c_str());
     return MONITOR_ERR_ZOO_FAILED;
-  }
-
-  zk_node_buf_ = new char[MONITOR_MAX_VALUE_SIZE];
-  if (NULL == zk_node_buf_) {
-    LOG(LOG_ERROR, "Failed to get zk node buf");
-    return MONITOR_ERR_MEM;
   }
 
   return MONITOR_OK;

@@ -23,18 +23,12 @@
 #include "monitor_listener.h"
 #include "monitor_process.h"
 
-using namespace std;
+namespace process {
 
-WorkThread* Process::work_thread_ = NULL;
-MonitorOptions* Process::options_ = NULL;
-ServiceListener* Process::service_listener_ = NULL;
-void Process::InitEnv(WorkThread *work_thread) {
-  work_thread_ = work_thread;
-  options_ = work_thread->options_;
-  service_listener_ = work_thread->service_listener_;
-}
+MonitorOptions *options;
+bool need_restart;
 
-bool Process::IsProcessRunning(const string& processName) {
+bool IsProcessRunning(const std::string& processName) {
   FILE* ptr = NULL;
   char ps[128] = {0};
   char resBuf[128] = {0};
@@ -57,7 +51,7 @@ bool Process::IsProcessRunning(const string& processName) {
   return false;
 }
 
-int Process::Daemonize() {
+int Daemonize() {
   signal(SIGTTOU, SIG_IGN);
   signal(SIGTTIN, SIG_IGN);
   signal(SIGTSTP, SIG_IGN);
@@ -114,12 +108,12 @@ int Process::Daemonize() {
   return 0;
 }
 
-void Process::SigForward(const int sig) {
+void SigForward(const int sig) {
   signal(sig, SIG_IGN);
   kill(0, sig);
 }
 
-void Process::ProcessParam(const string& op) {
+void ProcessParam(const std::string& op) {
   ofstream fout;
   fout.open(STATUS_LIST_FILE, ofstream::out);
   if (!fout.good()) {
@@ -132,15 +126,14 @@ void Process::ProcessParam(const string& op) {
   int downCount = 0;
   int unknownCount = 0;
   int allCount = 0;
-  string service;
-  string stat;
+  std::string service;
+  std::string stat;
   ServiceItem item;
-  string node;
-  map<string, ServiceItem> service_map = options_->GetServiceMap();
+  std::string node;
 
   //list node
   if (op != UP && op != DOWN && op != OFFLINE && op != ALL) {
-    unordered_set<string> ips = (service_listener_->GetServiceFatherToIp())[op];
+    std::set<std::string> ips = options->service_father_to_ip[op];
     if (ips.empty()) {
       LOG(LOG_ERROR, "node: %s doesn't exist.", op.c_str());
       return;
@@ -154,15 +147,15 @@ void Process::ProcessParam(const string& op) {
     fout << setiosflags(ios::left) << setw(10) << "status" << setiosflags(ios::left) \
       << setw(30) << "service" << setiosflags(ios::left) << "node" << endl;
     for (auto it = ips.begin(); it != ips.end(); ++it) {
-      string ip_port;
+      std::string ip_port;
       if (op.back() == '/') {
         ip_port = op + (*it);
       }
       else {
         ip_port = op + "/" + (*it);
       }
-      item = service_map[ip_port];
-      status = item.Status();
+      item = options->service_map[ip_port];
+      status = item.status;
       if (status == STATUS_UP) {
         ++upCount;
         stat = "up";
@@ -199,12 +192,12 @@ void Process::ProcessParam(const string& op) {
   fout << endl;
   fout << setiosflags(ios::left) << setw(10) << "status" << setiosflags(ios::left) \
     << setw(30) << "service" << setiosflags(ios::left) << "node" << endl;
-  allCount = service_map.size();
-  for (auto it = service_map.begin(); it != service_map.end(); ++it) {
+  allCount = options->service_map.size();
+  for (auto it = options->service_map.begin(); it != options->service_map.end(); ++it) {
     item = it->second;
-    status = item.Status();
-    node = item.GetServiceFather();
-    service = item.Host() + ":" + to_string(item.Port());
+    status = item.status;
+    node = item.service_father;
+    service = item.host + ":" + to_string(item.port);
     if (status == STATUS_UP) {
       stat = "up";
       if (op == UP || op == ALL) {
@@ -283,7 +276,7 @@ void Process::ProcessParam(const string& op) {
   return;
 }
 
-void Process::HandleCmd(vector<string>& cmd) {
+void HandleCmd(std::vector<std::string>& cmd) {
   if (cmd[0] == CMD_RELOAD) {
     //handle reload
   }
@@ -298,7 +291,7 @@ void Process::HandleCmd(vector<string>& cmd) {
   }
 }
 
-void Process::trim(string &str) {
+void trim(std::string &str) {
     size_t left = 0;
     while (left < str.size()) {
         char c = str[left];
@@ -320,16 +313,16 @@ void Process::trim(string &str) {
     str = str.substr(left, right - left + 1);
 }
 
-int Process::ProcessFileMsg(const string cmdFile) {
+int ProcessFileMsg(const std::string cmdFile) {
   LOG(LOG_TRACE, "processFileMsg...in...");
   ifstream file;
   file.open(cmdFile);
   if (file.good()) {
-    string line;
+    std::string line;
     while (!file.eof()) {
       getline(file, line);
       trim(line);
-      vector<string> cmd_explain;
+      std::vector<std::string> cmd_explain;
       slash::StringSplit(line, ':', cmd_explain);
       if (cmd_explain.size() <= 0 || cmd_explain.size() > 2) {
         continue;
@@ -345,18 +338,18 @@ int Process::ProcessFileMsg(const string cmdFile) {
   return 0;
 }
 
-void Process::SigHandler(const int sig) {
+void SigHandler(const int sig) {
   switch (sig) {
     case SIGUSR1:
       ProcessFileMsg(CMDFILE);
       break;
     default:
-      SetStop();
+      need_restart = true;
       break;
   }
 }
 
-int Process::ProcessKeepalive(int& childExitStatus, const string pidFile) {
+int ProcessKeepalive(int& childExitStatus, const std::string pidFile) {
 
   int processNum = 0;
   pid_t childPid = -1;
@@ -457,10 +450,4 @@ int Process::ProcessKeepalive(int& childExitStatus, const string pidFile) {
   }
 }
 
-void Process::SetStop() {
-  work_thread_->should_exit_ = true;
-}
-
-void Process::ClearStop() {
-  work_thread_->should_exit_ = false;
-}
+}  // namespace process
