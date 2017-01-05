@@ -2,6 +2,7 @@
 #include "slash_status.h"
 
 #include <string>
+#include <fstream>
 
 #include "monitor_options.h"
 #include "monitor_const.h"
@@ -11,45 +12,40 @@
 #include "monitor_listener.h"
 #include "monitor_work_thread.h"
 
-int WritePid(const std::string &file_name) {
-    int ret = MONITOR_OK;
-    slash::WritableFile *write_file;
-    slash::NewWritableFile(file_name, &write_file);
-    write_file->Append(to_string(getpid()));
-    write_file->Close();
-    delete write_file;
-    return ret;
-}
-
 int main(int argc, char** argv) {
   int ret = MONITOR_OK;
-  MonitorOptions options(CONF_PATH);
-  if ((ret = options.Load()) != MONITOR_OK)
+  MonitorOptions *options = new MonitorOptions(CONF_PATH);
+  if ((ret = options->Load()) != 0)
     return ret;
 
-  WorkThread work_thread(&options);
+  WorkThread *work_thread = new WorkThread(options);
 
-  Process::InitEnv(&work_thread);
-  if (Process::IsProcessRunning(MONITOR_PROCESS_NAME)) {
+  process::options = options;
+  process::need_restart = false;
+  if (process::IsProcessRunning(MONITOR_PROCESS_NAME)) {
     LOG(LOG_ERROR, "Monitor is already running.");
     return MONITOR_ERR_OTHER;
   }
-  if (options.IsDaemonMode())
-    Process::Daemonize();
+  if (options->daemon_mode)
+    process::Daemonize();
 
-  if (options.IsAutoRestart()) {
+  if (options->auto_restart) {
     int child_exit_status = -1;
-    int ret = Process::ProcessKeepalive(child_exit_status, PIDFILE);
+    int ret = process::ProcessKeepalive(child_exit_status, PIDFILE);
     // Parent process
     if (ret > 0)
       return child_exit_status;
     else if (ret < 0)
       return MONITOR_ERR_OTHER;
-    else if ((ret = WritePid(PIDFILE)) != MONITOR_OK)
-      return ret;
+    else {
+      std::ofstream pidstream(PIDFILE);
+      pidstream << getpid() << endl;
+      pidstream.close();
+    }
   }
 
-  work_thread.Start();
+  work_thread->Start();
+  delete work_thread;
 
   return 0;
 }

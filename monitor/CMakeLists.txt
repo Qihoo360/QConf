@@ -8,6 +8,7 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         )
 endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
+include_directories(${PROJECT_SOURCE_DIR}/include)
 add_subdirectory(src)
 
 install(DIRECTORY bin DESTINATION .)
