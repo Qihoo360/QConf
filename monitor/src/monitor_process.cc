@@ -28,22 +28,22 @@ namespace process {
 MonitorOptions *options;
 bool need_restart;
 
-bool IsProcessRunning(const std::string& processName) {
+bool IsProcessRunning(const std::string& process_name) {
   FILE* ptr = NULL;
   char ps[128] = {0};
-  char resBuf[128] = {0};
-  snprintf(ps, sizeof(ps), "ps -e | grep -c %s", processName.c_str());
-  strcpy(resBuf, "ABNORMAL");
+  char res_buf[128] = {0};
+  snprintf(ps, sizeof(ps), "ps -e | grep -c %s", process_name.c_str());
+  strcpy(res_buf, "ABNORMAL");
   if ((ptr = popen(ps, "r")) != NULL) {
-    while(fgets(resBuf, sizeof(resBuf), ptr)) {
-      if (atoi(resBuf) >= 2) {
+    while(fgets(res_buf, sizeof(res_buf), ptr)) {
+      if (atoi(res_buf) >= 2) {
         pclose(ptr);
         return true;
       }
     }
   }
-  //excute ps failed or fgets() failed
-  if (strcmp(resBuf, "ABNORMAL") == 0) {
+  // Excute ps failed or fgets() failed
+  if (strcmp(res_buf, "ABNORMAL") == 0) {
     LOG(LOG_ERROR, "excute command failed");
     return true;
   }
@@ -59,11 +59,11 @@ int Daemonize() {
 
   int fd;
   pid_t pid;
-  //already a daemon
+  // Already a daemon
   if (getppid() == 1) {
     return 1;
   }
-  //fork off the parent process
+  // Fork off the parent process
   pid = fork();
   if (pid < 0) {
     exit(1);
@@ -71,7 +71,7 @@ int Daemonize() {
   else if (pid > 0) {
     exit(0);
   }
-  //create a new session ID
+  // Create a new session ID
   if (setsid() < 0) {
     exit(1);
   }
@@ -83,12 +83,24 @@ int Daemonize() {
   else if (pid > 0) {
     exit(0);
   }
-  //change directory
-  /*
-     if (chdir("/") < 0) {
-     exit(EXIT_FAILURE);
-     }*/
-  // here close all the file description and redirect stand IO
+  // Change work directory to install directory
+  char dest[1024];
+  if (readlink("/proc/self/exe", dest, 1024) == -1) {
+    LOG(LOG_ERROR, "Readlink error %d, path is /proc/self/exe", errno);
+  }
+  string exe = dest;
+  std::string work_path;
+  size_t pos = exe.find_last_of('/');
+  if (pos != std::string::npos) {
+    std::string bin_path = exe.substr(0, pos);
+    pos = bin_path.find_last_of('/');
+    work_path = bin_path.substr(0, pos);
+    chdir(work_path.c_str());
+  }
+  else
+    LOG(LOG_ERROR, "Change work directory error");
+
+  // Here close all the file description and redirect stand IO
   fd = open("/dev/null", O_RDWR, 0);
   dup2(fd, STDIN_FILENO);
   dup2(fd, STDOUT_FILENO);
@@ -97,7 +109,7 @@ int Daemonize() {
     close(fd);
   }
 
-  Log::closeLogFile();
+  mlog::CloseLogFile();
 
   for (fd = sysconf(_SC_OPEN_MAX); fd >= 3; --fd) {
     close(fd);

@@ -1,9 +1,5 @@
-#include <string>
-#include <utility>
-
 #include "monitor_check_thread.h"
 #include "monitor_work_thread.h"
-#include "monitor_listener.h"
 #include "monitor_options.h"
 #include "monitor_const.h"
 #include "monitor_log.h"
@@ -13,12 +9,12 @@
 static bool IsOnlyOneUp(const std::string &node, MonitorOptions *options) {
   bool ret = true;
   int alive = 0;
-  std::string ip_path;
+  std::string ip_port_path;
   std::string service_father = node.substr(0, node.rfind('/'));
-  std::set<std::string> ips = options->service_father_to_ip[service_father];
-  for (auto it = ips.begin(); it != ips.end(); ++it) {
-    ip_path = service_father + "/" + (*it);
-    int status = options->service_map[ip_path].status;
+  std::set<std::string> &ipset = options->service_father_to_ip[service_father];
+  for (auto &ip_port : ipset) {
+    ip_port_path = service_father + "/" + ip_port;
+    int status = options->service_map[ip_port_path].status;
     if (status == kStatusUp) ++alive;
     if (alive > 1) return false;
   }
@@ -28,7 +24,7 @@ static bool IsOnlyOneUp(const std::string &node, MonitorOptions *options) {
 // Update service thread. comes first update first
 void UpdateServiceFunc(void *arg) {
   UpdateServiceArgs *update_service_args= static_cast<UpdateServiceArgs *>(arg);
-  std::string ip_port = update_service_args->ip_port;
+  std::string &ip_port = update_service_args->ip_port;
   int new_status = update_service_args->new_status;
   MonitorOptions *options = update_service_args->options;
   delete update_service_args;
@@ -44,15 +40,7 @@ void UpdateServiceFunc(void *arg) {
   }
 
   // Update in zookeeper and ServiceItem
-  // Only used for update status in update thread.
-  // does not need callback handle
-  struct WorkCallbackHandle : public MonitorZk::ZkCallBackHandle {
-    void ProcessDeleteEvent(const string& path) {}
-    void ProcessChildEvent(const string &path) {}
-    void ProcessChangedEvent(const string &path) {}
-  };
-  WorkCallbackHandle cb_handle;
-  MonitorZk *zk = WorkThread::GetZkInstance(options, &cb_handle);
+  MonitorZk *zk = WorkThread::GetZkInstance(options);
   int ret = zk->zk_modify(ip_port, to_string(new_status));
   if (ret == kSuccess)
     options->service_map[ip_port].status = new_status;

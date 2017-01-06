@@ -22,4 +22,4 @@ enum kServerStatus {
   kStatusDown
 };
 
-#endif
+#endif  // CONSTDEF_H

@@ -1,104 +1,103 @@
-#include <string>
-#include <cstring>
-
-#include <stdarg.h>
-#include <errno.h>
-#include <time.h>
-
 #include "monitor_log.h"
-#include "monitor_const.h"
 
-int Log::logLevel = LOG_WARNING;
-FILE* Log::fp = NULL;
-pthread_mutex_t Log::mutex;
-char Log::curLogFileName[128] = {0};
-std::string Log::logLevelitos[7] = {"FATAL_ERROR", "ERROR", "WARNING", "NOTICE", "INFO", "TRACE", "DEBUG"};
-std::string Log::kLogPath = "logs/";
-std::string Log::kLogFileNamePrefix = "qconf_monitor.log";
+namespace mlog {
 
-int Log::init(const int ll) {
-    logLevel = ll;
+std::string kLogPath = "logs/";
+std::string kLogFileNamePrefix = "qconf_monitor.log";
+
+int log_level = LOG_WARNING;
+FILE* fp = nullptr;
+pthread_mutex_t f_mutex = PTHREAD_MUTEX_INITIALIZER;
+char cur_log_file_name[128] = {0};
+
+std::string log_levelitos[7] = {"FATAL_ERROR", "ERROR", "WARNING", "NOTICE", "INFO", "TRACE", "DEBUG"};
+
+int Init(const int ll) {
+  log_level = ll;
+  return 0;
+}
+
+int CheckFile(const int year, const int mon, const int day) {
+  char new_name[128] = {0};
+  snprintf(new_name, sizeof(new_name), "%s%s.%4d%02d%02d", kLogPath.c_str(),
+           kLogFileNamePrefix.c_str(), year, mon, day);
+  if (strcmp(cur_log_file_name, new_name) == 0) {
     return 0;
-}
-
-std::string Log::getLogLevelStr(const int level) {
-    return logLevelitos[level];
-}
-
-int Log::checkFile(const int year, const int mon, const int day){
-    char newName[128] = {0};
-    snprintf(newName, sizeof(newName), "%s%s.%4d%02d%02d", kLogPath.c_str(),
-        kLogFileNamePrefix.c_str(), year, mon, day);
-    if (strcmp(curLogFileName, newName) == 0) {
-        return 0;
-    }
-    //we need to touch a new log file
-    else {
-        if (fp) {
-            pthread_mutex_lock(&mutex);
-            //because multithread, so we need to compare again.
-            if (fp){
-                fclose(fp);
-                fp = NULL;
-            }
-            pthread_mutex_unlock(&mutex);
-        }
-        if (strcmp(curLogFileName, newName) != 0) {
-            pthread_mutex_lock(&mutex);
-            if (strcmp(curLogFileName, newName) != 0) {
-                strcpy(curLogFileName, newName);
-                fp = fopen(curLogFileName, "a");
-                if (!fp) {
-                    fprintf(stderr, "Log file open failed. Path %s.  Error No:%s\n", curLogFileName, strerror(errno));
-                    pthread_mutex_unlock(&mutex);
-                    return -1;
-                }
-            }
-            pthread_mutex_unlock(&mutex);
-        }
-    }
-    return 0;
-}
-
-int Log::printLog(const char* fileName, const int line, const int level, const char* format, ...) {
-    //we only log when the level input is lower than the loglevel in the config file
-    if (level > logLevel) {
-        return 0;
-    }
-    std::string logInfo = getLogLevelStr(level);
-    //get the time
-    time_t curTime;
-    time(&curTime);
-    struct tm* realTime = localtime(&curTime);
-
-    char logBuf[1024] = {0};
-    int charCount = snprintf(logBuf, sizeof(logBuf), "%4d/%02d/%02d %02d:%02d:%02d - [%s][%s %d] - ",
-        realTime->tm_year + 1900, realTime->tm_mon + 1, realTime->tm_mday, realTime->tm_hour,
-        realTime->tm_min, realTime->tm_sec, logInfo.c_str(), fileName, line);
-    //check weather we need change a log file
-    if (checkFile(realTime->tm_year + 1900, realTime->tm_mon + 1, realTime->tm_mday) != 0) {
-        return -1;
-    }
-    if (!fp) {
-        return -1;
-    }
-    va_list argPtr;
-    va_start(argPtr, format);
-    vsnprintf(logBuf + charCount, sizeof(logBuf) - charCount, format, argPtr);
-    va_end(argPtr);
-    strcat(logBuf, "\n");
-    pthread_mutex_lock(&mutex);
-    fwrite(logBuf, sizeof(char), strlen(logBuf), fp);
-    fflush(fp);
-    pthread_mutex_unlock(&mutex);
-    return 0;
-}
-
-void Log::closeLogFile() {
-    if (fp && fp != stderr) {
+  } else {
+    // We need to touch a new log file
+    if (fp) {
+      pthread_mutex_lock(&f_mutex);
+      //because multithread, so we need to compare again.
+      if (fp){
         fclose(fp);
         fp = NULL;
-        memset(curLogFileName, 0, 128);
+      }
+      pthread_mutex_unlock(&f_mutex);
     }
-    return;
+    if (strcmp(cur_log_file_name, new_name) != 0) {
+      pthread_mutex_lock(&f_mutex);
+      if (strcmp(cur_log_file_name, new_name) != 0) {
+        strcpy(cur_log_file_name, new_name);
+        fp = fopen(cur_log_file_name, "a");
+        if (!fp) {
+          fprintf(stderr, "Log file open failed. Path %s.  Error No:%s\n", cur_log_file_name, strerror(errno));
+          pthread_mutex_unlock(&f_mutex);
+          return -1;
+        }
+      }
+      pthread_mutex_unlock(&f_mutex);
+    }
+  }
+  return 0;
 }
+
+int PrintLog(const char* file_name, const int line, const int level, const char* format, ...) {
+  //we only log when the level input is lower than the loglevel in the config file
+  if (level > log_level) {
+    return 0;
+  }
+  std::string log_info = log_levelitos[level];
+  //get the time
+  time_t cur_time;
+  time(&cur_time);
+  struct tm* real_time = localtime(&cur_time);
+
+  char log_buf[1024] = {0};
+  int char_count = snprintf(log_buf, sizeof(log_buf),
+                            "%4d/%02d/%02d %02d:%02d:%02d - [%s][%s %d] - ",
+                           real_time->tm_year + 1900,
+                           real_time->tm_mon + 1,
+                           real_time->tm_mday,
+                           real_time->tm_hour,
+                           real_time->tm_min,
+                           real_time->tm_sec,
+                           log_info.c_str(), file_name, line);
+  //check weather we need change a log file
+  if (CheckFile(real_time->tm_year + 1900, real_time->tm_mon + 1, real_time->tm_mday) != 0) {
+    return -1;
+  }
+  if (!fp) {
+    return -1;
+  }
+  va_list arg_ptr;
+  va_start(arg_ptr, format);
+  vsnprintf(log_buf + char_count, sizeof(log_buf) - char_count, format, arg_ptr);
+  va_end(arg_ptr);
+  strcat(log_buf, "\n");
+  pthread_mutex_lock(&f_mutex);
+  fwrite(log_buf, sizeof(char), strlen(log_buf), fp);
+  fflush(fp);
+  pthread_mutex_unlock(&f_mutex);
+  return 0;
+}
+
+void CloseLogFile() {
+  if (fp && fp != stderr) {
+    fclose(fp);
+    fp = NULL;
+    memset(cur_log_file_name, 0, 128);
+  }
+  return;
+}
+
+}  // namespace log

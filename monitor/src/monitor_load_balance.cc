@@ -1,15 +1,3 @@
-#include <map>
-#include <algorithm>
-#include <string>
-#include <iostream>
-#include <cstdio>
-#include <cstring>
-
-#include <signal.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <pthread.h>
-
 #include "monitor_const.h"
 #include "monitor_log.h"
 #include "monitor_load_balance.h"
@@ -83,7 +71,7 @@ int LoadBalance::DoBalance() {
     md5_node.push_back(it.first);
   }
 
-  std::set<string> dummy_set;
+  std::set<std::string> dummy_set;
   for (size_t i = rank; i < md5_node.size(); i += monitors_size) {
     std::string my_service_father = md5_to_service_father_[md5_node[i]];
     options_->service_father_to_ip[my_service_father] = dummy_set;

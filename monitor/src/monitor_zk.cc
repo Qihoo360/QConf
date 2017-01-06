@@ -2,19 +2,11 @@
 #include <sys/types.h>
 #include <errno.h>
 
-#include <map>
-#include <string>
-#include <iostream>
-#include <cstring>
-#include <cstdio>
-
 #include "monitor_const.h"
 #include "monitor_options.h"
 #include "monitor_process.h"
 #include "monitor_log.h"
 #include "monitor_zk.h"
-
-using namespace std;
 
 void MonitorZk::Watcher(zhandle_t* zhandle, int type, int state, const char* node, void* context) {
   ZkCallBackHandle *cb_handle = static_cast<ZkCallBackHandle *>(context);
@@ -35,18 +27,18 @@ void MonitorZk::Watcher(zhandle_t* zhandle, int type, int state, const char* nod
       break;
     case CHILD_EVENT_DEF:
       LOG(LOG_DEBUG, "[ child event ] ...");
-      cb_handle->ProcessChildEvent(string(node));
+      cb_handle->ProcessChildEvent(std::string(node));
       break;
     case CREATED_EVENT_DEF:
       LOG(LOG_DEBUG, "[ created event ]...");
       break;
     case DELETED_EVENT_DEF:
       LOG(LOG_DEBUG, "[ deleted event ] ...");
-      cb_handle->ProcessDeleteEvent(string(node));
+      cb_handle->ProcessDeleteEvent(std::string(node));
       break;
     case CHANGED_EVENT_DEF:
       LOG(LOG_DEBUG, "[ changed event ] ...");
-      cb_handle->ProcessChangedEvent(string(node));
+      cb_handle->ProcessChangedEvent(std::string(node));
       break;
     default:
       break;
@@ -112,7 +104,7 @@ int MonitorZk::zk_modify(const std::string &path, const std::string &value)
 /**
  * Get znode from zookeeper, and set a watcher
  */
-int MonitorZk::zk_get_node(const string &path, string &buf, int watcher) {
+int MonitorZk::zk_get_node(const std::string &path, std::string &buf, int watcher) {
   int ret = 0;
   int buffer_len = kMonitorMaxValueSize;
 
@@ -144,14 +136,14 @@ int MonitorZk::zk_get_node(const string &path, string &buf, int watcher) {
  * Create znode on zookeeper
  * and add watcher
  */
-int MonitorZk::zk_create_node(const string &path, const string &value, int flags) {
+int MonitorZk::zk_create_node(const std::string &path, const std::string &value, int flags) {
   int ret = zk_create_node(path, value, flags, NULL, 0);
-  string watch_path = ret == kSuccess ? path : path.substr(0, path.rfind('/'));
+  std::string watch_path = ret == kSuccess ? path : path.substr(0, path.rfind('/'));
   return zk_exists(watch_path);
 }
 
 // Create znode on zookeeper
-int MonitorZk::zk_create_node(const string &path, const string &value, int flags, char *path_buffer, int path_len) {
+int MonitorZk::zk_create_node(const std::string &path, const std::string &value, int flags, char *path_buffer, int path_len) {
   int ret = 0;
   for (int i = 0; i < kMonitorGetRetries; ++i) {
     ret = zoo_create(zk_handle_, path.c_str(), value.c_str(), value.length(), &ZOO_OPEN_ACL_UNSAFE, flags, path_buffer, path_len);
@@ -178,7 +170,7 @@ int MonitorZk::zk_create_node(const string &path, const string &value, int flags
 /**
  * Get children nodes from zookeeper and set a watcher
  */
-int MonitorZk::zk_get_chdnodes(const string &path, String_vector &nodes) {
+int MonitorZk::zk_get_chdnodes(const std::string &path, String_vector &nodes) {
   if (NULL == zk_handle_ || path.empty()) return kParamError;
 
   int ret;
@@ -204,11 +196,11 @@ int MonitorZk::zk_get_chdnodes(const string &path, String_vector &nodes) {
   return kZkFailed;
 }
 
-int MonitorZk::zk_get_chdnodes_with_status(const string &path, String_vector &nodes, vector<char> &status) {
+int MonitorZk::zk_get_chdnodes_with_status(const std::string &path, String_vector &nodes, vector<char> &status) {
   if (NULL == zk_handle_ || path.empty()) return kParamError;
   int ret = zk_get_chdnodes(path, nodes);
   if (kSuccess == ret) {
-    string child_path;
+    std::string child_path;
     status.resize(nodes.count);
     for (int i = 0; i < nodes.count; ++i) {
       child_path = path + '/' + nodes.data[i];
@@ -221,10 +213,10 @@ int MonitorZk::zk_get_chdnodes_with_status(const string &path, String_vector &no
   return ret;
 }
 
-int MonitorZk::zk_get_service_status(const string &path, char &status) {
+int MonitorZk::zk_get_service_status(const std::string &path, char &status) {
   if (NULL == zk_handle_ || path.empty()) return kParamError;
 
-  string buf;
+  std::string buf;
   if (kSuccess == zk_get_node(path, buf, 1)) {
     int value = kStatusUnknow;
     value = atoi(buf.c_str());
@@ -246,7 +238,7 @@ int MonitorZk::zk_get_service_status(const string &path, char &status) {
   return kSuccess;
 }
 
-int MonitorZk::zk_exists(const string &path) {
+int MonitorZk::zk_exists(const std::string &path) {
   int ret = 0;
 
   for (int i = 0; i < kMonitorGetRetries; ++i) {
