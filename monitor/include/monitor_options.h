@@ -37,12 +37,10 @@ struct MonitorOptions {
 
   // Core data. key is the full path of ip_port and value is ServiceItem of this ip_port
   std::map<std::string, ServiceItem> service_map;
-  slash::Mutex service_map_lock;
   // Core data
   // key is service_father and value is a set of ipPort
-  std::vector<std::string> service_fathers;
+  std::vector<std::string> my_service_fathers;
   std::map<std::string, std::set<std::string>> service_father_to_ip;
-  slash::Mutex service_father_to_ip_lock;
 
   // Marked weather there is a thread checking this service father
   std::vector<bool> has_thread;

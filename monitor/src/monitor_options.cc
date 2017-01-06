@@ -49,7 +49,7 @@ MonitorOptions::~MonitorOptions() {
 
 int MonitorOptions::Load() {
   if (base_conf->LoadConf() != 0)
-    return MONITOR_ERR_OTHER;
+    return kOtherError;
 
   Log::init(MAX_LOG_LEVEL);
 
@@ -62,7 +62,7 @@ int MonitorOptions::Load() {
   char hostname[128] = {0};
   if (gethostname(hostname, sizeof(hostname)) != 0) {
     LOG(LOG_ERROR, "get host name failed");
-    return MONITOR_ERR_MEM;
+    return kOtherError;
   }
   monitor_host_name.assign(hostname);
 
@@ -77,7 +77,7 @@ int MonitorOptions::Load() {
   }
   if (!find_zk_host) {
     LOG(LOG_ERROR, "get zk host name failed");
-    return MONITOR_ERR_OTHER;
+    return kOtherError;
   }
 
   base_conf->GetConfInt(CONN_RETRY_COUNT, &conn_retry_count);
@@ -92,29 +92,29 @@ int MonitorOptions::Load() {
 
   // Set zookeeper log path
   int ret;
-  if ((ret = SetZkLog()) != MONITOR_OK) {
+  if ((ret = SetZkLog()) != kSuccess) {
     LOG(LOG_ERROR, "set zk log path failed");
     return ret;
   }
-  return MONITOR_OK;
+  return kSuccess;
 }
 
 int MonitorOptions::SetZkLog() {
   if (zk_log_path.size() <= 0) {
-    return MONITOR_ERR_ZOO_FAILED;
+    return kZkFailed;
   }
   zk_log_file = fopen(zk_log_path.c_str(), "a+");
   if (!zk_log_file) {
     LOG(LOG_ERROR, "log file open failed. path:%s. error:%s",
         zk_log_path.c_str(), strerror(errno));
-    return MONITOR_ERR_FAILED_OPEN_FILE;
+    return kOpenFileFailed;
   }
   //set the log file stream of zookeeper
   zoo_set_log_stream(zk_log_file);
   zoo_set_debug_level(ZOO_LOG_LEVEL_WARN);
   LOG(LOG_INFO, "zoo_set_log_stream path:%s", zk_log_path.c_str());
 
-  return MONITOR_OK;
+  return kSuccess;
 }
 
 void MonitorOptions::Debug() {

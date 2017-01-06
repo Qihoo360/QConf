@@ -23,20 +23,20 @@ WorkThread::~WorkThread() {
 }
 
 int WorkThread::Init() {
-  int ret = MONITOR_OK;
-  if ((ret = load_balance_->Init()) != MONITOR_OK) {
+  int ret = kSuccess;
+  if ((ret = load_balance_->Init()) != kSuccess) {
     LOG(LOG_ERROR, "init load balance env failed");
     return ret;
   }
 
-  if ((ret = service_listener_->Init()) != MONITOR_OK) {
+  if ((ret = service_listener_->Init()) != kSuccess) {
     LOG(LOG_ERROR, "init service listener env failed");
     return ret;
   }
 
   if (update_thread_->StartThread() != pink::kSuccess) {
     LOG(LOG_ERROR, "create the update service thread error");
-    return MONITOR_ERR_OTHER;
+    return kOtherError;
   }
 
   process::need_restart = false;
@@ -45,8 +45,8 @@ int WorkThread::Init() {
 }
 
 int WorkThread::Start() {
-  if (Init() != MONITOR_OK)
-    return MONITOR_ERR_OTHER;
+  if (Init() != kSuccess)
+    return kOtherError;
 
   /*
    * this loop is for load balance.
@@ -55,10 +55,12 @@ int WorkThread::Start() {
   while (!should_exit_) {
     LOG(LOG_INFO, " main loop start -> !!!!!!");
 
-    int ret = MONITOR_ERR_OTHER;
-    if ((ret = load_balance_->DoBalance()) != MONITOR_OK) {
-        LOG(LOG_ERROR, "balance failed");
-        continue;
+    int ret = kOtherError;
+    if ((ret = load_balance_->DoBalance()) != kSuccess) {
+      LOG(LOG_ERROR, "balance failed");
+      // Maybe node doesn't exist, we sleep here.
+      sleep(MONITOR_SLEEP);
+      continue;
     }
 
     // After load balance. Each monitor should load the service to Config
@@ -81,5 +83,5 @@ int WorkThread::Start() {
     }
     sleep(MONITOR_SLEEP);
   }
-  return MONITOR_ERR_OTHER;
+  return kOtherError;
 }

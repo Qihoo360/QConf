@@ -54,7 +54,7 @@ void UpdateServiceFunc(void *arg) {
   WorkCallbackHandle cb_handle;
   MonitorZk *zk = WorkThread::GetZkInstance(options, &cb_handle);
   int ret = zk->zk_modify(ip_port, to_string(new_status));
-  if (ret == MONITOR_OK)
+  if (ret == kSuccess)
     options->service_map[ip_port].status = new_status;
   else
     LOG(LOG_ERROR, "Can not update zookeeper.");

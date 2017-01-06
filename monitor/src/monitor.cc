@@ -13,7 +13,7 @@
 #include "monitor_work_thread.h"
 
 int main(int argc, char** argv) {
-  int ret = MONITOR_OK;
+  int ret = kSuccess;
   MonitorOptions *options = new MonitorOptions(CONF_PATH);
   if ((ret = options->Load()) != 0)
     return ret;
@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   process::need_restart = false;
   if (process::IsProcessRunning(MONITOR_PROCESS_NAME)) {
     LOG(LOG_ERROR, "Monitor is already running.");
-    return MONITOR_ERR_OTHER;
+    return kOtherError;
   }
   if (options->daemon_mode)
     process::Daemonize();
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
     if (ret > 0)
       return child_exit_status;
     else if (ret < 0)
-      return MONITOR_ERR_OTHER;
+      return kOtherError;
     else {
       std::ofstream pidstream(PIDFILE);
       pidstream << getpid() << endl;

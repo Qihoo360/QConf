@@ -33,14 +33,13 @@ const std::string PIDFILE = "monitor_pid";
 const std::string CMDFILE = "tmp/cmd";
 
 //return status
-enum ERR_CODE {
-  MONITOR_OK = 0,
-  MONITOR_ERR_OTHER,
-  MONITOR_NODE_NOT_EXIST,
-  MONITOR_ERR_FAILED_OPEN_FILE,
-  MONITOR_ERR_MEM,
-  MONITOR_ERR_PARAM,
-  MONITOR_ERR_ZOO_FAILED
+enum RetCode {
+  kSuccess = 0,
+  kOtherError,
+  kNotExist,
+  kOpenFileFailed,
+  kParamError,
+  kZkFailed
 };
 
 const int MONITOR_MAX_VALUE_SIZE = 1048577;

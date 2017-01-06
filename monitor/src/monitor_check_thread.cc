@@ -188,8 +188,8 @@ void *CheckThread::ThreadMain() {
 }
 
 void CheckThread::CronHandle() {
-  int service_father_num = options_->service_fathers.size();
-  std::string &cur_service_father = options_->service_fathers[service_pos_];
+  int service_father_num = options_->my_service_fathers.size();
+  std::string &cur_service_father = options_->my_service_fathers[service_pos_];
   LOG(LOG_INFO, "|checkService| pthread id %x, pthread pos %d, current service father %s", \
       (unsigned int)this->thread_id(), (int)service_pos_, cur_service_father.c_str());
 

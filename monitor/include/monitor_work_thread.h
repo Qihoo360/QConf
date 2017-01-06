@@ -36,8 +36,8 @@ class WorkThread {
                                   MonitorZk::ZkCallBackHandle *cb_handle) {
     if (monitor_zk == NULL) {
       monitor_zk = new MonitorZk(options, cb_handle);
-      int ret = MONITOR_ERR_OTHER;
-      if ((ret = monitor_zk->InitEnv()) != MONITOR_OK) {
+      int ret = kOtherError;
+      if ((ret = monitor_zk->InitEnv()) != kSuccess) {
         LOG(LOG_ERROR, "Init zookeeper client failed");
       }
     }
