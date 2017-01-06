@@ -1,17 +1,6 @@
 #ifndef LOADBALANCE_H
 #define LOADBALANCE_H
 
-#include "slash_mutex.h"
-
-#include <string>
-#include <vector>
-#include <iostream>
-
-#include <pthread.h>
-
-#include <zookeeper.h>
-#include <zk_adaptor.h>
-
 #include "monitor_options.h"
 #include "monitor_zk.h"
 

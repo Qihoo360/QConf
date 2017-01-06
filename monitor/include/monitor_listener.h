@@ -1,20 +1,6 @@
 #ifndef SERVICELISTENER_H
 #define SERVICELISTENER_H
 
-#include <zookeeper.h>
-#include <zk_adaptor.h>
-#include "slash_mutex.h"
-
-#include <pthread.h>
-
-#include <set>
-#include <unordered_set>
-#include <map>
-#include <unordered_map>
-#include <string>
-#include <vector>
-#include <iostream>
-
 #include "monitor_options.h"
 #include "monitor_service_item.h"
 #include "monitor_load_balance.h"

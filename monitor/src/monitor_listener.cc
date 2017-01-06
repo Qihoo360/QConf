@@ -11,7 +11,9 @@ ServiceListener::ServiceListener(MonitorOptions *options)
   monitor_zk_ = new MonitorZk(options_, &cb_handle);
 }
 
-ServiceListener::~ServiceListener() {}
+ServiceListener::~ServiceListener() {
+  delete monitor_zk_;
+}
 
 int ServiceListener::Init() {
   cb_handle.options_ = options_;

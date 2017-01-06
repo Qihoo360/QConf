@@ -7,6 +7,7 @@
 #include "monitor_work_thread.h"
 
 MonitorZk* WorkThread::monitor_zk = NULL;
+
 WorkThread::WorkThread(MonitorOptions *options)
       : options_(options),
         should_exit_(false) {

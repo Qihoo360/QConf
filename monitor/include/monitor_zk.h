@@ -4,11 +4,6 @@
 #include <zookeeper.h>
 #include <zk_adaptor.h>
 
-#include <map>
-#include <cstdio>
-#include <string>
-#include <iostream>
-
 #include "monitor_options.h"
 #include "monitor_service_item.h"
 
@@ -28,7 +23,7 @@ class MonitorZk {
   MonitorZk(MonitorOptions *options, ZkCallBackHandle *cb_handle);
 
   int InitEnv();
-  virtual ~MonitorZk();
+  ~MonitorZk();
 
   int zk_get_node(const std::string &path, std::string &buf, int watcher);
   int zk_create_node(const std::string &path, const std::string &value, int flags);
@@ -43,11 +38,11 @@ class MonitorZk {
   static void Watcher(zhandle_t* zhandle, int type, int state, const char* node, void* context);
 
  private:
-  zhandle_t* zk_handle_;
+  zhandle_t *zk_handle_;
   int recv_timeout_;
   std::string zk_host_;
   char *zk_node_buf_;
-  MonitorOptions* options_;
+  MonitorOptions *options_;
   ZkCallBackHandle* const cb_handle_;
 };
 

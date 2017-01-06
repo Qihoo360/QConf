@@ -3,7 +3,7 @@
 
 #include <string>
 
-//return status
+// Return status
 enum RetCode {
   kSuccess = 0,
   kOtherError,
@@ -13,8 +13,7 @@ enum RetCode {
   kZkFailed
 };
 
-
-// server status define
+// Server status define
 enum kServerStatus {
   kStatusUnknow = -1,
   kStatusUp,
