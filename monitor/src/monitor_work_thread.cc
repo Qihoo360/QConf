@@ -59,18 +59,18 @@ int WorkThread::Start() {
     if ((ret = load_balance_->DoBalance()) != kSuccess) {
       LOG(LOG_ERROR, "balance failed");
       // Maybe node doesn't exist, we sleep here.
-      sleep(MONITOR_SLEEP);
+      sleep(kMonitorSleep);
       continue;
     }
 
     // After load balance. Each monitor should load the service to Config
     service_listener_->LoadAllService();
 
-    CheckThread *check_threads[MAX_THREAD_NUM];
+    CheckThread *check_threads[kMaxThreadNum];
 
     // If the number of service father < MAX_THREAD_NUM, one service father one thread
     int thread_num = min(static_cast<int>(options_->service_father_to_ip.size()),
-                         MAX_THREAD_NUM);
+                         kMaxThreadNum);
     for (int i = 0; i < thread_num; ++i) {
       check_threads[i] = new CheckThread(i, update_thread_, options_);
       check_threads[i]->StartThread();
@@ -81,7 +81,7 @@ int WorkThread::Start() {
       delete check_threads[i];
       LOG(LOG_INFO, "exit check thread: %d", i);
     }
-    sleep(MONITOR_SLEEP);
+    sleep(kMonitorSleep);
   }
   return kOtherError;
 }

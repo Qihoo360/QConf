@@ -19,6 +19,10 @@
 #include "monitor_service_item.h"
 #include "monitor_load_balance.h"
 
+//op of mpdify serviceFatherToIp
+const int kDelete = 0;
+const int kAdd = 1;
+
 class ServiceListener {
  public:
   ServiceListener(MonitorOptions *options);

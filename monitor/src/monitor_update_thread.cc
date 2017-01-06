@@ -19,7 +19,7 @@ static bool IsOnlyOneUp(const std::string &node, MonitorOptions *options) {
   for (auto it = ips.begin(); it != ips.end(); ++it) {
     ip_path = service_father + "/" + (*it);
     int status = options->service_map[ip_path].status;
-    if (status == STATUS_UP) ++alive;
+    if (status == kStatusUp) ++alive;
     if (alive > 1) return false;
   }
   return ret;
@@ -36,7 +36,7 @@ void UpdateServiceFunc(void *arg) {
   int old_status = (options->service_map[ip_port]).status;
 
   // Compare the new status and old status to decide weather to update status
-  if (new_status == STATUS_DOWN && old_status == STATUS_UP &&
+  if (new_status == kStatusDown && old_status == kStatusUp &&
       IsOnlyOneUp(ip_port, options)) {
     LOG(LOG_FATAL_ERROR, "Maybe %s is the last server that is up. \
         But monitor CAN NOT connect to it. its Status will not change!", ip_port.c_str());

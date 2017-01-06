@@ -10,8 +10,6 @@
 #include "monitor_options.h"
 #include "monitor_work_thread.h"
 
-using namespace std;
-
 class CheckThread : public pink::Thread {
  public:
   CheckThread(int init_pos, pink::BGThread *update_thread, MonitorOptions *options);

@@ -13,6 +13,25 @@
 
 namespace process{
 
+//process name
+const std::string kMonitorProcessName = "qconf_monitor";
+
+//pid file
+const std::string kPidFile = "monitor_pid";
+
+//command file
+const std::string kCmdFile = "tmp/cmd";
+
+//command to process
+const std::string kCmdReload = "reload";
+const std::string kCmdList = "list";
+const std::string kStatusListFile = "tmp/list";
+const std::string kAll = "all";
+const std::string kUp = "up";
+const std::string kDown = "down";
+const std::string kOffline = "offline";
+const int kLineLength = 100;
+
 extern MonitorOptions *options;
 extern bool need_restart;
 

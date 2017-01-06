@@ -14,12 +14,35 @@
 
 #include "monitor_service_item.h"
 
+//config file name
+const std::string kConfPath = "conf/monitor.conf";
+
+//multi thread
+#ifdef DEBUGT
+constexpr int kMaxThreadNum = 1;
+#else
+constexpr int kMaxThreadNum = 64;
+#endif
+
+//config file keys
+const std::string kDaemonMode = "daemon_mode";
+const std::string kAutoRestart = "auto_restart";
+const std::string kLogLevel = "log_level";
+const std::string kConnRetryCount = "connect_retry_count";
+const std::string kScanInterval = "scan_interval";
+const std::string kInstanceName = "instance_name";
+const std::string kZkHostPrefix = "zookeeper.";
+const std::string kZkLogPath = "zk_log_path";
+const std::string kZkRecvTimeout = "zk_recv_timeout";
+
+constexpr int kMinLogLevel = 0;
+constexpr int kMaxLogLevel = 6;
+
 //znode and path
-const std::string LOCK_ROOT_DIR = "/qconf_monitor_lock_node";
-const std::string DEFAULT_INSTANCE_NAME = "default_instance";
-const std::string MONITOR_LIST = "monitor_list";
-const std::string SLASH = "/";
-const std::string NODE_LIST = "md5_list";
+const std::string kLockRootDir = "/qconf_monitor_lock_node";
+const std::string kDefaultInstanceName = "default_instance";
+const std::string kMonitorList = "monitor_list";
+const std::string kNodeList = "md5_list";
 
 struct MonitorOptions {
   slash::BaseConf *base_conf;
@@ -59,10 +82,10 @@ struct MonitorOptions {
   int SetZkLog();
 
   std::string GetNodeList() {
-    return LOCK_ROOT_DIR + SLASH + instance_name + SLASH + NODE_LIST;
+    return kLockRootDir + "/" + instance_name + "/" + kNodeList;
   }
   std::string GetMonitorList() {
-    return LOCK_ROOT_DIR + SLASH + instance_name + SLASH + MONITOR_LIST;
+    return kLockRootDir + "/" + instance_name + "/" + kMonitorList;
   }
 
   void DebugServiceMap();

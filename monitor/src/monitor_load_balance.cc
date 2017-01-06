@@ -98,16 +98,16 @@ int LoadBalance::DoBalance() {
 int LoadBalance::RegisterMonitor(const std::string &path) {
   int ret = kOtherError;
   std::string &host_name = options_->monitor_host_name;
-  for (int i = 0; i < MONITOR_GET_RETRIES; ++i) {
-    memset(zk_lock_buf_, 0, sizeof(zk_lock_buf_));
-    //register the monitor.
-    ret = monitor_zk_->zk_create_node(path, host_name, ZOO_EPHEMERAL | ZOO_SEQUENCE,
-                         zk_lock_buf_, sizeof(zk_lock_buf_));
-    if (ret == kSuccess) {
-      LOG(LOG_INFO, "registerMonitor: %s", zk_lock_buf_);
-      return ret;
-    }
+  memset(zk_lock_buf_, 0, sizeof(zk_lock_buf_));
+
+  //register the monitor.
+  ret = monitor_zk_->zk_create_node(path, host_name, ZOO_EPHEMERAL | ZOO_SEQUENCE,
+                                    zk_lock_buf_, sizeof(zk_lock_buf_));
+  if (ret == kSuccess) {
+    LOG(LOG_INFO, "registerMonitor: %s", zk_lock_buf_);
+    return ret;
   }
+
   LOG(LOG_ERROR, "create zookeeper node failed. API return : %d. node: %s ", ret, path.c_str());
 
   return ret;

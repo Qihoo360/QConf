@@ -14,7 +14,7 @@
 
 int main(int argc, char** argv) {
   int ret = kSuccess;
-  MonitorOptions *options = new MonitorOptions(CONF_PATH);
+  MonitorOptions *options = new MonitorOptions(kConfPath);
   if ((ret = options->Load()) != 0)
     return ret;
 
@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
 
   process::options = options;
   process::need_restart = false;
-  if (process::IsProcessRunning(MONITOR_PROCESS_NAME)) {
+  if (process::IsProcessRunning(process::kMonitorProcessName)) {
     LOG(LOG_ERROR, "Monitor is already running.");
     return kOtherError;
   }
@@ -31,14 +31,14 @@ int main(int argc, char** argv) {
 
   if (options->auto_restart) {
     int child_exit_status = -1;
-    int ret = process::ProcessKeepalive(child_exit_status, PIDFILE);
+    int ret = process::ProcessKeepalive(child_exit_status, process::kPidFile);
     // Parent process
     if (ret > 0)
       return child_exit_status;
     else if (ret < 0)
       return kOtherError;
     else {
-      std::ofstream pidstream(PIDFILE);
+      std::ofstream pidstream(process::kPidFile);
       pidstream << getpid() << endl;
       pidstream.close();
     }

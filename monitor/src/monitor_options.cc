@@ -30,8 +30,8 @@ MonitorOptions::MonitorOptions(const string &conf_path)
         zk_host("127.0.0.1:2181"),
         zk_log_path("logs"),
         zk_recv_timeout(3000),
-        zk_log_file(NULL),
-        waiting_index(MAX_THREAD_NUM),
+        zk_log_file(nullptr),
+        waiting_index(kMaxThreadNum),
         need_rebalance(false) {
   service_map.clear();
 }
@@ -39,10 +39,10 @@ MonitorOptions::MonitorOptions(const string &conf_path)
 MonitorOptions::~MonitorOptions() {
   if (zk_log_file) {
     // Set the zookeeper log stream to be default stderr
-    zoo_set_log_stream(NULL);
+    zoo_set_log_stream(nullptr);
     LOG(LOG_DEBUG, "zkLog close ...");
     fclose(zk_log_file);
-    zk_log_file = NULL;
+    zk_log_file = nullptr;
   }
   delete base_conf;
 }
@@ -51,13 +51,14 @@ int MonitorOptions::Load() {
   if (base_conf->LoadConf() != 0)
     return kOtherError;
 
-  Log::init(MAX_LOG_LEVEL);
+  Log::init(kMaxLogLevel);
 
-  base_conf->GetConfBool(DAEMON_MODE, &daemon_mode);
-  base_conf->GetConfBool(AUTO_RESTART, &auto_restart);
-  base_conf->GetConfInt(LOG_LEVEL, &log_level);
-  log_level = max(log_level, MIN_LOG_LEVEL);
-  log_level = min(log_level, MAX_LOG_LEVEL);
+  base_conf->GetConfBool(kDaemonMode, &daemon_mode);
+  base_conf->GetConfBool(kAutoRestart, &auto_restart);
+  base_conf->GetConfInt(kLogLevel, &log_level);
+  log_level = max(log_level, kMinLogLevel);
+  log_level = min(log_level, kMaxLogLevel);
+
   // Find the zk host this monitor should focus on. Their idc should be the same
   char hostname[128] = {0};
   if (gethostname(hostname, sizeof(hostname)) != 0) {
@@ -70,7 +71,7 @@ int MonitorOptions::Load() {
   slash::StringSplit(monitor_host_name, '.', word);
   bool find_zk_host = false;
   for (auto iter = word.begin(); iter != word.end(); iter++) {
-    if (base_conf->GetConfStr(ZK_HOST + *iter, &zk_host)) {
+    if (base_conf->GetConfStr(kZkHostPrefix + *iter, &zk_host)) {
       find_zk_host = true;
       break;
     }
@@ -80,12 +81,12 @@ int MonitorOptions::Load() {
     return kOtherError;
   }
 
-  base_conf->GetConfInt(CONN_RETRY_COUNT, &conn_retry_count);
-  base_conf->GetConfInt(SCAN_INTERVAL, &scan_interval);
-  base_conf->GetConfStr(INSTANCE_NAME, &instance_name);
-  instance_name = instance_name.empty() ? DEFAULT_INSTANCE_NAME : instance_name;
-  base_conf->GetConfStr(ZK_LOG_PATH, &zk_log_path);
-  base_conf->GetConfInt(ZK_RECV_TIMEOUT, &zk_recv_timeout);
+  base_conf->GetConfInt(kConnRetryCount, &conn_retry_count);
+  base_conf->GetConfInt(kScanInterval, &scan_interval);
+  base_conf->GetConfStr(kInstanceName, &instance_name);
+  instance_name = instance_name.empty() ? kDefaultInstanceName : instance_name;
+  base_conf->GetConfStr(kZkLogPath, &zk_log_path);
+  base_conf->GetConfInt(kZkRecvTimeout, &zk_recv_timeout);
 
   // Reload the config result in the change of loglevel in Log
   Log::init(log_level);
