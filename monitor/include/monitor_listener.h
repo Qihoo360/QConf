@@ -45,6 +45,5 @@ class ServiceListener {
   void GetAllIp();
   int AddChildren(const std::string &service_father, struct String_vector &children);
   int LoadService(std::string path, std::string service_father, std::string ip_port, vector<int>& );
-  int GetIpNum(const std::string& service_father);
 };
 #endif

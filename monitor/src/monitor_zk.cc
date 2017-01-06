@@ -64,16 +64,16 @@ MonitorZk::MonitorZk(MonitorOptions *options, ZkCallBackHandle *cb_handle)
 }
 
 int MonitorZk::InitEnv() {
-  if (zk_host_.size() <= 0) return MONITOR_ERR_PARAM;
+  if (zk_host_.size() <= 0) return kParamError;
 
   //init zookeeper handler
   zk_handle_ = zookeeper_init(zk_host_.c_str(), Watcher, recv_timeout_, NULL, (void *)cb_handle_, 0);
   if (!zk_handle_) {
     LOG(LOG_ERROR, "zookeeper_init failed. Check whether zk_host(%s) is correct or not", zk_host_.c_str());
-    return MONITOR_ERR_ZOO_FAILED;
+    return kZkFailed;
   }
 
-  return MONITOR_OK;
+  return kSuccess;
 }
 
 MonitorZk::~MonitorZk(){
@@ -94,19 +94,19 @@ int MonitorZk::zk_modify(const std::string &path, const std::string &value)
     switch (ret)
     {
       case ZOK:
-        return MONITOR_OK;
+        return kSuccess;
       case ZNONODE:
-        return MONITOR_NODE_NOT_EXIST;
+        return kNotExist;
       case ZINVALIDSTATE:
       case ZMARSHALLINGERROR:
         continue;
       default:
-        return MONITOR_ERR_ZOO_FAILED;
+        return kZkFailed;
     }
   }
   LOG(LOG_ERROR, "Failed to call zk_modify after retry. err:%s. path:%s",
       zerror(ret), path.c_str());
-  return MONITOR_ERR_ZOO_FAILED;
+  return kZkFailed;
 }
 
 /**
@@ -122,22 +122,22 @@ int MonitorZk::zk_get_node(const string &path, string &buf, int watcher) {
       case ZOK:
         if (-1 == buffer_len) buffer_len = 0;
         buf.assign(zk_node_buf_, buffer_len);
-        return MONITOR_OK;
+        return kSuccess;
       case ZNONODE:
-        return MONITOR_NODE_NOT_EXIST;
+        return kNotExist;
       case ZINVALIDSTATE:
       case ZMARSHALLINGERROR:
         continue;
       default:
         LOG(LOG_ERROR, "Failed to call zoo_get. err:%s. path:%s",
             zerror(ret), path.c_str());
-        return MONITOR_ERR_ZOO_FAILED;
+        return kZkFailed;
     }
   }
 
   LOG(LOG_ERROR, "Failed to call zoo_get after retry. err:%s. path:%s",
       zerror(ret), path.c_str());
-  return MONITOR_ERR_ZOO_FAILED;
+  return kZkFailed;
 }
 
 /*
@@ -146,7 +146,7 @@ int MonitorZk::zk_get_node(const string &path, string &buf, int watcher) {
  */
 int MonitorZk::zk_create_node(const string &path, const string &value, int flags) {
   int ret = zk_create_node(path, value, flags, NULL, 0);
-  string watch_path = ret == MONITOR_OK ? path : path.substr(0, path.rfind('/'));
+  string watch_path = ret == kSuccess ? path : path.substr(0, path.rfind('/'));
   return zk_exists(watch_path);
 }
 
@@ -158,13 +158,13 @@ int MonitorZk::zk_create_node(const string &path, const string &value, int flags
     switch (ret) {
       case ZOK:
       case ZNODEEXISTS:
-        return MONITOR_OK;
+        return kSuccess;
       case ZNONODE:
       case ZNOCHILDRENFOREPHEMERALS:
       case ZBADARGUMENTS:
         LOG(LOG_ERROR, "Failed to call zoo_create. err:%s. path:%s",
             zerror(ret), path.c_str());
-        return MONITOR_ERR_ZOO_FAILED;
+        return kZkFailed;
       default:
         continue;
     }
@@ -172,49 +172,49 @@ int MonitorZk::zk_create_node(const string &path, const string &value, int flags
 
   LOG(LOG_ERROR, "Failed to call zoo_create after retry. err:%s. path:%s",
       zerror(ret), path.c_str());
-  return MONITOR_ERR_ZOO_FAILED;
+  return kZkFailed;
 }
 
 /**
  * Get children nodes from zookeeper and set a watcher
  */
 int MonitorZk::zk_get_chdnodes(const string &path, String_vector &nodes) {
-  if (NULL == zk_handle_ || path.empty()) return MONITOR_ERR_PARAM;
+  if (NULL == zk_handle_ || path.empty()) return kParamError;
 
   int ret;
   for (int i = 0; i < MONITOR_GET_RETRIES; ++i) {
     ret = zoo_get_children(zk_handle_, path.c_str(), 1, &nodes);
     switch(ret) {
       case ZOK:
-        return MONITOR_OK;
+        return kSuccess;
       case ZNONODE:
-        return MONITOR_NODE_NOT_EXIST;
+        return kNotExist;
       case ZINVALIDSTATE:
       case ZMARSHALLINGERROR:
         continue;
       default:
         LOG(LOG_ERROR, "Failed to call zoo_get_children. err:%s. path:%s",
             zerror(ret), path.c_str());
-        return MONITOR_ERR_ZOO_FAILED;
+        return kZkFailed;
     }
   }
 
   LOG(LOG_ERROR, "Failed to call zoo_get_children after retry. err:%s. path:%s",
       zerror(ret), path.c_str());
-  return MONITOR_ERR_ZOO_FAILED;
+  return kZkFailed;
 }
 
 int MonitorZk::zk_get_chdnodes_with_status(const string &path, String_vector &nodes, vector<char> &status) {
-  if (NULL == zk_handle_ || path.empty()) return MONITOR_ERR_PARAM;
+  if (NULL == zk_handle_ || path.empty()) return kParamError;
   int ret = zk_get_chdnodes(path, nodes);
-  if (MONITOR_OK == ret) {
+  if (kSuccess == ret) {
     string child_path;
     status.resize(nodes.count);
     for (int i = 0; i < nodes.count; ++i) {
       child_path = path + '/' + nodes.data[i];
       char s = 0;
       ret = zk_get_service_status(child_path, s);
-      if (MONITOR_OK != ret) return MONITOR_ERR_OTHER;
+      if (kSuccess != ret) return kOtherError;
       status[i] = s;
     }
   }
@@ -222,10 +222,10 @@ int MonitorZk::zk_get_chdnodes_with_status(const string &path, String_vector &no
 }
 
 int MonitorZk::zk_get_service_status(const string &path, char &status) {
-  if (NULL == zk_handle_ || path.empty()) return MONITOR_ERR_PARAM;
+  if (NULL == zk_handle_ || path.empty()) return kParamError;
 
   string buf;
-  if (MONITOR_OK == zk_get_node(path, buf, 1)) {
+  if (kSuccess == zk_get_node(path, buf, 1)) {
     int value = STATUS_UNKNOWN;
     value = atoi(buf.c_str());
     switch(value) {
@@ -237,13 +237,13 @@ int MonitorZk::zk_get_service_status(const string &path, char &status) {
       default:
         LOG(LOG_FATAL_ERROR, "Invalid service status of path:%s, status:%ld!",
             path.c_str(), value);
-        return MONITOR_ERR_OTHER;
+        return kOtherError;
     }
   } else {
     LOG(LOG_FATAL_ERROR, "Failed to get service status, path:%s", path.c_str());
-    return MONITOR_ERR_OTHER;
+    return kOtherError;
   }
-  return MONITOR_OK;
+  return kSuccess;
 }
 
 int MonitorZk::zk_exists(const string &path) {
@@ -253,20 +253,20 @@ int MonitorZk::zk_exists(const string &path) {
     ret = zoo_exists(zk_handle_, path.c_str(), 1, NULL);
     switch (ret) {
       case ZOK:
-        return MONITOR_OK;
+        return kSuccess;
       case ZNONODE:
-        return MONITOR_NODE_NOT_EXIST;
+        return kNotExist;
       case ZINVALIDSTATE:
       case ZMARSHALLINGERROR:
         continue;
       default:
         LOG(LOG_FATAL_ERROR, "Failed to call zoo_exists. err:%s. path:%s",
             zerror(ret), path.c_str());
-        return MONITOR_ERR_ZOO_FAILED;
+        return kZkFailed;
     }
   }
 
   LOG(LOG_ERROR, "Failed to call zoo_exists after retry. err:%s. path:%s",
       zerror(ret), path.c_str());
-  return MONITOR_ERR_ZOO_FAILED;
+  return kZkFailed;
 }

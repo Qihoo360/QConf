@@ -35,8 +35,6 @@ void ServiceListener::LoadAllService() {
   options_->service_map.clear();
   GetAllIp();
 
-  // Here we need locks. Maybe we can remove it
-  slash::MutexLock l(&options_->service_father_to_ip_lock);
   for (auto it1 = options_->service_father_to_ip.begin();
        it1 != options_->service_father_to_ip.end();
        ++it1) {
@@ -58,7 +56,7 @@ void ServiceListener::GetAllIp() {
     std::string service_father = it->first;
     struct String_vector children = {0};
     // Get all ip_port belong to this service_father
-    if (monitor_zk_->zk_get_chdnodes(service_father, children) != MONITOR_OK) {
+    if (monitor_zk_->zk_get_chdnodes(service_father, children) != kSuccess) {
       LOG(LOG_ERROR, "get IP:Port failed. service_father:%s", service_father.c_str());
       options_->service_father_to_ip[service_father].insert("");
     } else {
@@ -80,8 +78,8 @@ int ServiceListener::AddChildren(const std::string &service_father,
 
 int ServiceListener::LoadService(std::string path, std::string service_father, std::string ip_port, std::vector<int>& st) {
   char status = STATUS_UNKNOWN;
-  int ret = MONITOR_OK;
-  if ((ret = monitor_zk_->zk_get_service_status(path, status))  != MONITOR_OK) {
+  int ret = kSuccess;
+  if ((ret = monitor_zk_->zk_get_service_status(path, status))  != kSuccess) {
     LOG(LOG_ERROR, "get service status failed. service:%s", path.c_str());
     return ret;
   }
@@ -100,16 +98,7 @@ int ServiceListener::LoadService(std::string path, std::string service_father, s
   ServiceItem item(ip, addr, port, service_father, status);
   options_->service_map[path] = item;
   LOG(LOG_INFO, "load service succeed, service:%s, status:%d", path.c_str(), status);
-  return MONITOR_OK;
-}
-
-int ServiceListener::GetIpNum(const std::string& service_father) {
-  int ret = 0;
-  slash::MutexLock l(&options_->service_father_to_ip_lock);
-  if (options_->service_father_to_ip.find(service_father)
-      != options_->service_father_to_ip.end())
-    ret = options_->service_father_to_ip[service_father].size();
-  return ret;
+  return kSuccess;
 }
 
 void ServiceListener::BalanceZkHandle::ModifyServiceFatherToIp(const int &op,
@@ -127,7 +116,7 @@ void ServiceListener::BalanceZkHandle::ModifyServiceFatherToIp(const int &op,
       return;
 
     char status = STATUS_UNKNOWN;
-    if (monitor_zk_->zk_get_service_status(ip_path, status) != MONITOR_OK) return;
+    if (monitor_zk_->zk_get_service_status(ip_path, status) != kSuccess) return;
 
     struct hostent *ht;
     ht = gethostbyname(ip.c_str());
@@ -152,7 +141,7 @@ void ServiceListener::BalanceZkHandle::ProcessDeleteEvent(const std::string& pat
 void ServiceListener::BalanceZkHandle::ProcessChildEvent(const std::string& path) {
   // It must be a service father node. Because I do zoo_get_children only in service father node
   struct String_vector children = {0};
-  if (monitor_zk_->zk_get_chdnodes(path, children) == MONITOR_OK) {
+  if (monitor_zk_->zk_get_chdnodes(path, children) == kSuccess) {
     if ((options_->service_father_to_ip.find(path) ==
          options_->service_father_to_ip.end()) ||
         children.count <= (options_->service_father_to_ip)[path].size()) {
@@ -171,7 +160,7 @@ void ServiceListener::BalanceZkHandle::ProcessChildEvent(const std::string& path
 void ServiceListener::BalanceZkHandle::ProcessChangedEvent(const std::string& path) {
   int new_status = STATUS_UNKNOWN;
   std::string data;
-  if (monitor_zk_->zk_get_node(path, data, 1) == MONITOR_OK) {
+  if (monitor_zk_->zk_get_node(path, data, 1) == kSuccess) {
     new_status = atoi(data.c_str());
     options_->service_map[path].status = new_status;
   }

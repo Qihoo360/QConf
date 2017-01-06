@@ -44,10 +44,9 @@ class LoadBalance {
   // Key is md5 and value is service_father
   std::map<std::string, std::string> md5_to_service_father_;
   slash::Mutex md5_to_service_father_lock_;
-  std::set<std::string> monitors_;
 
   int RegisterMonitor(const std::string &path);
   int GetMd5ToServiceFather();
-  int GetMonitors();
+  int GetMonitors(size_t &monitors_size, size_t &rank);
 };
 #endif
