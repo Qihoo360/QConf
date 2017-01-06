@@ -36,7 +36,6 @@ extern MonitorOptions *options;
 extern bool need_restart;
 
 void HandleCmd(std::vector<std::string>& cmd);
-void InitEnv(WorkThread *work_thread);
 bool IsProcessRunning(const std::string& process_name);
 int Daemonize();
 int ProcessKeepalive(int& child_exit_status, const std::string pid_file);

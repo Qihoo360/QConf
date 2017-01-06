@@ -1,25 +1,13 @@
 #include "zookeeper.h"
 #include "slash_string.h"
 
-#include <unistd.h>
-#include <pthread.h>
-
-#include <fstream>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <map>
-#include <set>
-#include <vector>
 #include <iostream>
 
 #include "monitor_options.h"
 #include "monitor_log.h"
 #include "monitor_const.h"
 
-using namespace std;
-
-MonitorOptions::MonitorOptions(const string &conf_path)
+MonitorOptions::MonitorOptions(const std::string &conf_path)
       : base_conf(new slash::BaseConf(conf_path)),
         daemon_mode(0),
         auto_restart(0),
@@ -51,7 +39,7 @@ int MonitorOptions::Load() {
   if (base_conf->LoadConf() != 0)
     return kOtherError;
 
-  Log::init(kMaxLogLevel);
+  mlog::Init(kMaxLogLevel);
 
   base_conf->GetConfBool(kDaemonMode, &daemon_mode);
   base_conf->GetConfBool(kAutoRestart, &auto_restart);
@@ -67,7 +55,7 @@ int MonitorOptions::Load() {
   }
   monitor_host_name.assign(hostname);
 
-  vector<string> word;
+  std::vector<std::string> word;
   slash::StringSplit(monitor_host_name, '.', word);
   bool find_zk_host = false;
   for (auto iter = word.begin(); iter != word.end(); iter++) {
@@ -89,7 +77,7 @@ int MonitorOptions::Load() {
   base_conf->GetConfInt(kZkRecvTimeout, &zk_recv_timeout);
 
   // Reload the config result in the change of loglevel in Log
-  Log::init(log_level);
+  mlog::Init(log_level);
 
   // Set zookeeper log path
   int ret;
@@ -130,12 +118,12 @@ void MonitorOptions::Debug() {
 }
 
 void MonitorOptions::DebugServiceMap() {
-  for (auto it = service_map.begin(); it != service_map.end(); ++it) {
-    LOG(LOG_INFO, "path: %s", (it->first).c_str());
-    LOG(LOG_INFO, "host: %s", (it->second).host.c_str());
-    LOG(LOG_INFO, "port: %d", (it->second).port);
-    LOG(LOG_INFO, "service father: %s", (it->second).service_father.c_str());
-    LOG(LOG_INFO, "status: %d", (it->second).status);
+  for (auto &item : service_map) {
+    LOG(LOG_INFO, "path: %s", item.first.c_str());
+    LOG(LOG_INFO, "host: %s", item.second.host.c_str());
+    LOG(LOG_INFO, "port: %d", item.second.port);
+    LOG(LOG_INFO, "service father: %s", item.second.service_father.c_str());
+    LOG(LOG_INFO, "status: %d", item.second.status);
   }
 }
 

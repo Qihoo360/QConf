@@ -34,11 +34,19 @@ class WorkThread {
   std::atomic<bool> should_exit_;
 
  public:
+  // Only used for update status in update thread.
+  // does not need callback handle
+  struct WorkCallbackHandle : public MonitorZk::ZkCallBackHandle {
+    void ProcessDeleteEvent(const string& path) {}
+    void ProcessChildEvent(const string &path) {}
+    void ProcessChangedEvent(const string &path) {}
+  };
+
   static MonitorZk *monitor_zk;
-  static MonitorZk *GetZkInstance(MonitorOptions *options,
-                                  MonitorZk::ZkCallBackHandle *cb_handle) {
+  static MonitorZk *GetZkInstance(MonitorOptions *options) {
     if (monitor_zk == NULL) {
-      monitor_zk = new MonitorZk(options, cb_handle);
+      static WorkCallbackHandle cb_handle;
+      monitor_zk = new MonitorZk(options, &cb_handle);
       int ret = kOtherError;
       if ((ret = monitor_zk->InitEnv()) != kSuccess) {
         LOG(LOG_ERROR, "Init zookeeper client failed");
@@ -48,4 +56,4 @@ class WorkThread {
   }
 };
 
-#endif
+#endif  //  MULTITHREAD_H
