@@ -8,27 +8,27 @@
 #include "monitor_log.h"
 #include "monitor_const.h"
 
-using namespace std;
-
 int Log::logLevel = LOG_WARNING;
 FILE* Log::fp = NULL;
 pthread_mutex_t Log::mutex;
 char Log::curLogFileName[128] = {0};
-string Log::logLevelitos[7] = {"FATAL_ERROR", "ERROR", "WARNING", "NOTICE", "INFO", "TRACE", "DEBUG"};
+std::string Log::logLevelitos[7] = {"FATAL_ERROR", "ERROR", "WARNING", "NOTICE", "INFO", "TRACE", "DEBUG"};
+std::string Log::kLogPath = "logs/";
+std::string Log::kLogFileNamePrefix = "qconf_monitor.log";
 
 int Log::init(const int ll) {
     logLevel = ll;
     return 0;
 }
 
-string Log::getLogLevelStr(const int level) {
+std::string Log::getLogLevelStr(const int level) {
     return logLevelitos[level];
 }
 
 int Log::checkFile(const int year, const int mon, const int day){
     char newName[128] = {0};
-    snprintf(newName, sizeof(newName), "%s%s.%4d%02d%02d", logPath.c_str(),
-        logFileNamePrefix.c_str(), year, mon, day);
+    snprintf(newName, sizeof(newName), "%s%s.%4d%02d%02d", kLogPath.c_str(),
+        kLogFileNamePrefix.c_str(), year, mon, day);
     if (strcmp(curLogFileName, newName) == 0) {
         return 0;
     }
@@ -65,7 +65,7 @@ int Log::printLog(const char* fileName, const int line, const int level, const c
     if (level > logLevel) {
         return 0;
     }
-    string logInfo = getLogLevelStr(level);
+    std::string logInfo = getLogLevelStr(level);
     //get the time
     time_t curTime;
     time(&curTime);

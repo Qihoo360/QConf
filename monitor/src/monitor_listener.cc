@@ -77,7 +77,7 @@ int ServiceListener::AddChildren(const std::string &service_father,
 }
 
 int ServiceListener::LoadService(std::string path, std::string service_father, std::string ip_port, std::vector<int>& st) {
-  char status = STATUS_UNKNOWN;
+  char status = kStatusUnknow;
   int ret = kSuccess;
   if ((ret = monitor_zk_->zk_get_service_status(path, status))  != kSuccess) {
     LOG(LOG_ERROR, "get service status failed. service:%s", path.c_str());
@@ -105,20 +105,20 @@ void ServiceListener::BalanceZkHandle::ModifyServiceFatherToIp(const int &op,
   std::string ip;
   int port;
   slash::ParseIpPortString(ip_port, ip, port);
-  if (op == ADD) {
+  if (op == kAdd) {
     //If this ip_port has exist, no need to do anything
     if (options_->service_father_to_ip[service_father].find(ip_port) !=
         options_->service_father_to_ip[service_father].end())
       return;
 
-    char status = STATUS_UNKNOWN;
+    char status = kStatusUnknow;
     if (monitor_zk_->zk_get_service_status(ip_path, status) != kSuccess) return;
 
     ServiceItem item(ip, port, service_father, status);
 
     options_->service_map[ip_path] = item;
     options_->service_father_to_ip[service_father].insert(ip_port);
-  } else if (op == DELETE) {
+  } else if (op == kDelete) {
     options_->service_map.erase(ip_path);
     options_->service_father_to_ip[service_father].erase(ip_port);
   }
@@ -127,7 +127,7 @@ void ServiceListener::BalanceZkHandle::ModifyServiceFatherToIp(const int &op,
 void ServiceListener::BalanceZkHandle::ProcessDeleteEvent(const std::string& path) {
   // It must be a service node. Because I do zoo_get only in service node
   // update service_father_to_ip
-  ModifyServiceFatherToIp(DELETE, path);
+  ModifyServiceFatherToIp(kDelete, path);
 }
 
 void ServiceListener::BalanceZkHandle::ProcessChildEvent(const std::string& path) {
@@ -142,7 +142,7 @@ void ServiceListener::BalanceZkHandle::ProcessChildEvent(const std::string& path
       LOG(LOG_INFO, "add new service");
       for (int i = 0; i < children.count; ++i) {
         std::string ip_port = std::string(children.data[i]);
-        ModifyServiceFatherToIp(ADD, path + "/" + ip_port);
+        ModifyServiceFatherToIp(kAdd, path + "/" + ip_port);
       }
     }
   }
@@ -150,7 +150,7 @@ void ServiceListener::BalanceZkHandle::ProcessChildEvent(const std::string& path
 }
 
 void ServiceListener::BalanceZkHandle::ProcessChangedEvent(const std::string& path) {
-  int new_status = STATUS_UNKNOWN;
+  int new_status = kStatusUnknow;
   std::string data;
   if (monitor_zk_->zk_get_node(path, data, 1) == kSuccess) {
     new_status = atoi(data.c_str());

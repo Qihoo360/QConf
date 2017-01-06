@@ -12,6 +12,9 @@
 #include "monitor_options.h"
 #include "monitor_service_item.h"
 
+const int kMonitorGetRetries = 3;
+const int kMonitorMaxValueSize = 1048577;
+
 class MonitorZk {
  public:
   // Interface for callback handle

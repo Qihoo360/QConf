@@ -60,7 +60,7 @@ MonitorZk::MonitorZk(MonitorOptions *options, ZkCallBackHandle *cb_handle)
     zk_node_buf_(NULL),
     options_(options),
     cb_handle_(cb_handle) {
-  zk_node_buf_ = new char[MONITOR_MAX_VALUE_SIZE];
+  zk_node_buf_ = new char[kMonitorMaxValueSize];
 }
 
 int MonitorZk::InitEnv() {
@@ -88,7 +88,7 @@ MonitorZk::~MonitorZk(){
 int MonitorZk::zk_modify(const std::string &path, const std::string &value)
 {
   int ret = 0;
-  for (int i = 0; i < MONITOR_GET_RETRIES; ++i)
+  for (int i = 0; i < kMonitorGetRetries; ++i)
   {
     ret = zoo_set(zk_handle_, path.c_str(), value.c_str(), value.size(), -1);
     switch (ret)
@@ -114,9 +114,9 @@ int MonitorZk::zk_modify(const std::string &path, const std::string &value)
  */
 int MonitorZk::zk_get_node(const string &path, string &buf, int watcher) {
   int ret = 0;
-  int buffer_len = MONITOR_MAX_VALUE_SIZE;
+  int buffer_len = kMonitorMaxValueSize;
 
-  for (int i = 0; i < MONITOR_GET_RETRIES; ++i) {
+  for (int i = 0; i < kMonitorGetRetries; ++i) {
     ret = zoo_get(zk_handle_, path.c_str(), watcher, zk_node_buf_, &buffer_len, NULL);
     switch (ret) {
       case ZOK:
@@ -153,7 +153,7 @@ int MonitorZk::zk_create_node(const string &path, const string &value, int flags
 // Create znode on zookeeper
 int MonitorZk::zk_create_node(const string &path, const string &value, int flags, char *path_buffer, int path_len) {
   int ret = 0;
-  for (int i = 0; i < MONITOR_GET_RETRIES; ++i) {
+  for (int i = 0; i < kMonitorGetRetries; ++i) {
     ret = zoo_create(zk_handle_, path.c_str(), value.c_str(), value.length(), &ZOO_OPEN_ACL_UNSAFE, flags, path_buffer, path_len);
     switch (ret) {
       case ZOK:
@@ -182,7 +182,7 @@ int MonitorZk::zk_get_chdnodes(const string &path, String_vector &nodes) {
   if (NULL == zk_handle_ || path.empty()) return kParamError;
 
   int ret;
-  for (int i = 0; i < MONITOR_GET_RETRIES; ++i) {
+  for (int i = 0; i < kMonitorGetRetries; ++i) {
     ret = zoo_get_children(zk_handle_, path.c_str(), 1, &nodes);
     switch(ret) {
       case ZOK:
@@ -226,12 +226,12 @@ int MonitorZk::zk_get_service_status(const string &path, char &status) {
 
   string buf;
   if (kSuccess == zk_get_node(path, buf, 1)) {
-    int value = STATUS_UNKNOWN;
+    int value = kStatusUnknow;
     value = atoi(buf.c_str());
     switch(value) {
-      case STATUS_UP:
-      case STATUS_DOWN:
-      case STATUS_OFFLINE:
+      case kStatusUp:
+      case kStatusDown:
+      case kStatusOffline:
         status = static_cast<char>(value);
         break;
       default:
@@ -249,7 +249,7 @@ int MonitorZk::zk_get_service_status(const string &path, char &status) {
 int MonitorZk::zk_exists(const string &path) {
   int ret = 0;
 
-  for (int i = 0; i < MONITOR_GET_RETRIES; ++i) {
+  for (int i = 0; i < kMonitorGetRetries; ++i) {
     ret = zoo_exists(zk_handle_, path.c_str(), 1, NULL);
     switch (ret) {
       case ZOK:

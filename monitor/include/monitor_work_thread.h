@@ -14,6 +14,8 @@
 #include "monitor_load_balance.h"
 #include "monitor_listener.h"
 
+const int kMonitorSleep = 2;
+
 class WorkThread {
  public:
   WorkThread(MonitorOptions *options);

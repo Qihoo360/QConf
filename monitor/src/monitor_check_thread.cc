@@ -55,17 +55,17 @@ int CheckThread::TryConnect(const std::string &cur_service_father) {
 
     ServiceItem item = options_->service_map[ip_port];
     int old_status = item.status;
-    //If the node is STATUS_UNKNOWN or STATUS_OFFLINE, we will ignore it
-    if (old_status == STATUS_UNKNOWN || old_status == STATUS_OFFLINE)
+    //If the node is kStatusUnknow or kStatusOffline, we will ignore it
+    if (old_status == kStatusUnknow || old_status == kStatusOffline)
       continue;
 
-    int cur_try_times = (old_status == STATUS_UP) ? 1 : 3;
-    int status = STATUS_DOWN;
+    int cur_try_times = (old_status == kStatusUp) ? 1 : 3;
+    int status = kStatusDown;
     do {
       pcli_->Connect(item.host, item.port);
-      status = (pcli_->Available()) ? STATUS_UP : STATUS_DOWN;
+      status = (pcli_->Available()) ? kStatusUp : kStatusDown;
       cur_try_times++;
-    } while (cur_try_times < retry_count && status == STATUS_DOWN);
+    } while (cur_try_times < retry_count && status == kStatusDown);
     pcli_->Close();
 
     LOG(LOG_INFO, "|checkService| service:%s, old status:%d, new status:%d. Have tried times:%d, max try times:%d", ip_port.c_str(), old_status, status, cur_try_times, retry_count);
@@ -111,7 +111,7 @@ void CheckThread::CronHandle() {
 
   TryConnect(cur_service_father);
 
-  if (service_father_num > MAX_THREAD_NUM) {
+  if (service_father_num > kMaxThreadNum) {
     options_->SetHasThread(service_pos_, false);
     service_pos_ = options_->GetAndAddWaitingIndex();
     options_->SetHasThread(service_pos_, true);

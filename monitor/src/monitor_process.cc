@@ -115,9 +115,9 @@ void SigForward(const int sig) {
 
 void ProcessParam(const std::string& op) {
   ofstream fout;
-  fout.open(STATUS_LIST_FILE, ofstream::out);
+  fout.open(kStatusListFile, ofstream::out);
   if (!fout.good()) {
-    LOG(LOG_ERROR, "file open failed, path: %s", STATUS_LIST_FILE.c_str());
+    LOG(LOG_ERROR, "file open failed, path: %s", kStatusListFile.c_str());
     return;
   }
   int status;
@@ -132,7 +132,7 @@ void ProcessParam(const std::string& op) {
   std::string node;
 
   //list node
-  if (op != UP && op != DOWN && op != OFFLINE && op != ALL) {
+  if (op != kUp && op != kDown && op != kOffline && op != kAll) {
     std::set<std::string> ips = options->service_father_to_ip[op];
     if (ips.empty()) {
       LOG(LOG_ERROR, "node: %s doesn't exist.", op.c_str());
@@ -140,7 +140,7 @@ void ProcessParam(const std::string& op) {
     }
     //find and output
     allCount = ips.size();
-    for (int i = 0; i < LINE_LENGTH; ++i) {
+    for (int i = 0; i < kLineLength; ++i) {
       fout << "-";
     }
     fout << endl;
@@ -156,15 +156,15 @@ void ProcessParam(const std::string& op) {
       }
       item = options->service_map[ip_port];
       status = item.status;
-      if (status == STATUS_UP) {
+      if (status == kStatusUp) {
         ++upCount;
         stat = "up";
       }
-      else if (status == STATUS_DOWN) {
+      else if (status == kStatusDown) {
         ++downCount;
         stat = "down";
       }
-      else if (status == STATUS_OFFLINE) {
+      else if (status == kStatusOffline) {
         ++offlineCount;
         stat = "offline";
       }
@@ -172,13 +172,13 @@ void ProcessParam(const std::string& op) {
         ++unknownCount;
         stat = "unknown";
       }
-      for (int i = 0; i < LINE_LENGTH; ++i) {
+      for (int i = 0; i < kLineLength; ++i) {
         fout << "-";
       }
       fout << endl;
       fout << setw(10) << stat << setw(30) << (*it) << op <<  endl;
     }
-    for (int i = 0; i < LINE_LENGTH; ++i) {
+    for (int i = 0; i < kLineLength; ++i) {
       fout << "-";
     }
     fout << endl;
@@ -186,7 +186,7 @@ void ProcessParam(const std::string& op) {
       << downCount << "    Unknown:" << unknownCount << "    Total:" << allCount << endl;
     return;
   }
-  for (int i = 0; i < LINE_LENGTH; ++i) {
+  for (int i = 0; i < kLineLength; ++i) {
     fout << "-";
   }
   fout << endl;
@@ -198,10 +198,10 @@ void ProcessParam(const std::string& op) {
     status = item.status;
     node = item.service_father;
     service = item.host + ":" + to_string(item.port);
-    if (status == STATUS_UP) {
+    if (status == kStatusUp) {
       stat = "up";
-      if (op == UP || op == ALL) {
-        for (int i = 0; i < LINE_LENGTH; ++i) {
+      if (op == kUp || op == kAll) {
+        for (int i = 0; i < kLineLength; ++i) {
           fout << "-";
         }
         fout << endl;
@@ -209,10 +209,10 @@ void ProcessParam(const std::string& op) {
       }
       ++upCount;
     }
-    else if (status == STATUS_DOWN) {
+    else if (status == kStatusDown) {
       stat = "down";
-      if (op == DOWN || op == ALL) {
-        for (int i = 0; i < LINE_LENGTH; ++i) {
+      if (op == kDown || op == kAll) {
+        for (int i = 0; i < kLineLength; ++i) {
           fout << "-";
         }
         fout << endl;
@@ -220,10 +220,10 @@ void ProcessParam(const std::string& op) {
       }
       ++downCount;
     }
-    else if (status == STATUS_OFFLINE) {
+    else if (status == kStatusOffline) {
       stat = "offline";
-      if (op == OFFLINE || op == ALL) {
-        for (int i = 0; i < LINE_LENGTH; ++i) {
+      if (op == kOffline || op == kAll) {
+        for (int i = 0; i < kLineLength; ++i) {
           fout << "-";
         }
         fout << endl;
@@ -233,8 +233,8 @@ void ProcessParam(const std::string& op) {
     }
     else {
       stat = "unknown";
-      if (op == ALL) {
-        for (int i = 0; i < LINE_LENGTH; ++i) {
+      if (op == kAll) {
+        for (int i = 0; i < kLineLength; ++i) {
           fout << "-";
         }
         fout << endl;
@@ -243,29 +243,29 @@ void ProcessParam(const std::string& op) {
       ++unknownCount;
     }
   }
-  if (op == UP) {
-    for (int i = 0; i < LINE_LENGTH; ++i) {
+  if (op == kUp) {
+    for (int i = 0; i < kLineLength; ++i) {
       fout << "-";
     }
     fout << endl;
     fout <<"Up Service:" << upCount << endl;
   }
-  if (op == DOWN) {
-    for (int i = 0; i < LINE_LENGTH; ++i) {
+  if (op == kDown) {
+    for (int i = 0; i < kLineLength; ++i) {
       fout << "-";
     }
     fout << endl;
     fout <<"Down Service:" << downCount << endl;
   }
-  if (op == OFFLINE) {
-    for (int i = 0; i < LINE_LENGTH; ++i) {
+  if (op == kOffline) {
+    for (int i = 0; i < kLineLength; ++i) {
       fout << "-";
     }
     fout << endl;
     fout <<"Offline Service:" << offlineCount << endl;
   }
-  if (op == ALL) {
-    for (int i = 0; i < LINE_LENGTH; ++i) {
+  if (op == kAll) {
+    for (int i = 0; i < kLineLength; ++i) {
       fout << "-";
     }
     fout << endl;
@@ -277,10 +277,10 @@ void ProcessParam(const std::string& op) {
 }
 
 void HandleCmd(std::vector<std::string>& cmd) {
-  if (cmd[0] == CMD_RELOAD) {
+  if (cmd[0] == kCmdReload) {
     //handle reload
   }
-  else if (cmd[0] == CMD_LIST) {
+  else if (cmd[0] == kCmdList) {
     if (cmd.size() == 1) {
       cmd.push_back("all");
     }
@@ -341,7 +341,7 @@ int ProcessFileMsg(const std::string cmdFile) {
 void SigHandler(const int sig) {
   switch (sig) {
     case SIGUSR1:
-      ProcessFileMsg(CMDFILE);
+      ProcessFileMsg(kCmdFile);
       break;
     default:
       need_restart = true;

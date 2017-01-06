@@ -21,7 +21,7 @@ struct ServiceItem {
       // default 3 seconds
       conn_timeout(3),
       service_father(""),
-      status(STATUS_DOWN) {
+      status(kStatusDown) {
   }
 
   ServiceItem(std::string &_host, int _port,
