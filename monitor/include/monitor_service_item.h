@@ -1,5 +1,6 @@
-#ifndef SERVICEMAP_H
-#define SERVICEMAP_H
+#ifndef SERVICE_ITEM_H
+#define SERVICE_ITEM_H
+
 #include <netinet/in.h>
 
 #include <map>
@@ -21,13 +22,11 @@ struct ServiceItem {
       conn_timeout(3),
       service_father(""),
       status(STATUS_DOWN) {
-    memset(&addr, 0, sizeof(struct in_addr));
   }
 
-  ServiceItem(std::string _host, struct in_addr *_addr, int _port,
-              std::string _service_father, int _status)
+  ServiceItem(std::string &_host, int _port,
+              std::string &_service_father, int _status)
     : host(_host),
-      addr(*_addr),
       port(_port),
       conn_retry(3),
       conn_timeout(3),
@@ -35,10 +34,7 @@ struct ServiceItem {
       status(_status) {
   }
 
-  // host is IP without port
   std::string host;
-  // addr is for net
-  struct in_addr addr;
   int port;
   int conn_retry;
   int conn_timeout;
@@ -46,4 +42,5 @@ struct ServiceItem {
   // online or offline
   int status;
 };
-#endif
+
+#endif  // SERVICE_ITEM_H

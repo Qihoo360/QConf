@@ -1,6 +1,9 @@
 #ifndef MONITOR_CHECK_THREAD_H
 #define MONITOR_CHECK_THREAD_H
+
 #include "pink_thread.h"
+#include "pink_cli.h"
+#include  "status.h"
 
 #include <string>
 
@@ -15,14 +18,20 @@ class CheckThread : public pink::Thread {
   ~CheckThread();
 
  private:
+  // Used for connect to server, need not data transfer
+  class TestCli : public pink::PinkCli {
+    virtual pink::Status Send(void *) { return pink::Status::OK(); }
+    virtual pink::Status Recv(void *) { return pink::Status::OK(); }
+  };
+
   void *ThreadMain();
   int TryConnect(const string &cur_service_father);
   void CronHandle();
-  bool IsServiceExist(struct in_addr *addr, string host, int port, int timeout, int cur_status);
 
   int service_pos_;
   MonitorOptions *options_;
   pink::BGThread *update_thread_;
+  TestCli *pcli_;
 };
 
 struct UpdateServiceArgs {

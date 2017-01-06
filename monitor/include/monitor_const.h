@@ -1,5 +1,6 @@
 #ifndef CONSTDEF_H
 #define CONSTDEF_H
+
 #include <string>
 
 //config file name
