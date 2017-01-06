@@ -1,5 +1,6 @@
 #ifndef LOADBALANCE_H
 #define LOADBALANCE_H
+
 #include "slash_mutex.h"
 
 #include <string>

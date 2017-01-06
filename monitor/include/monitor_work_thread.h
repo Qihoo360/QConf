@@ -1,5 +1,6 @@
 #ifndef MULTITHREAD_H
 #define MULTITHREAD_H
+
 #include "bg_thread.h"
 #include "slash_mutex.h"
 

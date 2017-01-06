@@ -31,95 +31,12 @@ CheckThread::CheckThread(int init_pos,
         service_pos_(init_pos),
         options_(options),
         update_thread_(update_thread) {
+  pcli_ = new TestCli();
+  pcli_->set_connect_timeout(3);
 }
 
 CheckThread::~CheckThread() {
   should_exit_ = true;
-}
-
-bool CheckThread::IsServiceExist(struct in_addr *addr, std::string host, int port, int timeout, int cur_status) {
-  bool exist = false;
-  int sock = -1, val = 1, ret = 0;
-  struct timeval conn_tv;
-  struct timeval recv_tv;
-  struct sockaddr_in serv_addr;
-  fd_set readfds, writefds, errfds;
-
-  timeout = timeout <= 0 ? 1 : timeout;
-
-  if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    LOG(LOG_ERROR, "socket failed. error:%s", strerror(errno));
-    // return false is a good idea ?
-    return false;
-  }
-
-  memset(&serv_addr, 0, sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(port);
-  serv_addr.sin_addr = *addr;
-
-  // set socket non-block
-  ioctl(sock, FIONBIO, &val);
-
-  // set connect timeout
-  conn_tv.tv_sec = timeout;
-  conn_tv.tv_usec = 0;
-
-  // set recv timeout
-  recv_tv.tv_sec = 1;
-  recv_tv.tv_sec = 0;
-  setsockopt( sock, SOL_SOCKET, SO_RCVTIMEO, &recv_tv, sizeof(recv_tv));
-
-  // connect
-  if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) != 0) {
-    if (errno != EINPROGRESS) {
-      if (cur_status != STATUS_DOWN) {
-        LOG(LOG_ERROR, "connect failed. host:%s port:%d error:%s",
-            host.c_str(), port, strerror(errno));
-      }
-      close(sock);
-      return false;
-    }
-  }
-  FD_ZERO(&readfds);
-  FD_SET(sock, &readfds);
-  FD_ZERO(&writefds);
-  FD_SET(sock, &writefds);
-  FD_ZERO(&errfds);
-  FD_SET(sock, &errfds);
-  ret = select(sock+1, &readfds, &writefds, &errfds, &conn_tv);
-  if ( ret <= 0 ){
-    // connect timeout
-    if (cur_status != STATUS_DOWN) {
-      if (ret == 0) LOG(LOG_ERROR, "connect timeout. host:%s port:%d timeout:%d error:%s",
-                        host.c_str(), port, timeout, strerror(errno));
-      else LOG(LOG_ERROR, "select error. host:%s port:%d timeout:%d error:%s",
-               host.c_str(), port, timeout, strerror(errno));
-    }
-    exist = false;
-  }
-  else {
-    if (! FD_ISSET(sock, &readfds) && ! FD_ISSET(sock, &writefds)) {
-      if (cur_status != STATUS_DOWN) {
-        LOG(LOG_ERROR, "select not in read fds and write fds.host:%s port:%d error:%s",
-            host.c_str(), port, strerror(errno));
-      }
-    }
-    else if (FD_ISSET(sock, &errfds)) {
-      exist = false;
-    }
-    else if (FD_ISSET(sock, &writefds) && FD_ISSET(sock, &readfds)) {
-      exist = false;
-    }
-    else if (FD_ISSET(sock, &readfds) || FD_ISSET(sock, &writefds)) {
-      exist = true;
-    }
-    else {
-      exist = false;
-    }
-  }
-  close(sock);
-  return exist;
 }
 
 // Try to connect to the ip_port to see weather it's connecteble
@@ -142,15 +59,14 @@ int CheckThread::TryConnect(const std::string &cur_service_father) {
     if (old_status == STATUS_UNKNOWN || old_status == STATUS_OFFLINE)
       continue;
 
-    struct in_addr addr = item.addr;
     int cur_try_times = (old_status == STATUS_UP) ? 1 : 3;
-    int timeout = item.conn_timeout > 0 ? item.conn_timeout : 3;
     int status = STATUS_DOWN;
     do {
-      bool res = IsServiceExist(&addr, item.host, item.port, timeout, item.status);
-      status = (res) ? STATUS_UP : STATUS_DOWN;
+      pcli_->Connect(item.host, item.port);
+      status = (pcli_->Available()) ? STATUS_UP : STATUS_DOWN;
       cur_try_times++;
     } while (cur_try_times < retry_count && status == STATUS_DOWN);
+    pcli_->Close();
 
     LOG(LOG_INFO, "|checkService| service:%s, old status:%d, new status:%d. Have tried times:%d, max try times:%d", ip_port.c_str(), old_status, status, cur_try_times, retry_count);
     if (status != old_status) {
@@ -168,21 +84,21 @@ void *CheckThread::ThreadMain() {
 
   when.tv_sec += (cron_interval_ / 1000);
   when.tv_usec += ((cron_interval_ % 1000 ) * 1000);
-  int timeout = cron_interval_;
+  int cron_timeout = cron_interval_;
 
   while (!should_exit_ && !options_->need_rebalance && !process::need_restart) {
     if (cron_interval_ > 0 ) {
       gettimeofday(&now, NULL);
       if (when.tv_sec > now.tv_sec || (when.tv_sec == now.tv_sec && when.tv_usec > now.tv_usec)) {
-        timeout = (when.tv_sec - now.tv_sec) * 1000 + (when.tv_usec - now.tv_usec) / 1000;
+        cron_timeout = (when.tv_sec - now.tv_sec) * 1000 + (when.tv_usec - now.tv_usec) / 1000;
       } else {
         when.tv_sec = now.tv_sec + (cron_interval_ / 1000);
         when.tv_usec = now.tv_usec + ((cron_interval_ % 1000 ) * 1000);
         CronHandle();
-        timeout = cron_interval_;
+        cron_timeout = cron_interval_;
       }
     }
-    sleep(timeout);
+    sleep(cron_timeout);
   }
   return NULL;
 }

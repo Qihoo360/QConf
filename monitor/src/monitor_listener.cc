@@ -91,11 +91,7 @@ int ServiceListener::LoadService(std::string path, std::string service_father, s
   int port;
   slash::ParseIpPortString(ip_port, ip, port);
 
-  struct hostent *ht;
-  ht = gethostbyname(ip.c_str());
-  struct in_addr *addr = (struct in_addr *)ht->h_addr;
-
-  ServiceItem item(ip, addr, port, service_father, status);
+  ServiceItem item(ip, port, service_father, status);
   options_->service_map[path] = item;
   LOG(LOG_INFO, "load service succeed, service:%s, status:%d", path.c_str(), status);
   return kSuccess;
@@ -118,11 +114,7 @@ void ServiceListener::BalanceZkHandle::ModifyServiceFatherToIp(const int &op,
     char status = STATUS_UNKNOWN;
     if (monitor_zk_->zk_get_service_status(ip_path, status) != kSuccess) return;
 
-    struct hostent *ht;
-    ht = gethostbyname(ip.c_str());
-    struct in_addr *addr = (struct in_addr *)ht->h_addr;
-
-    ServiceItem item(ip, addr, port, service_father, status);
+    ServiceItem item(ip, port, service_father, status);
 
     options_->service_map[ip_path] = item;
     options_->service_father_to_ip[service_father].insert(ip_port);
@@ -144,7 +136,7 @@ void ServiceListener::BalanceZkHandle::ProcessChildEvent(const std::string& path
   if (monitor_zk_->zk_get_chdnodes(path, children) == kSuccess) {
     if ((options_->service_father_to_ip.find(path) ==
          options_->service_father_to_ip.end()) ||
-        children.count <= (options_->service_father_to_ip)[path].size()) {
+        children.count <= (int)options_->service_father_to_ip[path].size()) {
       LOG(LOG_INFO, "actually It's a delete event");
     } else {
       LOG(LOG_INFO, "add new service");

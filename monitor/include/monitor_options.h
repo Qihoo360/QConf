@@ -1,5 +1,6 @@
 #ifndef MONITOR_OPTIONS_H
 #define MONITOR_OPTIONS_H
+
 #include "base_conf.h"
 #include "slash_mutex.h"
 
