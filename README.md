@@ -1,5 +1,8 @@
 QConf
 =====
+
+[![Build Status](https://travis-ci.org/Qihoo360/QConf.svg?branch=master)](https://travis-ci.org/Qihoo360/QConf)
+
 We have build another interesting proect [pika](https://github.com/Qihoo360/pika). Pika is a nosql compatible with redis protocol with huge storage space. You can have a try.
 
 ## Introduction [中文](https://github.com/Qihoo360/QConf/blob/master/README_ZH.md)

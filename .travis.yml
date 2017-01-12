@@ -1,0 +1,18 @@
+sudo: required
+dist: trusty
+language: cpp
+
+os:
+  - linux
+
+compiler: 
+  - gcc
+
+language: cpp
+notifications:
+  email:
+    - gaodunqiao@360.cn
+
+script:
+  - cmake .
+  - make
