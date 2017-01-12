@@ -21,7 +21,7 @@
 #include "qconf_format.h"
 
 #define NEED_MD5_TBLLEN 1024
-// #define USE_MIXED_VERIFY
+#define USE_MIXED_VERIFY
 
 using namespace std;
 
