@@ -72,6 +72,7 @@ int WorkThread::Start() {
     // If the number of service father < MAX_THREAD_NUM, one service father one thread
     int thread_num = min(static_cast<int>(options_->service_father_to_ip.size()),
                          kMaxThreadNum);
+    options_->has_thread.resize(thread_num, true);
     for (int i = 0; i < thread_num; ++i) {
       check_threads[i] = new CheckThread(i, update_thread_, options_);
       check_threads[i]->StartThread();
