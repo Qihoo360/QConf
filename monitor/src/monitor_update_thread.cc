@@ -24,7 +24,7 @@ static bool IsOnlyOneUp(const std::string &node, MonitorOptions *options) {
 // Update service thread. comes first update first
 void UpdateServiceFunc(void *arg) {
   UpdateServiceArgs *update_service_args= static_cast<UpdateServiceArgs *>(arg);
-  std::string &ip_port = update_service_args->ip_port;
+  std::string ip_port = update_service_args->ip_port;
   int new_status = update_service_args->new_status;
   MonitorOptions *options = update_service_args->options;
   delete update_service_args;

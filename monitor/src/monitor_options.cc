@@ -55,11 +55,11 @@ int MonitorOptions::Load() {
   }
   monitor_host_name.assign(hostname);
 
-  std::vector<std::string> word;
-  slash::StringSplit(monitor_host_name, '.', word);
+  std::vector<std::string> words;
+  slash::StringSplit(monitor_host_name, '.', words);
   bool find_zk_host = false;
-  for (auto iter = word.begin(); iter != word.end(); iter++) {
-    if (base_conf->GetConfStr(kZkHostPrefix + *iter, &zk_host)) {
+  for (auto &word: words) {
+    if (base_conf->GetConfStr(kZkHostPrefix + word, &zk_host)) {
       find_zk_host = true;
       break;
     }

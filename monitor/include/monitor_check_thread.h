@@ -23,7 +23,7 @@ class CheckThread : public pink::Thread {
   };
 
   void *ThreadMain();
-  int TryConnect(const string &cur_service_father);
+  int TryConnect(const std::string &cur_service_father);
   void CronHandle();
 
   int service_pos_;
@@ -33,12 +33,12 @@ class CheckThread : public pink::Thread {
 };
 
 struct UpdateServiceArgs {
-  explicit UpdateServiceArgs(string ip_port, int new_status, MonitorOptions *options)
+  explicit UpdateServiceArgs(std::string ip_port, int new_status, MonitorOptions *options)
       : ip_port(ip_port),
         new_status(new_status),
         options(options) {
   }
-  string ip_port;
+  std::string ip_port;
   int new_status;
   MonitorOptions *options;
 };
