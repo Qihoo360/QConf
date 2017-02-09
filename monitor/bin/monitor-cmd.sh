@@ -52,7 +52,7 @@ reload () {
 }
 
 version () {
-    echo "$monitor version : 0.2.4"
+    echo "$monitor version : 0.3.0"
 }
 
 case "$1" in

@@ -37,9 +37,9 @@ class WorkThread {
   // Only used for update status in update thread.
   // does not need callback handle
   struct WorkCallbackHandle : public MonitorZk::ZkCallBackHandle {
-    void ProcessDeleteEvent(const string& path) {}
-    void ProcessChildEvent(const string &path) {}
-    void ProcessChangedEvent(const string &path) {}
+    void ProcessDeleteEvent(const std::string& path) {}
+    void ProcessChildEvent(const std::string &path) {}
+    void ProcessChangedEvent(const std::string &path) {}
   };
 
   static MonitorZk *monitor_zk;
