@@ -1,0 +1,6 @@
+[submodule "monitor/third/pink"]
+	path = monitor/third/pink
+	url = https://github.com/Qihoo360/pink.git
+[submodule "monitor/third/slash"]
+	path = monitor/third/slash
+	url = https://github.com/baotiao/slash.git
