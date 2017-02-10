@@ -18,6 +18,7 @@ CheckThread::CheckThread(int init_pos,
 
 CheckThread::~CheckThread() {
   should_exit_ = true;
+  delete pcli_;
 }
 
 // Try to connect to the ip_port to see weather it's connecteble
