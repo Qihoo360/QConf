@@ -275,7 +275,7 @@ static int load_localidc_conf_(const string &localidc_path)
 
     if ('\n' == idc_buf[idc_len - 1]) idc_buf[idc_len - 1] = '\0';
     
-    _agent_conf_map.insert(make_pair<string, string>(QCONF_KEY_LOCAL_IDC, idc_buf));
+    _agent_conf_map.insert(make_pair(QCONF_KEY_LOCAL_IDC, idc_buf));
 
     fclose(fp);
     fp = NULL;
@@ -335,7 +335,7 @@ static int load_conf_(const string &conf_path)
                 continue;
             }
 
-            ret = _idc_conf_map.insert(make_pair<string, string>(idc, value));
+            ret = _idc_conf_map.insert(make_pair(idc, value));
             if (!ret.second)
             {
                 LOG_ERR("Failed to put idc map item:<%s, %s>",
@@ -352,7 +352,7 @@ static int load_conf_(const string &conf_path)
                 continue;
             }
 
-            ret = _agent_conf_map.insert(make_pair<string, string>(key, value));
+            ret = _agent_conf_map.insert(make_pair(key, value));
             if (!ret.second)
             {
                 LOG_ERR("Failed to put conf_map item:<%s, %s>", 
