@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/ipc.h>
 
 #include <vector>
 
