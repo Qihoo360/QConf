@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <sys/stat.h>
+#include <sys/ipc.h>
 
 #include <string>
 #include <iostream>
