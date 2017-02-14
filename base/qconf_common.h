@@ -91,7 +91,7 @@ typedef struct String_vector string_vector_t;
 #define QCONF_INVALID_KEY                   -1
 
 // qconf share memory key
-#define QCONF_DEFAULT_SHM_KEY               0x10cf21d1
+#define QCONF_DEFAULT_SHM_KEY               0x10cf21d3
 #define QCONF_MAX_SLOTS_NUM                 800000 
 
 #define QCONF_FILE_PATH_LEN                 2048
