@@ -150,7 +150,9 @@ static int hash_tbl_get_(qhasharr_t *tbl, const string &key, string &val)
     char *val_tmp = NULL;
     size_t val_tmp_len = 0;
 
+    pthread_mutex_lock(&_qhasharr_op_mutex);
     val_tmp = (char*)qhasharr_get(tbl, key.data(), key.size(), &val_tmp_len);
+    pthread_mutex_unlock(&_qhasharr_op_mutex);
     if (NULL == val_tmp) return QCONF_ERR_NOT_FOUND;
 
     val.assign(val_tmp, val_tmp_len);
@@ -308,7 +310,11 @@ int hash_tbl_set(qhasharr_t *tbl, const string &key, const string &val)
 bool hash_tbl_exist(qhasharr_t *tbl, const string &key)
 {
     if (NULL == tbl || key.empty()) return false;
-    return qhasharr_exist(tbl, key.data(), key.size());
+    bool ret;
+    pthread_mutex_lock(&_qhasharr_op_mutex);
+    ret = qhasharr_exist(tbl, key.data(), key.size());
+    pthread_mutex_unlock(&_qhasharr_op_mutex);
+    return ret;
 }
 
 int hash_tbl_getnext(qhasharr_t *tbl, string &tblkey, string &tblval, int &idx)
