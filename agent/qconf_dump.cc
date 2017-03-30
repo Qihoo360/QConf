@@ -68,6 +68,14 @@ static int qconf_init_dbf_(int flags)
         return QCONF_ERR_OPEN_DUMP;
     }
 
+    int value = 1;
+    int ret = gdbm_setopt(_qconf_dbf, GDBM_COALESCEBLKS, &value, sizeof(value));
+    if (ret != 0) {
+        LOG_FATAL_ERR("Failed to setopt of gdbm file:%s; gdbm err:%s", 
+                _qconf_dump_file.c_str(), gdbm_strerror(gdbm_errno));
+        return QCONF_ERR_OPEN_DUMP;
+    }
+
     return QCONF_OK;
 }
 
