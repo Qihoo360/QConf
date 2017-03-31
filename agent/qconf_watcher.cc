@@ -51,6 +51,10 @@ static CondVar _watch_nodes_cond(&_watch_nodes_mutex);
 static deque<string> _need_watch_nodes;
 static set<string> _exist_watch_nodes;
 
+// Nodes receiving data from zk, and watcher may check this set
+static Mutex _pending_nodes_mutex;
+static set<string> _pending_nodes;
+
 // Idcs need to be do gray process
 static Mutex _gray_idcs_mutex;
 static CondVar _gray_idcs_cond(&_gray_idcs_mutex);
@@ -361,6 +365,28 @@ static void *msg_process(void *p)
     pthread_exit(NULL);
 }
 
+static void add_pending_node(const string& tblkey)
+{
+    _pending_nodes_mutex.Lock();
+    _pending_nodes.insert(tblkey);
+    _pending_nodes_mutex.Unlock();
+}
+
+static void del_pending_node(const string& tblkey)
+{
+    _pending_nodes_mutex.Lock();
+    _pending_nodes.erase(tblkey);
+    _pending_nodes_mutex.Unlock();
+}
+
+static bool pending_node_exist(const string& tblkey)
+{
+    _pending_nodes_mutex.Lock();
+    int exist = (_pending_nodes.find(tblkey) == _pending_nodes.end());
+    _pending_nodes_mutex.Unlock();
+    return exist;
+}
+
 static void deque_process()
 {
     while (!_stop_watcher_setting)
@@ -379,10 +405,12 @@ static void deque_process()
             _exist_watch_nodes.erase(tblkey);
         }
         _watch_nodes_mutex.Unlock();
+        add_pending_node(tblkey);
         if (!tblkey.empty() && QCONF_OK != set_watcher_and_update_tbl(tblkey))
         {
             LOG_ERR_KEY_INFO(tblkey, "Failed to set watcher and update tbl!");
         }
+        del_pending_node(tblkey);
     }
 }
 
@@ -806,19 +834,19 @@ static void process_deleted_event(const string &idc, const string &path)
     
     string tblkey;
     serialize_to_tblkey(QCONF_DATA_TYPE_NODE, idc, path, tblkey); 
-    if (hash_tbl_exist(_shm_tbl, tblkey))
+    if (pending_node_exist(tblkey) || hash_tbl_exist(_shm_tbl, tblkey))
     {
         add_watcher_node(tblkey);
     }
 
     serialize_to_tblkey(QCONF_DATA_TYPE_SERVICE, idc, path, tblkey);
-    if (hash_tbl_exist(_shm_tbl, tblkey))
+    if (pending_node_exist(tblkey) || hash_tbl_exist(_shm_tbl, tblkey))
     {
         add_watcher_node(tblkey);
     }
 
     serialize_to_tblkey(QCONF_DATA_TYPE_BATCH_NODE, idc, path, tblkey);
-    if (hash_tbl_exist(_shm_tbl, tblkey))
+    if (pending_node_exist(tblkey) || hash_tbl_exist(_shm_tbl, tblkey))
     {
         add_watcher_node(tblkey);
     }
@@ -840,7 +868,7 @@ static void process_changed_event(const string &idc, const string &path)
 {
     string tblkey;
     serialize_to_tblkey(QCONF_DATA_TYPE_NODE, idc, path, tblkey);
-    if (hash_tbl_exist(_shm_tbl, tblkey))
+    if (pending_node_exist(tblkey) || hash_tbl_exist(_shm_tbl, tblkey))
     {
         add_watcher_node(tblkey);
     }
@@ -851,7 +879,7 @@ static void process_changed_event(const string &idc, const string &path)
     {
         string parent_tblkey;   
         serialize_to_tblkey(QCONF_DATA_TYPE_SERVICE, idc, path.substr(0, pos), parent_tblkey);
-        if (hash_tbl_exist(_shm_tbl, parent_tblkey))
+        if (pending_node_exist(tblkey) || hash_tbl_exist(_shm_tbl, parent_tblkey))
         {
             add_watcher_node(parent_tblkey);
         }
@@ -866,13 +894,13 @@ static void process_child_event(const string &idc, const string &path)
     string tblkey;
 
     serialize_to_tblkey(QCONF_DATA_TYPE_SERVICE, idc, path, tblkey);
-    if (hash_tbl_exist(_shm_tbl, tblkey))
+    if (pending_node_exist(tblkey) || hash_tbl_exist(_shm_tbl, tblkey))
     {
         add_watcher_node(tblkey);
     }
 
     serialize_to_tblkey(QCONF_DATA_TYPE_BATCH_NODE, idc, path, tblkey);
-    if (hash_tbl_exist(_shm_tbl, tblkey))
+    if (pending_node_exist(tblkey) || hash_tbl_exist(_shm_tbl, tblkey))
     {
         add_watcher_node(tblkey);
     }
