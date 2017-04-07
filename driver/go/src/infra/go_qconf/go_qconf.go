@@ -112,7 +112,7 @@ var (
 )
 
 const (
-    QCONF_DRIVER_GO_VERSION         = "1.0.0"
+    QCONF_DRIVER_GO_VERSION         = "1.2.1"
     QCONF_CONF_BUF_INIT_MAX_LEN     = 2 *1024
     QCONF_CONF_BUF_MAX_LEN          = 1024 *1024
     QCONF_CONF_BUF_MULTIPLE         = 8
