@@ -382,7 +382,7 @@ static void del_pending_node(const string& tblkey)
 static bool pending_node_exist(const string& tblkey)
 {
     _pending_nodes_mutex.Lock();
-    int exist = (_pending_nodes.find(tblkey) == _pending_nodes.end());
+    bool exist = (_pending_nodes.find(tblkey) != _pending_nodes.end());
     _pending_nodes_mutex.Unlock();
     return exist;
 }
