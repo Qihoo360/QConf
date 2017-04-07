@@ -9,7 +9,7 @@ extern "C" {
 #include "qconf_errno.h"
 
 // agent version
-#define QCONF_DRIVER_CC_VERSION "1.0.0"
+#define QCONF_DRIVER_CC_VERSION "1.2.1"
 
 // The max length of conf
 #define QCONF_CONF_BUF_MAX_LEN   (1024*1024)

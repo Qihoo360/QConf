@@ -2,7 +2,7 @@
 #include "qconf.h"
 static PyObject* QconfError;
 
-#define QCONF_DRIVER_PYTHON_VERSION  "1.0.0"
+#define QCONF_DRIVER_PYTHON_VERSION  "1.2.1"
 #if PY_MAJOR_VERSION >= 3
     #define Pys_FromString(val) PyBytes_FromString(val)
 #else

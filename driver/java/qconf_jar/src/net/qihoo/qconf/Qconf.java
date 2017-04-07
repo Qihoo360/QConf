@@ -10,11 +10,11 @@ import net.qihoo.qconf.QconfException;
 
 /**
  * the entrance class of qconf
- * @version 1.0.0
+ * @version 1.2.1
  */
 public class Qconf
 {
-    private static final String QCONF_DRIVER_JAVA_VERSION = "1.0.0";
+    private static final String QCONF_DRIVER_JAVA_VERSION = "1.2.1";
     static
     {
         // 1.load library
