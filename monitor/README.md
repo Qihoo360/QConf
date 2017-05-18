@@ -41,5 +41,5 @@ make install
 
 
 
-1. 通过QConf manager提供的[接口](https://github.com/Qihoo360/Qconf/blob/master/manager/src/php/qconf_manager.cc#L183)添加需要监控的主机为服务节点
+1. 通过QConf manager提供的接口（[PHP](https://github.com/Qihoo360/QConf/wiki/QConf-%E7%AE%A1%E7%90%86%E7%AB%AF%E6%8E%A5%E5%8F%A3%EF%BC%88PHP%EF%BC%89)，[C++](https://github.com/Qihoo360/QConf/wiki/QConf-%E7%AE%A1%E7%90%86%E7%AB%AF%E6%8E%A5%E5%8F%A3%EF%BC%88C---%EF%BC%89)）添加需要监控的主机为服务节点
 2. 使用[zkdash](https://github.com/ireaderlab/zkdash)添加服务节点
