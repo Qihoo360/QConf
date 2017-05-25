@@ -290,7 +290,7 @@ int watcher_setting_start()
         return QCONF_ERR_OTHER;
     }
 
-    // Change trigger thread, trigger process like feedback, execute script and dump
+    // Gray thread, process the gray submit operation
     ret = pthread_create(&gray_thread, NULL, do_gray_process, NULL);
     if (0 != ret)
     {
