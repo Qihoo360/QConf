@@ -741,6 +741,18 @@ static void global_watcher(zhandle_t *zh, int type, int state, const char *path,
         }
         else if (ZOO_CONNECTED_STATE == state)
         {
+            /*
+            ** 建立连接后需要init_env_for_zk
+            */
+            string idc_host, idc, host;
+            unsigned long htkey = reinterpret_cast<unsigned long>(zh);
+            if (QCONF_OK == lock_ht_find(_ht_handle_idchost, _ht_hi_mutex, htkey, idc_host))
+            {
+                deserialize_from_idc_host(idc_host, idc, host); 
+                init_env_for_zk(zh, idc_host, idc);
+                // reset the table watcher
+                _finish_process_tbl_sleep_setting = true;
+            }
             LOG_INFO("[session state: ZOO_CONNECTED_STATE]");
         }
         else if (ZOO_CONNECTING_STATE == state)
@@ -808,6 +820,15 @@ static void init_env_for_zk(zhandle_t *zh, const string &idc_host, const string 
     unsigned long htkey_new = reinterpret_cast<unsigned long>(zh);
     lock_ht_update(_ht_handle_idchost, _ht_hi_mutex, htkey_new, idc_host);
     lock_ht_update(_ht_idchost_handle, _ht_ih_mutex, idc_host, zh);
+
+    /*
+    ** 如果没有真正建立连接，直接退出，等待global_watcher回调时重新init
+    */
+    int state = zoo_state(zh);
+    LOG_INFO("the state is %d",state);
+    if(state != CONNECTED_STATE_DEF){
+        return;
+    }
 
     // Reregister Current Host on Zookeeper host
     zk_register_ephemeral(zh, _register_node_path, QCONF_AGENT_VERSION);
