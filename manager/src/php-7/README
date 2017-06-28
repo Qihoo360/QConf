@@ -1,0 +1,12 @@
+The step to install php qconf_manager
+1. build source and generate qconf_manager.so
+    /usr/local/php/bin/phpize
+    ./configure --with-php-config=/usr/local/php/bin/php-config --with-qconfzk-dir=$QCONF_MANAGER_HEADER$ --enable-static LDFLAGS=$QCONF_MANAGER_STATIC_LIBRARY$
+    make
+    cp -v modules/qconf.so /usr/local/php/extensions/
+
+the QCONF_MANAGER_HEADER and QCONF_MANAGER_STATIC_LIBRARY is the include and lib directory which will generated after install the c version qconf_manager
+
+2. if php.ini doesn't include 'extension=qconf_manager.so', then insert 'extension=qconf_manager.so' into php.ini
+3. if current php has php-fpm service, then restart it
+        /usr/local/php/sbin/php-fpm restart
