@@ -1019,11 +1019,11 @@ TEST_F(Test_qconf_shm, hash_tbl_get_key_exists_and_value_needs_two_slots)
 
 
 /**
-  * Begin_Test_for function: int qconf_check_md5(string &val)
+  * Begin_Test_for function: int qconf_verify(string &val)
   *==============================================================================================================
   */
-// Test for qconf_check_md5: success
-TEST_F(Test_qconf_shm, qconf_check_md5_common)
+// Test for qconf_verify: success
+TEST_F(Test_qconf_shm, qconf_verify_common)
 {
     int retCode = 0;
     char val_md5[QCONF_MD5_INT_LEN] = {0};
@@ -1031,13 +1031,13 @@ TEST_F(Test_qconf_shm, qconf_check_md5_common)
     qhashmd5(val.data(), val.size(), val_md5);
     val.append(val_md5, QCONF_MD5_INT_LEN);
 
-    retCode = qconf_check_md5(val);
+    retCode = qconf_verify(val);
     EXPECT_EQ(QCONF_OK, retCode);
     EXPECT_STREQ("hello", val.data());
 }
 
-// Test for qconf_check_md5: md5 error
-TEST_F(Test_qconf_shm, qconf_check_md5_error_md5)
+// Test for qconf_verify: md5 error
+TEST_F(Test_qconf_shm, qconf_verify_error_md5)
 {
     int retCode = 0;
     char val_md5[QCONF_MD5_INT_LEN] = {0};
@@ -1046,22 +1046,22 @@ TEST_F(Test_qconf_shm, qconf_check_md5_error_md5)
     val_md5[2] = '1';
     val.append(val_md5, QCONF_MD5_INT_LEN);
 
-    retCode = qconf_check_md5(val);
+    retCode = qconf_verify(val);
     EXPECT_EQ(QCONF_ERR_TBL_DATA_MESS, retCode);
 }
 
-// Test for qconf_check_md5: empty
-TEST_F(Test_qconf_shm, qconf_check_md5_val_empty)
+// Test for qconf_verify: empty
+TEST_F(Test_qconf_shm, qconf_verify_val_empty)
 {
     int retCode = 0;
     string val;
 
-    retCode = qconf_check_md5(val);
+    retCode = qconf_verify(val);
     EXPECT_EQ(QCONF_ERR_TBL_DATA_MESS, retCode);
 }
 
 /**
-  * End_Test_for function: int qconf_check_md5(string &val)
+  * End_Test_for function: int qconf_verify(string &val)
   *==============================================================================================================
   */
 

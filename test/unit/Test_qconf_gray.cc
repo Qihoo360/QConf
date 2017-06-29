@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 #include "gtest/gtest.h"
 #include "qconf_gray.h"
