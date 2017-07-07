@@ -61,7 +61,7 @@ class QConfZK
         int zk_node_delete(const std::string &node);
 
         /**
-         * Set services, add if not exit 
+         * Set services, add if not exit
          */
         int zk_services_set(const std::string &node, const std::map<std::string, char> &servs);
 
@@ -89,7 +89,7 @@ class QConfZK
          * Upline one service
          */
         int zk_service_down(const std::string &node, const std::string &serv);
-        
+
         /**
          * Offline one service
          */
@@ -101,7 +101,7 @@ class QConfZK
         int zk_node_get(const std::string &node, std::string &buf);
 
         /**
-         *  Get all services 
+         *  Get all services
          */
         int zk_services_get(const std::string &node, std::set<std::string> &servs);
 
@@ -111,7 +111,7 @@ class QConfZK
         int zk_services_get_with_status(const std::string &node, std::map<std::string, char> &servs);
 
         /**
-         * List all children nodes 
+         * List all children nodes
          */
         int zk_list(const std::string &node, std::set<std::string> &children);
 
@@ -134,12 +134,17 @@ class QConfZK
          * Rollback gray commit
          */
         int zk_gray_rollback(const std::string &gray_id);
-        
+
         /**
          * Commit gray commit
          */
         int zk_gray_commit(const std::string &gray_id);
-        
+
+        /**
+         * Get gray content
+         */
+        int zk_gray_get_content(const std::string &gray_id, std::vector<std::pair<std::string, std::string> > &nodes);
+
     private:
         zhandle_t *zh;
         FILE *zkLog;
@@ -161,7 +166,7 @@ class QConfZK
         int string_to_integer(const std::string &cnt, long &integer);
         std::string integer_to_string(const long &integer);
         int path_normalize(const std::string &path, std::string &new_path);
-        
+
         // Gray related
         int zk_gray_get_content(const std::string &gray_id, std::vector<std::pair<std::string, std::string> > &nodes);
         int zk_gray_delete_notify(const std::string &gray_id);
