@@ -168,7 +168,6 @@ class QConfZK
         int path_normalize(const std::string &path, std::string &new_path);
 
         // Gray related
-        int zk_gray_get_content(const std::string &gray_id, std::vector<std::pair<std::string, std::string> > &nodes);
         int zk_gray_delete_notify(const std::string &gray_id);
         int zk_gray_check_nodes(const std::map<std::string, std::string> &raw_nodes, std::map<std::string, std::string> &nodes);
         int zk_gray_check_chients(const std::vector<std::string> &clients);
