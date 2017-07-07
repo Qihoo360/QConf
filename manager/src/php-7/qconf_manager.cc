@@ -626,6 +626,7 @@ zend_function_entry qconfzk_methods[] = {
     PHP_ME(QConfZK,  grayBegin,             NULL, ZEND_ACC_PUBLIC)
     PHP_ME(QConfZK,  grayRollback,          NULL, ZEND_ACC_PUBLIC)
     PHP_ME(QConfZK,  grayCommit,            NULL, ZEND_ACC_PUBLIC)
+    PHP_ME(QConfZK,  grayContent,           NULL, ZEND_ACC_PUBLIC)
     {NULL, NULL, NULL}	/* Must be the last line in qconf_manager_functions[] */
 };
 /* }}} */
