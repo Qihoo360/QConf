@@ -541,7 +541,6 @@ static PHP_METHOD(QConfZK, grayCommit)
     RETURN_LONG(QCONF_PHP_ERROR);
 }
 
-
 static PHP_METHOD(QConfZK, grayContent)
 {
     zend_string *gray_id;
