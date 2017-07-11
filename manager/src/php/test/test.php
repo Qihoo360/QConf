@@ -189,7 +189,7 @@ foreach ($gray_nodes as $path => $val)
     assert(0 === $zk->nodeSet("$path", "value"));
 }
 $machines = array(
-    "HelloDawndeMacBook-Pro.local",   
+    "HelloDawndeMacBook-Pro.local",
     "HelloDawndeMacBook-Pro.local1"
 );
 
@@ -267,7 +267,7 @@ $gray_nodes = array(
 );
 
 $machines = array(
-    "HelloDawndeMacBook-Pro.local",   
+    "HelloDawndeMacBook-Pro.local",
     "HelloDawndeMacBook-Pro.local1"
 );
 $gray_id = $zk->grayBegin($gray_nodes, $machines);
@@ -290,6 +290,10 @@ foreach ($gray_nodes as $path => $val)
     assert($val == $zk->nodeGet("$path"));
 }
 
+
+$gray_id = "GRAYID1499757386-759608";
+$gray_nodes = $zk->grayContent($gray_id);
+assert(-1 == $gray_nodes);
 
 echo "FINISHED!" . PHP_EOL;
 ?>
