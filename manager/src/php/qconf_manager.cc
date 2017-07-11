@@ -598,19 +598,20 @@ static PHP_METHOD(QConfZK, grayContent)
     std::vector<std::pair<std::string, std::string> >::iterator it;
     array_init(return_value);
 
-    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &gray_id, &$gray_id_len) == FAILURE)
+    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &gray_id, &gray_id_len) == FAILURE)
     {
         RETURN_LONG(QCONF_PHP_ERROR);
     }
 
     QConfZK *qconfzk = NULL;
-    qconfzk_object *obj = Z_QCONFZK_OBJ_P(getThis());
+    qconfzk_object *obj = (qconfzk_object *)zend_object_store_get_object(
+            getThis() TSRMLS_CC);
     qconfzk = obj->qconfzk;
     if(qconfzk != NULL){
         if (QCONF_OK != qconfzk->zk_gray_get_content(std::string(gray_id, gray_id_len), nodes)) RETURN_LONG(QCONF_PHP_ERROR);
         for (it = nodes.begin(); it != nodes.end(); ++it)
         {
-            add_assoc_string(return_value,(*it).first.c_str(),(char *)(*it).second.c_str());
+            add_assoc_string(return_value,(*it).first.c_str(),(char *)(*it).second.c_str(),1);
         }
         RETURN_ZVAL(return_value,0,0);
     }
