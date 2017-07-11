@@ -45,7 +45,7 @@ struct qconfzk_object
 void qconfzk_free_storage(zend_object *object TSRMLS_DC)
 {
     qconfzk_object *obj = (qconfzk_object *)object;
-    delete obj->qconfzk; 
+    delete obj->qconfzk;
     // zend_hash_destroy(obj->std.properties);
     // FREE_HASHTABLE(obj->std.properties);
     efree(obj);
@@ -54,14 +54,14 @@ void qconfzk_free_storage(zend_object *object TSRMLS_DC)
 static inline struct qconfzk_object * php_custom_object_fetch_object(zend_object *obj) {
       return (struct qconfzk_object *)((char *)obj - XtOffsetOf(struct qconfzk_object , std));
 }
- 
+
 #define Z_QCONFZK_OBJ_P(zv) php_custom_object_fetch_object(Z_OBJ_P(zv));
 
 zend_object * qconfzk_create_handler(zend_class_entry *ce TSRMLS_DC) {
      // Allocate sizeof(custom) + sizeof(properties table requirements)
 	struct qconfzk_object *intern = (struct qconfzk_object *)ecalloc(
-		1, 
-		sizeof(struct qconfzk_object) + 
+		1,
+		sizeof(struct qconfzk_object) +
 		zend_object_properties_size(ce));
      // Allocating:
      // struct custom_object {
@@ -72,9 +72,9 @@ zend_object * qconfzk_create_handler(zend_class_entry *ce TSRMLS_DC) {
      zend_object_std_init(&intern->std, ce TSRMLS_CC);
      qconfzk_object_handlers.offset = XtOffsetOf(struct qconfzk_object, std);
      qconfzk_object_handlers.free_obj = qconfzk_free_storage;
- 
+
      intern->std.handlers = &qconfzk_object_handlers;
- 
+
      return &intern->std;
 }
 
@@ -90,14 +90,14 @@ static PHP_METHOD(QConfZK, __construct)
     char *host = NULL;
     int host_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &host, &host_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &host, &host_len) == FAILURE)
     {
         RETURN_NULL();
     }
 
     QConfZK *qconfZk = new QConfZK();
     qconfZk->zk_init(std::string(host, host_len));
-    
+
     qconfzk_object *obj = Z_QCONFZK_OBJ_P(getThis());
     obj->qconfzk = qconfZk;
 }
@@ -110,7 +110,7 @@ static PHP_METHOD(QConfZK, __destruct)
     QConfZK *qconfzk = NULL;
     qconfzk_object *obj = Z_QCONFZK_OBJ_P(getThis());
     qconfzk = obj->qconfzk;
-    if (qconfzk != NULL) 
+    if (qconfzk != NULL)
     {
         qconfzk->zk_close();
     }
@@ -124,7 +124,7 @@ static PHP_METHOD(QConfZK, nodeSet)
     char *path = NULL, *value = NULL;
     int path_len = 0, value_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &value, &value_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &value, &value_len) == FAILURE)
     {
         RETURN_LONG(QCONF_PHP_ERROR);
     }
@@ -132,11 +132,11 @@ static PHP_METHOD(QConfZK, nodeSet)
     QConfZK *qconfzk = NULL;
     qconfzk_object *obj = Z_QCONFZK_OBJ_P(getThis());
     qconfzk = obj->qconfzk;
-    if (qconfzk != NULL) 
+    if (qconfzk != NULL)
     {
         RETURN_LONG(qconfzk->zk_node_set(std::string(path, path_len), std::string(value, value_len)));
     }
-    
+
     RETURN_LONG(QCONF_PHP_ERROR);
 }
 
@@ -145,7 +145,7 @@ static PHP_METHOD(QConfZK, nodeGet)
     char *path = NULL;
     int path_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
         RETURN_NULL();
     }
@@ -166,7 +166,7 @@ static PHP_METHOD(QConfZK, nodeDelete)
     char *path = NULL;
     int path_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
         RETURN_LONG(QCONF_PHP_ERROR);
     }
@@ -177,7 +177,7 @@ static PHP_METHOD(QConfZK, nodeDelete)
     if (qconfzk != NULL) {
         RETURN_LONG(qconfzk->zk_node_delete(std::string(path, path_len)));
     }
-    
+
     RETURN_LONG(QCONF_PHP_ERROR);
 }
 
@@ -189,7 +189,7 @@ static PHP_METHOD(QConfZK, servicesSet)
     int path_len = 0;
     std::map<std::string, char> mserv;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sa", &path, &path_len, &array_input) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sa", &path, &path_len, &array_input) == FAILURE)
     {
         RETURN_LONG(QCONF_PHP_ERROR);
     }
@@ -206,11 +206,11 @@ static PHP_METHOD(QConfZK, servicesSet)
     QConfZK *qconfzk = NULL;
     qconfzk_object *obj = Z_QCONFZK_OBJ_P(getThis());
     qconfzk = obj->qconfzk;
-    if (qconfzk != NULL) 
+    if (qconfzk != NULL)
     {
         RETURN_LONG(qconfzk->zk_services_set(std::string(path, path_len), mserv));
     }
-    
+
     RETURN_LONG(QCONF_PHP_ERROR);
 }
 
@@ -219,7 +219,7 @@ static PHP_METHOD(QConfZK, servicesGet)
     char *path = NULL;
     int path_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
         RETURN_NULL();
     }
@@ -229,18 +229,18 @@ static PHP_METHOD(QConfZK, servicesGet)
     qconfzk_object *obj = Z_QCONFZK_OBJ_P(getThis());
     qconfzk = obj->qconfzk;
     if (qconfzk == NULL) RETURN_NULL();
-    
+
     int ret = QCONF_PHP_ERROR;
     std::set<std::string> servs;
     ret = qconfzk->zk_services_get(std::string(path, path_len), servs);
     if (QCONF_OK != ret) RETURN_NULL();
-    
-    array_init(return_value); 
+
+    array_init(return_value);
     std::set<std::string>::const_iterator it;
     int i = 0;
     for (it = servs.begin(); it != servs.end(); ++it, ++i)
     {
-        add_index_string(return_value, i, const_cast<char*>((*it).c_str())); 
+        add_index_string(return_value, i, const_cast<char*>((*it).c_str()));
     }
     return;
 }
@@ -250,7 +250,7 @@ static PHP_METHOD(QConfZK, servicesGetWithStatus)
     char *path = NULL;
     int path_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
         RETURN_NULL();
     }
@@ -260,18 +260,18 @@ static PHP_METHOD(QConfZK, servicesGetWithStatus)
     qconfzk = obj->qconfzk;
     if (qconfzk == NULL)
         RETURN_NULL();
-    
+
     int ret = QCONF_PHP_ERROR;
     std::map<std::string, char> servs;
     ret = qconfzk->zk_services_get_with_status(std::string(path, path_len), servs);
     if (QCONF_OK != ret) RETURN_NULL();
 
-    array_init(return_value); 
+    array_init(return_value);
 
     std::map<std::string, char>::iterator it = servs.begin();
     for (int i = 0; it != servs.end(); ++it, ++i)
     {
-        add_assoc_long(return_value, const_cast<char*>((it->first).c_str()), it->second); 
+        add_assoc_long(return_value, const_cast<char*>((it->first).c_str()), it->second);
     }
     return;
 }
@@ -282,7 +282,7 @@ static PHP_METHOD(QConfZK, serviceAdd)
     int path_len = 0, serv_len = 0;
     long status = -1;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ssl", &path, &path_len, &serv, &serv_len, &status) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ssl", &path, &path_len, &serv, &serv_len, &status) == FAILURE)
     {
         RETURN_LONG(QCONF_PHP_ERROR);
     }
@@ -302,7 +302,7 @@ static PHP_METHOD(QConfZK, serviceDelete)
     char *path = NULL, *serv = NULL;
     int path_len = 0, serv_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &serv, &serv_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &serv, &serv_len) == FAILURE)
     {
         RETURN_LONG(QCONF_PHP_ERROR);
     }
@@ -312,7 +312,7 @@ static PHP_METHOD(QConfZK, serviceDelete)
     qconfzk = obj->qconfzk;
     if (qconfzk == NULL)
         RETURN_LONG(QCONF_PHP_ERROR);
-    
+
     RETURN_LONG(qconfzk->zk_service_delete(std::string(path, path_len), std::string(serv, serv_len)));
 }
 
@@ -321,7 +321,7 @@ static PHP_METHOD(QConfZK, serviceUp)
     char *path = NULL, *serv = NULL;
     int path_len = 0, serv_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &serv, &serv_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &serv, &serv_len) == FAILURE)
     {
         RETURN_LONG(QCONF_PHP_ERROR);
     }
@@ -331,7 +331,7 @@ static PHP_METHOD(QConfZK, serviceUp)
     qconfzk = obj->qconfzk;
     if (qconfzk == NULL)
         RETURN_LONG(QCONF_PHP_ERROR);
-    
+
     RETURN_LONG(qconfzk->zk_service_up(std::string(path, path_len), std::string(serv, serv_len)));
 }
 
@@ -340,7 +340,7 @@ static PHP_METHOD(QConfZK, serviceDown)
     char *path = NULL, *serv = NULL;
     int path_len = 0, serv_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &serv, &serv_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &serv, &serv_len) == FAILURE)
     {
         RETURN_LONG(QCONF_PHP_ERROR);
     }
@@ -350,7 +350,7 @@ static PHP_METHOD(QConfZK, serviceDown)
     qconfzk = obj->qconfzk;
     if (qconfzk == NULL)
         RETURN_LONG(QCONF_PHP_ERROR);
-    
+
     RETURN_LONG(qconfzk->zk_service_down(std::string(path, path_len), std::string(serv, serv_len)));
 }
 
@@ -359,7 +359,7 @@ static PHP_METHOD(QConfZK, serviceOffline)
     char *path = NULL, *serv = NULL;
     int path_len = 0, serv_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &serv, &serv_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &serv, &serv_len) == FAILURE)
     {
         RETURN_LONG(QCONF_PHP_ERROR);
     }
@@ -369,7 +369,7 @@ static PHP_METHOD(QConfZK, serviceOffline)
     qconfzk = obj->qconfzk;
     if (qconfzk == NULL)
         RETURN_LONG(QCONF_PHP_ERROR);
-    
+
     RETURN_LONG(qconfzk->zk_service_offline(std::string(path, path_len), std::string(serv, serv_len)));
 }
 
@@ -378,7 +378,7 @@ static PHP_METHOD(QConfZK, serviceClear)
     char *path = NULL;
     int path_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
         RETURN_LONG(QCONF_PHP_ERROR);
     }
@@ -389,7 +389,7 @@ static PHP_METHOD(QConfZK, serviceClear)
     if (qconfzk != NULL) {
         RETURN_LONG(qconfzk->zk_service_clear(std::string(path, path_len)));
     }
-    
+
     RETURN_LONG(QCONF_PHP_ERROR);
 }
 
@@ -398,7 +398,7 @@ static PHP_METHOD(QConfZK, list)
     char *path = NULL;
     int path_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
         RETURN_NULL();
     }
@@ -408,18 +408,18 @@ static PHP_METHOD(QConfZK, list)
     qconfzk_object *obj = Z_QCONFZK_OBJ_P(getThis());
     qconfzk = obj->qconfzk;
     if (qconfzk == NULL) RETURN_NULL();
-    
+
     int ret = QCONF_PHP_ERROR;
     std::set<std::string> children;
     ret = qconfzk->zk_list(std::string(path, path_len), children);
     if (QCONF_OK != ret) RETURN_NULL();
-    
-    array_init(return_value); 
+
+    array_init(return_value);
     std::set<std::string>::const_iterator it;
     int i = 0;
     for (it = children.begin(); it != children.end(); ++it, ++i)
     {
-        add_index_string(return_value, i, const_cast<char*>((*it).c_str())); 
+        add_index_string(return_value, i, const_cast<char*>((*it).c_str()));
     }
     return;
 }
@@ -429,7 +429,7 @@ static PHP_METHOD(QConfZK, listWithValue)
     char *path = NULL;
     int path_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
         RETURN_NULL();
     }
@@ -439,18 +439,18 @@ static PHP_METHOD(QConfZK, listWithValue)
     qconfzk = obj->qconfzk;
     if (qconfzk == NULL)
         RETURN_NULL();
-    
+
     int ret = QCONF_PHP_ERROR;
     std::map<std::string, std::string> children;
     ret = qconfzk->zk_list_with_values(std::string(path, path_len), children);
     if (QCONF_OK != ret) RETURN_NULL();
-    
-    array_init(return_value); 
+
+    array_init(return_value);
 
     std::map<std::string, std::string>::iterator it = children.begin();
     for (int i = 0; it != children.end(); ++it, ++i)
     {
-        add_assoc_string(return_value, const_cast<char*>((it->first).c_str()), (char*)(it->second).c_str()); 
+        add_assoc_string(return_value, const_cast<char*>((it->first).c_str()), (char*)(it->second).c_str());
     }
     return;
 }
@@ -464,7 +464,7 @@ static PHP_METHOD(QConfZK, grayBegin)
     std::map<std::string, std::string> mpaths;
     std::vector<std::string> mmachines;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "aa", &apath, &amachine) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "aa", &apath, &amachine) == FAILURE)
     {
         RETURN_NULL();
     }
@@ -497,7 +497,7 @@ static PHP_METHOD(QConfZK, grayBegin)
         if (QCONF_OK == qconfzk->zk_gray_begin(mpaths, mmachines, gray_id))
             RETURN_STRINGL(const_cast<char*>(gray_id.c_str()), gray_id.size());
     }
-    
+
     RETURN_NULL();
 }
 
@@ -506,7 +506,7 @@ static PHP_METHOD(QConfZK, grayRollback)
     char *gray_id = NULL;
     int gray_id_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &gray_id, &gray_id_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &gray_id, &gray_id_len) == FAILURE)
     {
         RETURN_LONG(QCONF_PHP_ERROR);
     }
@@ -517,7 +517,7 @@ static PHP_METHOD(QConfZK, grayRollback)
     if (qconfzk != NULL) {
         RETURN_LONG(qconfzk->zk_gray_rollback(std::string(gray_id, gray_id_len)));
     }
-    
+
     RETURN_LONG(QCONF_PHP_ERROR);
 }
 
@@ -526,7 +526,7 @@ static PHP_METHOD(QConfZK, grayCommit)
     char *gray_id = NULL;
     int gray_id_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &gray_id, &gray_id_len) == FAILURE) 
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &gray_id, &gray_id_len) == FAILURE)
     {
         RETURN_LONG(QCONF_PHP_ERROR);
     }
@@ -537,10 +537,36 @@ static PHP_METHOD(QConfZK, grayCommit)
     if (qconfzk != NULL) {
         RETURN_LONG(qconfzk->zk_gray_commit(std::string(gray_id, gray_id_len)));
     }
-    
+
     RETURN_LONG(QCONF_PHP_ERROR);
 }
 
+static PHP_METHOD(QConfZK, grayContent)
+{
+    zend_string *gray_id;
+    std::vector<std::pair<std::string, std::string> > nodes;
+    std::vector<std::pair<std::string, std::string> >::iterator it;
+    array_init(return_value);
+
+    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "S", &gray_id) == FAILURE)
+    {
+        RETURN_LONG(QCONF_PHP_ERROR);
+    }
+
+    QConfZK *qconfzk = NULL;
+    qconfzk_object *obj = Z_QCONFZK_OBJ_P(getThis());
+    qconfzk = obj->qconfzk;
+    if(qconfzk != NULL){
+        if (QCONF_OK != qconfzk->zk_gray_get_content(ZSTR_VAL(gray_id), nodes)) RETURN_LONG(QCONF_PHP_ERROR);
+        for (it = nodes.begin(); it != nodes.end(); ++it)
+        {
+            add_assoc_string(return_value,(*it).first.c_str(),(char *)(*it).second.c_str());
+        }
+        RETURN_ZVAL(return_value,0,0);
+    }
+
+    RETURN_LONG(QCONF_PHP_ERROR);
+}
 /* }}} */
 
 
@@ -599,6 +625,7 @@ zend_function_entry qconfzk_methods[] = {
     PHP_ME(QConfZK,  grayBegin,             NULL, ZEND_ACC_PUBLIC)
     PHP_ME(QConfZK,  grayRollback,          NULL, ZEND_ACC_PUBLIC)
     PHP_ME(QConfZK,  grayCommit,            NULL, ZEND_ACC_PUBLIC)
+    PHP_ME(QConfZK,  grayContent,           NULL, ZEND_ACC_PUBLIC)
     {NULL, NULL, NULL}	/* Must be the last line in qconf_manager_functions[] */
 };
 /* }}} */
@@ -633,7 +660,7 @@ zend_module_entry qconf_manager_module_entry = {
 	NULL,
 	PHP_MINIT(qconf_manager),
 	PHP_MSHUTDOWN(qconf_manager),
-	NULL,		
+	NULL,
 	NULL,
 	PHP_MINFO(qconf_manager),
 	PHP_QCONF_MANAGER_VERSION,
