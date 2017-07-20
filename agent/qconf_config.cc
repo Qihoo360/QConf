@@ -227,7 +227,7 @@ static int is_valid_conf(const string &key, const string &value)
     return QCONF_OK;
 }
 
-int qconf_load_conf(const string &agent_dir)
+int qconf_load_conf(const string &agent_dir, const std::string& localidc)
 {
     string agent_conf_path = agent_dir + QCONF_AGENT_CONF_PATH;
     string idc_conf_path = agent_dir + QCONF_IDC_CONF_PATH;
@@ -238,8 +238,13 @@ int qconf_load_conf(const string &agent_dir)
     if (QCONF_OK != ret) return ret;
     ret = load_conf_(idc_conf_path);
     if (QCONF_OK != ret) return ret;
-    ret = load_localidc_conf_(localidc_path);
-    if (QCONF_OK != ret) return ret;
+    if (localidc.empty()) {
+      ret = load_localidc_conf_(localidc_path);
+      if (QCONF_OK != ret) return ret;
+    } else {
+      _agent_conf_map.insert(make_pair(QCONF_KEY_LOCAL_IDC, localidc));
+      ret = QCONF_OK;
+    }
 
     printf_map(_agent_conf_map);
     printf_map(_idc_conf_map);
