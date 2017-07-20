@@ -32,6 +32,12 @@ static void qconf_agent_destroy();
 #define STRING_(str) #str
 #define STRING(str) STRING_(str)
 
+static void Usage() {
+  LOG_INFO("Usage: \n ./qconf_agent --localidc=idcname\n"
+           "We support one argument for now, idcname is "
+           "your idc name in agent.conf");
+}
+
 int main(int argc, char **arg)
 {
     string agent_dir("..");
@@ -49,7 +55,22 @@ int main(int argc, char **arg)
     if (QCONF_OK != ret) return ret;
 
     // load configure
-    ret = qconf_load_conf(agent_dir);
+    // Check localidc argv
+    std::string localidc;
+    if (argc > 1) {
+      if (argc == 2) {
+        std::string localidc_s(argv[1]);
+        if (localidc_s.empty()) {
+          Usage();
+        }
+        size_t pos = localidc_s.find("=");
+        localidc.assign(localidc_s.substr(pos + 1));
+      } else {
+        Usage();
+      }
+      LOG_DEBUG("localidc: %s", localidc.c_str());
+    }
+    ret = qconf_load_conf(agent_dir, localidc);
     if (QCONF_OK != ret)
     {
         LOG_FATAL_ERR("Failed to load configure!");

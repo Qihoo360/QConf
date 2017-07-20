@@ -7,7 +7,7 @@
 /**
  * Read configuration from file
  */
-int qconf_load_conf(const std::string &agent_dir);
+int qconf_load_conf(const std::string &agent_dir, const std::string& localidc = "");
 
 /**
  * Get config value
