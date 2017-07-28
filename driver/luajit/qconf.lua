@@ -51,7 +51,7 @@ local qconf_conf_buf_max_len = 1048576
 local qconf_host_buf_max_len = 256
 
 -- define qconf lua version
-local qconf_version = "1.2.1"
+local qconf_version = "1.2.2"
 
 -- define the qconf errors flags
 local qconf_errors = {
