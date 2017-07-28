@@ -348,13 +348,21 @@ static PHP_METHOD(Qconf, getHostNative)
 	{
 		if (nodes.count == 0)
 		{
+#if PHP_VERSION_ID >= 70000
+			RETVAL_STRINGL("", 0);
+#else
 			RETVAL_STRINGL("", 0, 1);
+#endif
 		}
 		else 
 		{
 			unsigned int r = rand() % nodes.count;
 			size_t node_len = strlen(nodes.data[r]);
+#if PHP_VERSION_ID >= 70000
+			RETVAL_STRINGL(nodes.data[r], node_len);
+#else
 			RETVAL_STRINGL(nodes.data[r], node_len, 1);
+#endif
 		}
 
 		destroy_string_vector(&nodes);
@@ -404,7 +412,11 @@ static PHP_METHOD(Qconf, getAllHostNative)
 		array_init(return_value);
 		for (i = 0; i < nodes.count; i++) 
 		{
+#if PHP_VERSION_ID >= 70000
+			add_next_index_string(return_value, nodes.data[i]);
+#else
 			add_next_index_string(return_value, nodes.data[i], 1);
+#endif
 		}
 
 		destroy_string_vector(&nodes);
@@ -670,7 +682,11 @@ static PHP_METHOD(QConfig, GetBatchKeysNative)
 		array_init(return_value);
 		for (i = 0; i < nodes.count; i++) 
 		{
+#if PHP_VERSION_ID >= 70000
+			add_next_index_string(return_value, nodes.data[i]);
+#else
 			add_next_index_string(return_value, nodes.data[i], 1);
+#endif
 		}
 
 		destroy_string_vector(&nodes);
