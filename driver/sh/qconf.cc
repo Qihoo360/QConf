@@ -15,7 +15,7 @@ using namespace std;
 #define CMD_GET_BATCH_KEYS      "get_batch_keys"
 #define CMD_VERSION             "version"
 
-#define QCONF_SHELL_VERSION     "1.2.1"
+#define QCONF_SHELL_VERSION     "1.2.2"
 
 void show_usage()
 {

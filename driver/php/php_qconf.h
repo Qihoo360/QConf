@@ -9,7 +9,7 @@
 # include "config.h"
 #endif
 
-#define QCONF_DRIVER_PHP_VERSION 		"1.2.1"
+#define QCONF_DRIVER_PHP_VERSION 		"1.2.2"
 #define QCONF_WAIT                      0
 #define QCONF_NOWAIT                    1 
 
