@@ -57,7 +57,7 @@ int execute_script(const string &script, const long mtimeout)
     fd_set  set;
     struct  timeval timeout;
     timeout.tv_sec = mtimeout / 1000;
-    timeout.tv_usec = mtimeout % 1000 * 1000000;
+    timeout.tv_usec = mtimeout % 1000 * 1000;
 
     struct sigaction act, oact;
     sigemptyset(&act.sa_mask);
