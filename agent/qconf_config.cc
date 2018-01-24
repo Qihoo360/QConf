@@ -142,9 +142,9 @@ static int is_ip_port(const string &item)
 
 static int get_first_host_by_name(const string &domain, string &ip_address)
 {
-    char **pptr;
-    const char *ip_res;
-    struct hostent *hptr;
+    char **pptr = NULL;
+    const char *ip_res = NULL;
+    struct hostent *hptr = NULL;
     char str[32];
 
     if(NULL == (hptr = gethostbyname(domain.c_str())))
