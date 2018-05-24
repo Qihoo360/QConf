@@ -3,7 +3,7 @@
     <property name="src.dir" value="src" />
     <property name="dest.dir" value="classes" />
     <property name="doc.dir" value="doc" />
-    <property name="qconf.jar" value="qconf-client-1.2.2.jar" />
+    <property name="qconf.jar" value="qconf-client-1.2.3.jar" />
     <target name="init">
         <mkdir dir="${dest.dir}" />
         <mkdir dir="${doc.dir}" />
