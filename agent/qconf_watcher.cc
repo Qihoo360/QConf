@@ -302,7 +302,7 @@ int watcher_setting_start()
         return QCONF_ERR_OTHER;
     }
 
-    // Main thread, set wather on zookeeper and write share table
+    // Main thread, set watcher on zookeeper and write share table
     deque_process();
 
     qconf_thread_exit();
