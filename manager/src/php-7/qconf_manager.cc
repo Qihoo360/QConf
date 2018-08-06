@@ -40,22 +40,24 @@ struct qconfzk_object
 {
     zend_object std;
     QConfZK *qconfzk;
-};
-
-void qconfzk_free_storage(zend_object *object TSRMLS_DC)
-{
-    qconfzk_object *obj = (qconfzk_object *)object;
-    delete obj->qconfzk;
-    // zend_hash_destroy(obj->std.properties);
-    // FREE_HASHTABLE(obj->std.properties);
-    efree(obj);
-}
+}; 
 
 static inline struct qconfzk_object * php_custom_object_fetch_object(zend_object *obj) {
-      return (struct qconfzk_object *)((char *)obj - XtOffsetOf(struct qconfzk_object , std));
+      return (struct qconfzk_object *)((char *)obj - XtOffsetOf(struct qconfzk_object, std));
 }
 
 #define Z_QCONFZK_OBJ_P(zv) php_custom_object_fetch_object(Z_OBJ_P(zv));
+
+void qconfzk_free_storage(zend_object *object TSRMLS_DC)
+{
+    qconfzk_object *obj = php_custom_object_fetch_object(object);
+    if (obj->qconfzk != NULL) 
+    {
+        delete obj->qconfzk;
+        obj->qconfzk = NULL;
+    }
+    zend_object_std_dtor(object);
+}
 
 zend_object * qconfzk_create_handler(zend_class_entry *ce TSRMLS_DC) {
      // Allocate sizeof(custom) + sizeof(properties table requirements)
@@ -88,7 +90,7 @@ zend_class_entry *qconfzk_ce;
 static PHP_METHOD(QConfZK, __construct)
 {
     char *host = NULL;
-    int host_len = 0;
+    size_t host_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &host, &host_len) == FAILURE)
     {
@@ -96,7 +98,7 @@ static PHP_METHOD(QConfZK, __construct)
     }
 
     QConfZK *qconfZk = new QConfZK();
-    qconfZk->zk_init(std::string(host, host_len));
+    qconfZk->zk_init(std::string(host, static_cast<int>(host_len)));
 
     qconfzk_object *obj = Z_QCONFZK_OBJ_P(getThis());
     obj->qconfzk = qconfZk;
@@ -122,7 +124,7 @@ static PHP_METHOD(QConfZK, __destruct)
 static PHP_METHOD(QConfZK, nodeSet)
 {
     char *path = NULL, *value = NULL;
-    int path_len = 0, value_len = 0;
+    size_t path_len = 0, value_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &value, &value_len) == FAILURE)
     {
@@ -134,7 +136,7 @@ static PHP_METHOD(QConfZK, nodeSet)
     qconfzk = obj->qconfzk;
     if (qconfzk != NULL)
     {
-        RETURN_LONG(qconfzk->zk_node_set(std::string(path, path_len), std::string(value, value_len)));
+        RETURN_LONG(qconfzk->zk_node_set(std::string(path, static_cast<int>(path_len)), std::string(value, static_cast<int>(value_len))));
     }
 
     RETURN_LONG(QCONF_PHP_ERROR);
@@ -143,7 +145,7 @@ static PHP_METHOD(QConfZK, nodeSet)
 static PHP_METHOD(QConfZK, nodeGet)
 {
     char *path = NULL;
-    int path_len = 0;
+    size_t path_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
@@ -155,7 +157,7 @@ static PHP_METHOD(QConfZK, nodeGet)
     qconfzk = obj->qconfzk;
     if (qconfzk != NULL) {
         std::string value;
-        if (QCONF_OK != qconfzk->zk_node_get(std::string(path, path_len), value)) RETURN_NULL();
+        if (QCONF_OK != qconfzk->zk_node_get(std::string(path, static_cast<int>(path_len)), value)) RETURN_NULL();
         RETURN_STRINGL(const_cast<char*>(value.c_str()), value.size());
     }
     RETURN_NULL();
@@ -164,7 +166,7 @@ static PHP_METHOD(QConfZK, nodeGet)
 static PHP_METHOD(QConfZK, nodeDelete)
 {
     char *path = NULL;
-    int path_len = 0;
+    size_t path_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
@@ -175,7 +177,7 @@ static PHP_METHOD(QConfZK, nodeDelete)
     qconfzk_object *obj = Z_QCONFZK_OBJ_P(getThis());
     qconfzk = obj->qconfzk;
     if (qconfzk != NULL) {
-        RETURN_LONG(qconfzk->zk_node_delete(std::string(path, path_len)));
+        RETURN_LONG(qconfzk->zk_node_delete(std::string(path, static_cast<int>(path_len))));
     }
 
     RETURN_LONG(QCONF_PHP_ERROR);
@@ -186,7 +188,7 @@ static PHP_METHOD(QConfZK, servicesSet)
     char *path = NULL;
     zval *array_input, *val;
 	ulong num_key;
-    int path_len = 0;
+    size_t path_len = 0;
     std::map<std::string, char> mserv;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sa", &path, &path_len, &array_input) == FAILURE)
@@ -208,7 +210,7 @@ static PHP_METHOD(QConfZK, servicesSet)
     qconfzk = obj->qconfzk;
     if (qconfzk != NULL)
     {
-        RETURN_LONG(qconfzk->zk_services_set(std::string(path, path_len), mserv));
+        RETURN_LONG(qconfzk->zk_services_set(std::string(path, static_cast<int>(path_len)), mserv));
     }
 
     RETURN_LONG(QCONF_PHP_ERROR);
@@ -217,7 +219,7 @@ static PHP_METHOD(QConfZK, servicesSet)
 static PHP_METHOD(QConfZK, servicesGet)
 {
     char *path = NULL;
-    int path_len = 0;
+    size_t path_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
@@ -232,7 +234,7 @@ static PHP_METHOD(QConfZK, servicesGet)
 
     int ret = QCONF_PHP_ERROR;
     std::set<std::string> servs;
-    ret = qconfzk->zk_services_get(std::string(path, path_len), servs);
+    ret = qconfzk->zk_services_get(std::string(path, static_cast<int>(path_len)), servs);
     if (QCONF_OK != ret) RETURN_NULL();
 
     array_init(return_value);
@@ -248,7 +250,7 @@ static PHP_METHOD(QConfZK, servicesGet)
 static PHP_METHOD(QConfZK, servicesGetWithStatus)
 {
     char *path = NULL;
-    int path_len = 0;
+    size_t path_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
@@ -263,7 +265,7 @@ static PHP_METHOD(QConfZK, servicesGetWithStatus)
 
     int ret = QCONF_PHP_ERROR;
     std::map<std::string, char> servs;
-    ret = qconfzk->zk_services_get_with_status(std::string(path, path_len), servs);
+    ret = qconfzk->zk_services_get_with_status(std::string(path, static_cast<int>(path_len)), servs);
     if (QCONF_OK != ret) RETURN_NULL();
 
     array_init(return_value);
@@ -279,7 +281,7 @@ static PHP_METHOD(QConfZK, servicesGetWithStatus)
 static PHP_METHOD(QConfZK, serviceAdd)
 {
     char *path, *serv = NULL;
-    int path_len = 0, serv_len = 0;
+    size_t path_len = 0, serv_len = 0;
     long status = -1;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ssl", &path, &path_len, &serv, &serv_len, &status) == FAILURE)
@@ -294,13 +296,13 @@ static PHP_METHOD(QConfZK, serviceAdd)
     qconfzk = obj->qconfzk;
     if (qconfzk == NULL)
         RETURN_LONG(QCONF_PHP_ERROR);
-    RETURN_LONG(qconfzk->zk_service_add(std::string(path, path_len), std::string(serv, serv_len), status));
+    RETURN_LONG(qconfzk->zk_service_add(std::string(path, static_cast<int>(path_len)), std::string(serv, static_cast<int>(serv_len)), status));
 }
 
 static PHP_METHOD(QConfZK, serviceDelete)
 {
     char *path = NULL, *serv = NULL;
-    int path_len = 0, serv_len = 0;
+    size_t path_len = 0, serv_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &serv, &serv_len) == FAILURE)
     {
@@ -313,13 +315,13 @@ static PHP_METHOD(QConfZK, serviceDelete)
     if (qconfzk == NULL)
         RETURN_LONG(QCONF_PHP_ERROR);
 
-    RETURN_LONG(qconfzk->zk_service_delete(std::string(path, path_len), std::string(serv, serv_len)));
+    RETURN_LONG(qconfzk->zk_service_delete(std::string(path, static_cast<int>(path_len)), std::string(serv, static_cast<int>(serv_len))));
 }
 
 static PHP_METHOD(QConfZK, serviceUp)
 {
     char *path = NULL, *serv = NULL;
-    int path_len = 0, serv_len = 0;
+    size_t path_len = 0, serv_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &serv, &serv_len) == FAILURE)
     {
@@ -332,13 +334,13 @@ static PHP_METHOD(QConfZK, serviceUp)
     if (qconfzk == NULL)
         RETURN_LONG(QCONF_PHP_ERROR);
 
-    RETURN_LONG(qconfzk->zk_service_up(std::string(path, path_len), std::string(serv, serv_len)));
+    RETURN_LONG(qconfzk->zk_service_up(std::string(path, static_cast<int>(path_len)), std::string(serv, static_cast<int>(serv_len))));
 }
 
 static PHP_METHOD(QConfZK, serviceDown)
 {
     char *path = NULL, *serv = NULL;
-    int path_len = 0, serv_len = 0;
+    size_t path_len = 0, serv_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &serv, &serv_len) == FAILURE)
     {
@@ -351,13 +353,13 @@ static PHP_METHOD(QConfZK, serviceDown)
     if (qconfzk == NULL)
         RETURN_LONG(QCONF_PHP_ERROR);
 
-    RETURN_LONG(qconfzk->zk_service_down(std::string(path, path_len), std::string(serv, serv_len)));
+    RETURN_LONG(qconfzk->zk_service_down(std::string(path, static_cast<int>(path_len)), std::string(serv, static_cast<int>(serv_len))));
 }
 
 static PHP_METHOD(QConfZK, serviceOffline)
 {
     char *path = NULL, *serv = NULL;
-    int path_len = 0, serv_len = 0;
+    size_t path_len = 0, serv_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path, &path_len, &serv, &serv_len) == FAILURE)
     {
@@ -370,13 +372,13 @@ static PHP_METHOD(QConfZK, serviceOffline)
     if (qconfzk == NULL)
         RETURN_LONG(QCONF_PHP_ERROR);
 
-    RETURN_LONG(qconfzk->zk_service_offline(std::string(path, path_len), std::string(serv, serv_len)));
+    RETURN_LONG(qconfzk->zk_service_offline(std::string(path, static_cast<int>(path_len)), std::string(serv, static_cast<int>(serv_len))));
 }
 
 static PHP_METHOD(QConfZK, serviceClear)
 {
     char *path = NULL;
-    int path_len = 0;
+    size_t path_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
@@ -387,7 +389,7 @@ static PHP_METHOD(QConfZK, serviceClear)
     qconfzk_object *obj = Z_QCONFZK_OBJ_P(getThis());
     qconfzk = obj->qconfzk;
     if (qconfzk != NULL) {
-        RETURN_LONG(qconfzk->zk_service_clear(std::string(path, path_len)));
+        RETURN_LONG(qconfzk->zk_service_clear(std::string(path, static_cast<int>(path_len))));
     }
 
     RETURN_LONG(QCONF_PHP_ERROR);
@@ -396,7 +398,7 @@ static PHP_METHOD(QConfZK, serviceClear)
 static PHP_METHOD(QConfZK, list)
 {
     char *path = NULL;
-    int path_len = 0;
+    size_t path_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
@@ -411,7 +413,7 @@ static PHP_METHOD(QConfZK, list)
 
     int ret = QCONF_PHP_ERROR;
     std::set<std::string> children;
-    ret = qconfzk->zk_list(std::string(path, path_len), children);
+    ret = qconfzk->zk_list(std::string(path, static_cast<int>(path_len)), children);
     if (QCONF_OK != ret) RETURN_NULL();
 
     array_init(return_value);
@@ -427,7 +429,7 @@ static PHP_METHOD(QConfZK, list)
 static PHP_METHOD(QConfZK, listWithValue)
 {
     char *path = NULL;
-    int path_len = 0;
+    size_t path_len = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &path, &path_len) == FAILURE)
     {
@@ -442,7 +444,7 @@ static PHP_METHOD(QConfZK, listWithValue)
 
     int ret = QCONF_PHP_ERROR;
     std::map<std::string, std::string> children;
-    ret = qconfzk->zk_list_with_values(std::string(path, path_len), children);
+    ret = qconfzk->zk_list_with_values(std::string(path, static_cast<int>(path_len)), children);
     if (QCONF_OK != ret) RETURN_NULL();
 
     array_init(return_value);
