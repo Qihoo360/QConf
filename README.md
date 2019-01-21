@@ -49,7 +49,9 @@ vi QCONF_INSTALL_PREFIX/conf/idc.conf
 ``` php
   # all the zookeeper host configuration.
   #[zookeeper]
-  zookeeper.test=127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183 #zookeeper of idc 'test'
+  
+  #zookeeper of idc 'test'
+  zookeeper.test=127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183
 ```
  - **Assign** local idc
 ``` 
