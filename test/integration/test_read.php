@@ -1,10 +1,9 @@
 <?php
+// QConf批量获取节点500000个时，使用命令获取：qconf get_batch_keys
+// 报错：     [ERROR]Failed to get batch keys! ret:8
+// 因此编写脚本测试批量获取最大的节点数
 $zoo_host = "192.168.0.1:2181,192.168.0.2:2181,192.168.0.3:2181";
-$hostname = "";
 $idc = "test";
-$waiting_time = 5;
-$internal = false;
-$prefix = ($internal) ? "/qconf" : "/";
 $qzk = new QConfZK($zoo_host);
 
 $zookeeper = new Zookeeper($zoo_host);
@@ -22,15 +21,7 @@ if(! $p1)
 
 for($i=0;$i<=500000;$i++){
    $bkeys[$i]="bnode".($i+1);
-
    $zookeeper->create($arr_path."/conf".$i, $bkeys[$i],$aclArray);
- //  if($r){
-     //echo 'SUCCESS';
-   //  $s++;
-  // }else{
-     //echo 'ERR';
-  //   $e++;
-  // }
 $banchs=Qconf::getBatchKeys($arr_path);
 if($banchs){
   var_dump($banchs);
