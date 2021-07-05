@@ -46,7 +46,9 @@ vi QCONF_INSTALL_PREFIX/conf/idc.conf
 ``` php
   #all the zookeeper host configuration.
   #[zookeeper]
-  zookeeper.test=127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183 #test机房zookeeper配置
+  
+  #test机房zookeeper配置
+  zookeeper.test=127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183
 ```
  - 在QConf配置文件中指定本地机房
 ``` shell
